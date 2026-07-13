@@ -650,5 +650,243 @@ def create_enrichment_pilot(
         logger.error(f"Failed to create enrichment pilot: {e}", exc_info=True)
         raise e
 
+@app.command(name="prepare-review-scraping")
+def prepare_review_scraping(
+    input: str = typer.Option("data/enrichment/pilot/pilot_google_places_input.csv", help="Path to pilot places input CSV"),
+    batch_size: int = typer.Option(70, help="Maximum place IDs per batch"),
+    output_dir: str = typer.Option("data/enrichment/apify_review_inputs", help="Output directory for Apify payloads")
+):
+    """
+    Task 2: Partition eligible pilot places and build Apify review scraping payloads.
+    """
+    from src.enrichment.review_payload_builder import build_review_payloads
+    console.print(f"[bold blue]Building review scraping payloads from {input}...[/bold blue]")
+    try:
+        manifest = build_review_payloads(input_csv_path=input, output_dir=output_dir, batch_size=batch_size)
+        console.print(f"[green]Successfully generated payloads! Manifest updated at {output_dir}/review_batch_manifest.json[/green]")
+    except Exception as e:
+        console.print(f"[red]Error preparing payloads: {e}[/red]")
+        raise e
+
+@app.command(name="run-review-scraping")
+def run_review_scraping(
+    mode: str = typer.Option(..., help="Mode: positive, negative, neutral"),
+    batch: str = typer.Option(..., help="Batch ID, e.g. batch_001")
+):
+    """
+    Task 3: Run Apify reviews scraper for a single batch.
+    """
+    from dotenv import load_dotenv
+    load_dotenv()
+    token = os.getenv("APIFY_TOKEN")
+    if not token or str(token).strip() == "":
+        console.print("[yellow]APIFY_TOKEN is missing in .env. Skipping execution. (Dry validation mode)[/yellow]")
+        return
+        
+    try:
+        from apify_client import ApifyClient
+    except ImportError:
+        console.print("[red]apify-client library is not installed. Please run 'pip install apify-client' to use this command.[/red]")
+        return
+        
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    if not os.path.exists(manifest_path):
+        console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
+        return
+        
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest_data = json.load(f)
+        
+    entry = None
+    for b in manifest_data.get("batches", []):
+        if b["batch_id"] == batch and b["mode"] == mode:
+            entry = b
+            break
+            
+    if not entry:
+        console.print(f"[red]Batch {batch} ({mode}) not found in manifest.[/red]")
+        return
+        
+    if entry.get("status") == "completed":
+        console.print(f"[yellow]Batch {batch} ({mode}) is already completed. Skipping.[/yellow]")
+        return
+        
+    client = ApifyClient(token)
+    payload_path = os.path.join("data/enrichment/apify_review_inputs", entry["payload_path"])
+    with open(payload_path, "r", encoding="utf-8") as pf:
+        run_input = json.load(pf)
+        
+    console.print(f"[blue]Starting Apify actor compass/google-maps-reviews-scraper for {batch} ({mode})...[/blue]")
+    run = client.actor("compass/google-maps-reviews-scraper").call(run_input=run_input)
+    
+    run_id = run.get("id")
+    dataset_id = run.get("defaultDatasetId")
+    
+    console.print(f"[green]Run completed: run_id={run_id}, dataset_id={dataset_id}[/green]")
+    
+    # Download dataset
+    items = client.dataset(dataset_id).list_items().items
+    raw_dir = os.path.join("data/enrichment/raw_reviews", mode)
+    os.makedirs(raw_dir, exist_ok=True)
+    raw_path = os.path.join(raw_dir, f"{batch}.json")
+    with open(raw_path, "w", encoding="utf-8") as rf:
+        json.dump(items, rf, indent=2)
+        
+    console.print(f"[green]Saved {len(items)} raw reviews to {raw_path}[/green]")
+    
+    # Update manifest
+    entry["status"] = "completed"
+    entry["apify_run_id"] = run_id
+    entry["dataset_id"] = dataset_id
+    
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest_data, f, indent=2)
+
+@app.command(name="run-review-scraping-all")
+def run_review_scraping_all():
+    """
+    Task 3: Run Apify reviews scraper for all pending batches in manifest.
+    """
+    from dotenv import load_dotenv
+    load_dotenv()
+    token = os.getenv("APIFY_TOKEN")
+    if not token or str(token).strip() == "":
+        console.print("[yellow]APIFY_TOKEN is missing in .env. Skipping execution of run-review-scraping-all.[/yellow]")
+        return
+        
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    if not os.path.exists(manifest_path):
+        console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
+        return
+        
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest_data = json.load(f)
+        
+    pending_batches = [b for b in manifest_data.get("batches", []) if b.get("status") != "completed"]
+    
+    if not pending_batches:
+        console.print("[green]All batches in manifest are already completed![/green]")
+        return
+        
+    console.print(f"[bold blue]Running {len(pending_batches)} pending review scraping batches...[/bold blue]")
+    
+    for b in pending_batches:
+        try:
+            run_review_scraping(mode=b["mode"], batch=b["batch_id"])
+        except Exception as e:
+            console.print(f"[red]Error running batch {b['batch_id']} ({b['mode']}): {e}[/red]")
+
+@app.command(name="import-review-results")
+def import_review_results(
+    mode: str = typer.Option(..., help="Mode: positive, negative, neutral"),
+    batch: str = typer.Option(..., help="Batch ID, e.g. batch_001"),
+    input: str = typer.Option(..., help="Path to the downloaded result JSON/JSONL file")
+):
+    """
+    Task 4: Import downloaded reviews JSON/JSONL file offline.
+    """
+    if not os.path.exists(input):
+        console.print(f"[red]Input file not found: {input}[/red]")
+        return
+        
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    if not os.path.exists(manifest_path):
+        console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
+        return
+        
+    # Read input file (handles JSON array or JSONL)
+    reviews = []
+    try:
+        with open(input, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                reviews = data
+            elif isinstance(data, dict):
+                reviews = [data]
+    except Exception:
+        # Fallback to JSONL
+        try:
+            with open(input, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        reviews.append(json.loads(line))
+        except Exception as e:
+            console.print(f"[red]Failed to parse file as JSON array or JSONL: {e}[/red]")
+            return
+            
+    raw_dir = os.path.join("data/enrichment/raw_reviews", mode)
+    os.makedirs(raw_dir, exist_ok=True)
+    raw_path = os.path.join(raw_dir, f"{batch}.json")
+    
+    with open(raw_path, "w", encoding="utf-8") as rf:
+        json.dump(reviews, rf, indent=2)
+        
+    # Update manifest
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest_data = json.load(f)
+        
+    updated = False
+    for b in manifest_data.get("batches", []):
+        if b["batch_id"] == batch and b["mode"] == mode:
+            b["status"] = "completed"
+            b["dataset_id"] = "imported_offline"
+            b["apify_run_id"] = "imported_offline"
+            updated = True
+            break
+            
+    if updated:
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest_data, f, indent=2)
+        console.print(f"[green]Imported {len(reviews)} reviews for {batch} ({mode}) successfully.[/green]")
+    else:
+        console.print(f"[yellow]Batch {batch} ({mode}) not found in manifest, but saved raw file to {raw_path}[/yellow]")
+
+@app.command(name="import-review-results-all")
+def import_review_results_all(
+    root: str = typer.Option("data/enrichment/raw_reviews", help="Root directory of raw review JSON files")
+):
+    """
+    Task 4: Scan and update batch status in manifest based on raw files present on disk.
+    """
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    if not os.path.exists(manifest_path):
+        console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
+        return
+        
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest_data = json.load(f)
+        
+    updated_count = 0
+    for b in manifest_data.get("batches", []):
+        mode = b["mode"]
+        batch_id = b["batch_id"]
+        raw_path = os.path.join(root, mode, f"{batch_id}.json")
+        if os.path.exists(raw_path) and b["status"] != "completed":
+            b["status"] = "completed"
+            b["dataset_id"] = b["dataset_id"] or "imported_offline"
+            b["apify_run_id"] = b["apify_run_id"] or "imported_offline"
+            updated_count += 1
+              
+    if updated_count > 0:
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest_data, f, indent=2)
+        console.print(f"[green]Manifest status updated for {updated_count} batches found on disk.[/green]")
+    else:
+        console.print("[yellow]No pending batches matched files on disk.[/yellow]")
+
+@app.command(name="process-reviews")
+def process_reviews():
+    """
+    Task 6-9: Process raw reviews, map to canonicals, deduplicate, select representative reviews, and compile reports.
+    """
+    from src.enrichment.review_processor import process_and_select_reviews
+    console.print("[bold blue]Starting review processing and selection pipeline...[/bold blue]")
+    try:
+        process_and_select_reviews()
+        console.print("[green]Processing completed successfully. Output files saved in data/enrichment/final/ and reports in reports/.[/green]")
+    except Exception as e:
+        console.print(f"[red]Error during review processing: {e}[/red]")
+        raise e
+
 if __name__ == "__main__":
     app()

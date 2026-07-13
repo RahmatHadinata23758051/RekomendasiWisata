@@ -1,0 +1,13 @@
+batch_id,mode,status,apify_run_id,dataset_id,place_count
+batch_001,positive,pending,,,70
+batch_001,negative,pending,,,70
+batch_001,neutral,pending,,,70
+batch_002,positive,pending,,,70
+batch_002,negative,pending,,,70
+batch_002,neutral,pending,,,70
+batch_003,positive,pending,,,70
+batch_003,negative,pending,,,70
+batch_003,neutral,pending,,,70
+batch_004,positive,pending,,,61
+batch_004,negative,pending,,,61
+batch_004,neutral,pending,,,61
