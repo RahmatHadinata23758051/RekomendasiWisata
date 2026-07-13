@@ -206,3 +206,150 @@ def test_importer_and_processor():
         for d in [test_raw_dir, test_processed_dir, test_final_dir, test_reports_dir]:
             if os.path.exists(d):
                 shutil.rmtree(d)
+
+def test_get_run_value_helper():
+    from src.cli import get_run_value
+    
+    # 1. Pydantic-like object testing
+    class MockPydanticRun:
+        def __init__(self, run_id, dataset_id):
+            self.id = run_id
+            self.default_dataset_id = dataset_id
+            
+    pydantic_run = MockPydanticRun("run_abc", "dataset_xyz")
+    assert get_run_value(pydantic_run, "id") == "run_abc"
+    assert get_run_value(pydantic_run, "default_dataset_id", "defaultDatasetId") == "dataset_xyz"
+    
+    # 2. Legacy dictionary testing
+    legacy_run = {
+        "id": "run_123",
+        "defaultDatasetId": "dataset_456"
+    }
+    assert get_run_value(legacy_run, "id") == "run_123"
+    assert get_run_value(legacy_run, "default_dataset_id", "defaultDatasetId") == "dataset_456"
+    
+    # Test invalid type raising TypeError
+    with pytest.raises(TypeError):
+        get_run_value(42, "id")
+
+def test_recover_run_logic(monkeypatch):
+    # Mock ApifyClient and get_run_value
+    mock_run_calls = 0
+    mock_actor_calls = 0
+    mock_dataset_calls = 0
+    
+    class MockDataset:
+        def list_items(self):
+            class MockItems:
+                items = [{"id": "rev1", "text": "excellent pantai", "stars": 5}]
+            return MockItems()
+            
+    class MockRun:
+        def get(self):
+            nonlocal mock_run_calls
+            mock_run_calls += 1
+            class MockRunObj:
+                id = "mock_run_id"
+                status = "SUCCEEDED"
+                default_dataset_id = "mock_dataset_id"
+            return MockRunObj()
+            
+    class MockActor:
+        def call(self, run_input=None):
+            nonlocal mock_actor_calls
+            mock_actor_calls += 1
+            return {"id": "new_run_id", "defaultDatasetId": "new_dataset_id"}
+            
+    class MockApifyClient:
+        def __init__(self, token):
+            self.token = token
+        def run(self, run_id):
+            return MockRun()
+        def dataset(self, dataset_id):
+            nonlocal mock_dataset_calls
+            mock_dataset_calls += 1
+            return MockDataset()
+        def actor(self, actor_id):
+            return MockActor()
+            
+    # Mock apify_client import
+    import sys
+    from types import ModuleType
+    mock_apify_mod = ModuleType("apify_client")
+    mock_apify_mod.ApifyClient = MockApifyClient
+    sys.modules["apify_client"] = mock_apify_mod
+    
+    monkeypatch.setenv("APIFY_TOKEN", "mock_token")
+    
+    test_manifest_dir = "data/enrichment/apify_review_inputs_test_rec"
+    os.makedirs(test_manifest_dir, exist_ok=True)
+    
+    try:
+        manifest_data = {
+            "batches": [
+                {
+                    "batch_id": "batch_test",
+                    "mode": "positive",
+                    "payload_path": "positive/batch_test.json",
+                    "place_count": 1,
+                    "canonical_ids": ["can_1"],
+                    "google_place_ids": ["g1"],
+                    "payload_checksum": "xyz",
+                    "status": "pending",
+                    "apify_run_id": None,
+                    "dataset_id": None
+                }
+            ]
+        }
+        
+        backup_manifest = "data/enrichment/apify_review_inputs/review_batch_manifest.json.bak"
+        actual_manifest = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+        
+        if os.path.exists(actual_manifest):
+            shutil.copy(actual_manifest, backup_manifest)
+            
+        os.makedirs(os.path.dirname(actual_manifest), exist_ok=True)
+        with open(actual_manifest, "w", encoding="utf-8") as f:
+            json.dump(manifest_data, f)
+            
+        test_raw_path = "data/enrichment/raw_reviews/positive/batch_test.json"
+        if os.path.exists(test_raw_path):
+            os.remove(test_raw_path)
+            
+        from src.cli import recover_review_run
+        
+        # 3. Recovery existing successful run
+        recover_review_run(mode="positive", batch="batch_test", run_id="mock_run_id")
+        
+        assert mock_run_calls == 1
+        assert mock_dataset_calls == 1
+        # 4. Recovery does not trigger new Actor run
+        assert mock_actor_calls == 0
+        
+        # Check manifest status is now completed
+        with open(actual_manifest, "r", encoding="utf-8") as f:
+            updated_manifest = json.load(f)
+        assert updated_manifest["batches"][0]["status"] == "completed"
+        assert updated_manifest["batches"][0]["apify_run_id"] == "mock_run_id"
+        assert updated_manifest["batches"][0]["dataset_id"] == "mock_dataset_id"
+        
+        # 6. Idempotency check: running recovery again should NOT call run or dataset download
+        mock_run_calls = 0
+        mock_dataset_calls = 0
+        recover_review_run(mode="positive", batch="batch_test", run_id="mock_run_id")
+        assert mock_run_calls == 0
+        assert mock_dataset_calls == 0
+        
+        # Cleanup test raw file
+        if os.path.exists(test_raw_path):
+            os.remove(test_raw_path)
+            
+        # Restore manifest
+        if os.path.exists(backup_manifest):
+            shutil.move(backup_manifest, actual_manifest)
+        else:
+            os.remove(actual_manifest)
+            
+    finally:
+        if os.path.exists(test_manifest_dir):
+            shutil.rmtree(test_manifest_dir)

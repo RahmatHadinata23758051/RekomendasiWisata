@@ -668,6 +668,13 @@ def prepare_review_scraping(
         console.print(f"[red]Error preparing payloads: {e}[/red]")
         raise e
 
+def get_run_value(run, attribute, legacy_key=None):
+    if hasattr(run, attribute):
+        return getattr(run, attribute)
+    if isinstance(run, dict):
+        return run.get(legacy_key or attribute)
+    raise TypeError(f"Expected dict or Pydantic object, got {type(run)}")
+
 @app.command(name="run-review-scraping")
 def run_review_scraping(
     mode: str = typer.Option(..., help="Mode: positive, negative, neutral"),
@@ -719,8 +726,8 @@ def run_review_scraping(
     console.print(f"[blue]Starting Apify actor compass/google-maps-reviews-scraper for {batch} ({mode})...[/blue]")
     run = client.actor("compass/google-maps-reviews-scraper").call(run_input=run_input)
     
-    run_id = run.get("id")
-    dataset_id = run.get("defaultDatasetId")
+    run_id = get_run_value(run, "id")
+    dataset_id = get_run_value(run, "default_dataset_id", "defaultDatasetId")
     
     console.print(f"[green]Run completed: run_id={run_id}, dataset_id={dataset_id}[/green]")
     
@@ -887,6 +894,131 @@ def process_reviews():
     except Exception as e:
         console.print(f"[red]Error during review processing: {e}[/red]")
         raise e
+
+@app.command(name="recover-review-run")
+def recover_review_run(
+    mode: str = typer.Option(..., help="Mode: positive, negative, neutral"),
+    batch: str = typer.Option(..., help="Batch ID, e.g. batch_001"),
+    run_id: str = typer.Option(..., help="Apify Run ID")
+):
+    """
+    Task 2: Recover a single existing successful run from Apify without triggering a new Actor run.
+    """
+    import hashlib
+    from dotenv import load_dotenv
+    load_dotenv()
+    token = os.getenv("APIFY_TOKEN")
+    if not token or str(token).strip() == "":
+        console.print("[red]APIFY_TOKEN is missing in .env. Cannot perform recovery.[/red]")
+        return
+        
+    try:
+        from apify_client import ApifyClient
+    except ImportError:
+        console.print("[red]apify-client library is not installed. Please run 'pip install apify-client' to use this command.[/red]")
+        return
+
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    if not os.path.exists(manifest_path):
+        console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
+        return
+        
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest_data = json.load(f)
+        
+    entry = None
+    for b in manifest_data.get("batches", []):
+        if b["batch_id"] == batch and b["mode"] == mode:
+            entry = b
+            break
+            
+    if not entry:
+        console.print(f"[red]Batch {batch} ({mode}) not found in manifest.[/red]")
+        return
+
+    raw_dir = os.path.join("data/enrichment/raw_reviews", mode)
+    os.makedirs(raw_dir, exist_ok=True)
+    raw_path = os.path.join(raw_dir, f"{batch}.json")
+
+    # Idempotency check:
+    if entry.get("status") == "completed" and entry.get("apify_run_id") == run_id and os.path.exists(raw_path):
+        with open(raw_path, "r", encoding="utf-8") as rf:
+            try:
+                existing_items = json.load(rf)
+                existing_checksum = hashlib.sha256(json.dumps(existing_items, sort_keys=True).encode("utf-8")).hexdigest()
+                if existing_checksum == entry.get("result_checksum"):
+                    console.print(f"[green]Batch {batch} ({mode}) run {run_id} already recovered and verified. Skipping.[/green]")
+                    return
+            except Exception:
+                pass
+
+    console.print(f"[blue]Recovering run {run_id} for {batch} ({mode})...[/blue]")
+    client = ApifyClient(token)
+    
+    try:
+        run = client.run(run_id).get()
+    except Exception as e:
+        console.print(f"[red]Failed to retrieve run details for {run_id}: {e}[/red]")
+        raise e
+        
+    status = get_run_value(run, "status")
+    if status != "SUCCEEDED":
+        console.print(f"[red]Run {run_id} status is {status}, expected SUCCEEDED. Cannot recover.[/red]")
+        return
+
+    dataset_id = get_run_value(run, "default_dataset_id", "defaultDatasetId")
+    console.print(f"[green]Run SUCCEEDED. Dataset ID: {dataset_id}. Downloading items...[/green]")
+    
+    try:
+        items = client.dataset(dataset_id).list_items().items
+    except Exception as e:
+        console.print(f"[red]Failed to download dataset items: {e}[/red]")
+        raise e
+        
+    raw_review_count = len(items)
+    checksum = hashlib.sha256(json.dumps(items, sort_keys=True).encode("utf-8")).hexdigest()
+    
+    with open(raw_path, "w", encoding="utf-8") as rf:
+        json.dump(items, rf, indent=2)
+        
+    entry["status"] = "completed"
+    entry["apify_run_id"] = run_id
+    entry["dataset_id"] = dataset_id
+    entry["raw_review_count"] = raw_review_count
+    entry["result_checksum"] = checksum
+    
+    from datetime import datetime, timezone
+    entry["completed_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest_data, f, indent=2)
+        
+    console.print(f"[green]Successfully recovered {raw_review_count} reviews to {raw_path}. Manifest updated.[/green]")
+
+@app.command(name="recover-review-batch")
+def recover_review_batch(
+    batch: str = typer.Option(..., help="Batch ID, e.g. batch_001")
+):
+    """
+    Task 2: Recover all three modes of a batch using pre-existing runs.
+    """
+    if batch != "batch_001":
+        console.print(f"[red]Only batch_001 is supported for recovery mapping in this command.[/red]")
+        return
+        
+    runs = {
+        "positive": "MVrGztxpiTCIXSLsH",
+        "negative": "0VCtRHHFadp9JudlV",
+        "neutral": "z4UYRSzMdTivVyRD5"
+    }
+    
+    console.print(f"[bold blue]Recovering batch {batch}...[/bold blue]")
+    for mode, run_id in runs.items():
+        try:
+            recover_review_run(mode=mode, batch=batch, run_id=run_id)
+        except Exception as e:
+            console.print(f"[red]Failed to recover {mode} run {run_id}: {e}[/red]")
+            raise e
 
 if __name__ == "__main__":
     app()
