@@ -1,0 +1,61 @@
+regions:
+  - id: bandar_lampung
+    name: "Kota Bandar Lampung"
+    query: "Bandar Lampung"
+    bbox: [105.15, -5.48, 105.35, -5.33] # [min_lon, min_lat, max_lon, max_lat]
+  - id: metro
+    name: "Kota Metro"
+    query: "Metro"
+    bbox: [105.25, -5.18, 105.38, -5.08]
+  - id: lampung_selatan
+    name: "Kabupaten Lampung Selatan"
+    query: "Lampung Selatan"
+    bbox: [105.00, -6.00, 105.90, -5.15]
+  - id: lampung_tengah
+    name: "Kabupaten Lampung Tengah"
+    query: "Lampung Tengah"
+    bbox: [104.58, -5.25, 105.65, -4.55]
+  - id: lampung_timur
+    name: "Kabupaten Lampung Timur"
+    query: "Lampung Timur"
+    bbox: [105.25, -5.35, 105.95, -4.60]
+  - id: lampung_utara
+    name: "Kabupaten Lampung Utara"
+    query: "Lampung Utara"
+    bbox: [104.55, -5.05, 105.15, -4.50]
+  - id: lampung_barat
+    name: "Kabupaten Lampung Barat"
+    query: "Lampung Barat"
+    bbox: [103.55, -5.45, 104.50, -4.70]
+  - id: pesawaran
+    name: "Kabupaten Pesawaran"
+    query: "Pesawaran"
+    bbox: [104.90, -5.85, 105.30, -5.15]
+  - id: tanggamus
+    name: "Kabupaten Tanggamus"
+    query: "Tanggamus"
+    bbox: [104.30, -5.75, 104.95, -5.10]
+  - id: pringsewu
+    name: "Kabupaten Pringsewu"
+    query: "Pringsewu"
+    bbox: [104.85, -5.50, 105.10, -5.15]
+  - id: pesisir_barat
+    name: "Kabupaten Pesisir Barat"
+    query: "Pesisir Barat"
+    bbox: [103.50, -5.95, 104.15, -4.80]
+  - id: tulang_bawang
+    name: "Kabupaten Tulang Bawang"
+    query: "Tulang Bawang"
+    bbox: [105.10, -4.75, 105.90, -4.10]
+  - id: tulang_bawang_barat
+    name: "Kabupaten Tulang Bawang Barat"
+    query: "Tulang Bawang Barat"
+    bbox: [104.75, -4.70, 105.25, -4.20]
+  - id: mesuji
+    name: "Kabupaten Mesuji"
+    query: "Mesuji"
+    bbox: [105.20, -4.30, 105.85, -3.80]
+  - id: way_kanan
+    name: "Kabupaten Way Kanan"
+    query: "Way Kanan"
+    bbox: [104.15, -4.85, 105.05, -4.20]

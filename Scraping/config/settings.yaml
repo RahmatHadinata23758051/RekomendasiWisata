@@ -1,0 +1,21 @@
+settings:
+  concurrency: 3
+  rate_limit_delay_seconds: 2
+  timeout_seconds: 30
+  retry:
+    max_attempts: 3
+    backoff_factor: 2
+  bounds:
+    # Bounding box for the entire Lampung Province
+    min_lat: -6.5
+    max_lat: -3.5
+    min_lon: 103.0
+    max_lon: 106.5
+  storage:
+    raw_dir: "data/raw"
+    normalized_dir: "data/normalized"
+    canonical_dir: "data/canonical"
+    reviews_dir: "data/reviews"
+    manual_review_dir: "data/manual_review"
+    reports_dir: "reports"
+    logs_dir: "logs"

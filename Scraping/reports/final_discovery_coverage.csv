@@ -1,0 +1,16 @@
+region,raw_apify,raw_osm,accepted,candidates,rejected,canonical_verified,possible_duplicates,missing_rating,missing_price
+Kabupaten Lampung Barat,255,48,233,53,22,248,1,96,301
+Kabupaten Lampung Selatan,492,63,377,105,36,396,6,114,501
+Kabupaten Lampung Tengah,314,39,205,86,37,214,0,114,300
+Kabupaten Lampung Timur,365,0,206,105,48,206,0,90,311
+Kabupaten Lampung Utara,241,13,163,58,14,168,0,100,226
+Kabupaten Mesuji,108,2,65,35,9,66,0,42,101
+Kabupaten Pesawaran,369,4,280,46,31,280,3,53,326
+Kabupaten Pesisir Barat,177,5,89,21,24,91,1,35,112
+Kabupaten Pringsewu,243,2,169,64,21,170,1,62,234
+Kabupaten Tanggamus,431,8,333,79,19,337,1,132,416
+Kabupaten Tulang Bawang,162,30,123,47,6,125,0,60,172
+Kabupaten Tulang Bawang Barat,146,3,108,31,2,107,0,45,138
+Kabupaten Way Kanan,215,4,156,52,6,160,2,81,212
+Kota Bandar Lampung,882,82,465,223,209,473,1,167,696
+Kota Metro,139,27,87,43,16,89,1,35,132

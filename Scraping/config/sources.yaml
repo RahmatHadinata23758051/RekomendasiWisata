@@ -1,0 +1,11 @@
+sources:
+  - id: dinas_pariwisata_lampung
+    name: "Dinas Pariwisata dan Ekonomi Kreatif Provinsi Lampung"
+    url: "https://pariwisata.lampungprov.go.id/"
+    enabled: true
+    parser: "dinas_pariwisata"
+  - id: jadesta_lampung
+    name: "Jejaring Desa Wisata (Jadesta) - Lampung"
+    url: "https://jadesta.kemenparekraf.go.id/provinsi/18" # Province code for Lampung
+    enabled: true
+    parser: "jadesta"

@@ -1,0 +1,51 @@
+source_record_id,name,source,categories,classification,classification_confidence,classification_signals,classification_reason
+apify_google_maps_ChIJO8YcXNUnQS4Rrfl_XeUQSsI,Hutan Mangrove Petengoran,apify_google_maps,taman,accepted,0.9,"name_keyword:hutan,high_reviews:111","Kategori 'Taman' disetujui dengan sinyal: name_keyword:hutan, high_reviews:111"
+apify_google_maps_ChIJeXhhfRwxQS4RYHiBWnGVnaY,BATU RAJA Stone Park Punduh Pidada,apify_google_maps,tujuan wisata,accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJa0a70-YvQS4R_BvtnqHCR5c,Pantai Centigi,apify_google_maps,taman liburan,accepted,0.8,name_accepted_keyword,Nama mengandung keyword wisata 'pantai'
+apify_google_maps_ChIJTwWM0iExQS4RpxR8SjpwP4w,Taman Kunang-kunang Banding Agung,apify_google_maps,tujuan wisata,accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJZXBd8oIqQS4RWJcEKh7cfWs,Air Terjun Anglo,apify_google_maps,"tujuan wisata,taman",accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJS1VNcQAvQS4RVWmXO8hrFdE,Desa gayau,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJBQcFYYUrQS4RjEQiLDMZTBM,Cendana Mountain Bike Park,apify_google_maps,bumi perkemahan,accepted,1.0,category_accepted,Kategori utama 'Bumi Perkemahan' disetujui
+apify_google_maps_ChIJozAhwRsrQS4R6l_LyFoYGzA,Pemandian Air Panas Telaga Langit Biru,apify_google_maps,taman bermain,manual_review,0.5,,Kategori 'Taman Bermain' tidak terklasifikasi secara otomatis
+apify_google_maps_ChIJQ7p5l7PZQC4RCoYaNouPDXM,WISATA VILLA GARDENIA LAMPUNG,apify_google_maps,"tujuan wisata,taman hiburan",rejected,0.8,name_rejected_keyword,Nama mengandung unsur bisnis/non-wisata: 'WISATA VILLA GARDENIA LAMPUNG'
+apify_google_maps_ChIJ8TH2YRApQS4R9qQeFBYLTpM,Pantai Klara 2,apify_google_maps,"tujuan wisata,taman rekreasi air",accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJd0hnMzsnQS4RxZ6DXKElALU,Sagara Holiday,apify_google_maps,"biro perjalanan dan wisata,wahana taman hiburan,jasa sewa perahu,persewaan kano & kayak,persewaan pondok,warung nasi,area rekreasi alam,biro wisata bawah laut,pusat informasi pariwisata",rejected,1.0,category_rejected,Kategori utama 'Biro Perjalanan Dan Wisata' ditolak
+apify_google_maps_ChIJBTtkFdUuQS4ROf6dImQG9ko,MARINES Eco Park,apify_google_maps,pantai,accepted,1.0,category_accepted,Kategori utama 'Pantai' disetujui
+apify_google_maps_ChIJW4Wu0hsrQS4RinVcSVNjev8,Air Terjun Randu Kembar,apify_google_maps,taman,accepted,0.9,high_reviews:100,Kategori 'Taman' disetujui dengan sinyal: high_reviews:100
+apify_google_maps_ChIJLdgLVUYnQS4Rm64332pwmOs,Area Parkir Pulau Mahitam,apify_google_maps,pos penjaga pantai,accepted,1.0,category_accepted,Kategori utama 'Pos Penjaga Pantai' disetujui
+apify_google_maps_ChIJY0QpXSUpQS4REaFO84xvqBs,Marines Eco Park,apify_google_maps,taman ekologi,manual_review,0.5,,Kategori 'Taman Ekologi' tidak terklasifikasi secara otomatis
+apify_google_maps_ChIJYSxjIg4pQS4RojoLN6zlphI,Pantai Benteng Samudera,apify_google_maps,taman bermain,accepted,0.8,name_accepted_keyword,Nama mengandung keyword wisata 'pantai'
+apify_google_maps_ChIJv0xsHfa1QC4R7KZdvVajEz4,Taman Agro Wisata Sri Rejeki,apify_google_maps,kolam renang umum,accepted,0.8,name_accepted_keyword,Nama mengandung keyword wisata 'wisata'
+apify_google_maps_ChIJQbc1ianLQC4RA_zbhVhdOHk,"Taman Dusun Tanjungrejo Pekon Sukoharum,",apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJm7f4GJy3QC4R6hdvrdpNrpM,WISATA KEBUN JERUK DAENG PARIS 1,apify_google_maps,taman rekreasi air,accepted,1.0,category_accepted,Kategori utama 'Taman Rekreasi Air' disetujui
+apify_google_maps_ChIJx3IUo8i3QC4RvgVlSG98yYE,Ripal,apify_google_maps,taman,accepted,0.9,"high_reviews:26,search_keyword:wisata keluarga","Kategori 'Taman' disetujui dengan sinyal: high_reviews:26, search_keyword:wisata keluarga"
+apify_google_maps_ChIJj2obZAC3QC4R3KeIRholO94,Speed Trap (kamera etle km 108) arah bakauheni,apify_google_maps,taman,accepted,0.9,search_keyword:wisata keluarga,Kategori 'Taman' disetujui dengan sinyal: search_keyword:wisata keluarga
+apify_google_maps_ChIJncCCZwCxQC4RI0IYODPheqk,Taman Desa Kampung Baru,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJ6cPeWgDVRi4RSikXrUVzOtI,Parkir Air Terjun Ciupang,apify_google_maps,tempat parkir,accepted,0.8,name_accepted_keyword,Nama mengandung keyword wisata 'air terjun'
+apify_google_maps_ChIJh6h5AwArQS4RRJKay8r0jEk,Loket Air Terjun Sinar Tiga,apify_google_maps,tempat parkir,accepted,0.8,name_accepted_keyword,Nama mengandung keyword wisata 'air terjun'
+apify_google_maps_ChIJ5ROiCPEtRy4Ru6HLXGs_zMg,PUNGKI PARK (Taman Wisata Edukasi),apify_google_maps,taman,accepted,0.9,"name_keyword:wisata,name_keyword:edukasi,high_reviews:70","Kategori 'Taman' disetujui dengan sinyal: name_keyword:wisata, name_keyword:edukasi, high_reviews:70"
+apify_google_maps_ChIJdwZCsTctQS4RbE1-3sNwhGI,Kebun Kapulaga Pujo Raharjo,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJ-2YJ4DvXQC4R832WGiZSPVQ,Taman Bungur Cilimus,apify_google_maps,"tujuan wisata,taman",accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJszeHWwXTQC4RS-QpfO4zAag,Bronjong Way Lima Pesawaran,apify_google_maps,wahana taman hiburan,accepted,1.0,category_accepted,Kategori utama 'Wahana Taman Hiburan' disetujui
+apify_google_maps_ChIJpeFtB_HSQC4RROjb2WvvEXU,Taman Andan Jejama,apify_google_maps,"tujuan wisata,taman",accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJm_HLVfDSQC4Ro4KydzRo_hc,Tugu Andan Jejama,apify_google_maps,taman,accepted,0.9,high_reviews:44,Kategori 'Taman' disetujui dengan sinyal: high_reviews:44
+apify_google_maps_ChIJp_Ef72bTQC4RYgj6wp9nbDM,Bringin Bronjong Way Lima,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJCwnP-P8pQS4Rb_imH3qA1qw,Rumah alm karto,apify_google_maps,taman,accepted,0.9,search_keyword:wisata keluarga,Kategori 'Taman' disetujui dengan sinyal: search_keyword:wisata keluarga
+apify_google_maps_ChIJu3tYRmnNQC4RGEzsKVOUfHg,Taman Bukit Raya,apify_google_maps,museum,accepted,1.0,category_accepted,Kategori utama 'Museum' disetujui
+apify_google_maps_ChIJeygWTpzVQC4RTTZTg4h03To,Sidodadi Water fall,apify_google_maps,taman rekreasi air,accepted,1.0,category_accepted,Kategori utama 'Taman Rekreasi Air' disetujui
+apify_google_maps_ChIJPXwtwaLTQC4RuLo2uzM7bFI,Taman Wisata Tanjung Mas,apify_google_maps,taman,accepted,0.9,"name_keyword:wisata,high_reviews:17","Kategori 'Taman' disetujui dengan sinyal: name_keyword:wisata, high_reviews:17"
+apify_google_maps_ChIJW-lHN4PTQC4R42Y1_MmXU6g,Taman Sidototo,apify_google_maps,taman kota,accepted,0.8,name_accepted_keyword,Nama mengandung keyword wisata 'taman'
+apify_google_maps_ChIJ0_5ui4nRQC4Rg3PZlKJ7Kx0,Hortipark,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJt7wq3HPTQC4R5ZTm8TawU9c,Taman sukaraja,apify_google_maps,tujuan wisata,accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJZY2eeobTQC4RB-cCV_2FvVg,Taman KWT Melati,apify_google_maps,taman,accepted,0.9,search_keyword:taman wisata,Kategori 'Taman' disetujui dengan sinyal: search_keyword:taman wisata
+apify_google_maps_ChIJH2UdWAArRy4RQrb9OjEdN1o,Taman Jaya agro wisata,apify_google_maps,tujuan wisata,accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJyc8o__zTQC4RAxTG6Yd_wLw,Telaga Batu Putih,apify_google_maps,taman,accepted,0.9,search_keyword:taman wisata,Kategori 'Taman' disetujui dengan sinyal: search_keyword:taman wisata
+apify_google_maps_ChIJSSGpSJ8kRy4RCHnfJtSuVHg,Pemandian Way Bekhak Sukaraja Gunung Alip,apify_google_maps,taman rekreasi air,accepted,1.0,category_accepted,Kategori utama 'Taman Rekreasi Air' disetujui
+apify_google_maps_ChIJ1QKNm0g9Ry4RSsayhXZ9qWU,Mata Air Sumberagung1,apify_google_maps,taman rekreasi air,accepted,1.0,category_accepted,Kategori utama 'Taman Rekreasi Air' disetujui
+apify_google_maps_ChIJw3z8eQA9Ry4RxRF81Xt-BUc,Wisata mata air,apify_google_maps,tempat parkir,accepted,0.8,name_accepted_keyword,Nama mengandung keyword wisata 'wisata'
+apify_google_maps_ChIJma1hegA9Ry4RaMR7yyzj5sc,AIR TERJUN GEROJOGAN LORO,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJ1fn0aVM7Ry4RWHdSXNaylkI,Gunung Alif,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJwYAfCwA9Ry4R0MIjhK44BbI,PARKIRAN WISATA MATA AIR GUNUNG BATU,apify_google_maps,tujuan wisata,accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJV98VIQA9Ry4Rheof_Ttzq1M,Tempat parkir wisata mata air gunung batu margoyoso,apify_google_maps,tujuan wisata,accepted,1.0,category_accepted,Kategori utama 'Tujuan Wisata' disetujui
+apify_google_maps_ChIJHz0gOKIlRy4RW2AEoHNlaPI,Simpang Gunung Alif,apify_google_maps,taman,manual_review,0.5,,Kategori 'Taman' tanpa sinyal wisata khusus
+apify_google_maps_ChIJp8i0JVsoRy4RIh8mkA7hbC0,Wisata Pegunungan Gayau,apify_google_maps,taman,accepted,0.9,"name_keyword:wisata,high_reviews:36","Kategori 'Taman' disetujui dengan sinyal: name_keyword:wisata, high_reviews:36"

@@ -1,0 +1,487 @@
+import typer
+import asyncio
+import os
+import glob
+import json
+import logging
+import pandas as pd
+from datetime import datetime, timezone
+from typing import Optional
+from rich.console import Console
+from rich.logging import RichHandler
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True)]
+)
+logger = logging.getLogger("scraper.cli")
+console = Console()
+
+app = typer.Typer(help="Lampung Tourism Data Collection CLI")
+
+def get_event_loop():
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+@app.command()
+def discover(
+    source: str = typer.Option(..., help="Collector source: osm, google-places, official-sites, all"),
+    region: Optional[str] = typer.Option(None, help="Specific region ID (e.g. bandar_lampung)"),
+    keyword: Optional[str] = typer.Option(None, help="Specific keyword to search"),
+    limit: Optional[int] = typer.Option(None, help="Limit number of items to collect"),
+    resume: bool = typer.Option(False, "--resume", help="Resume from cached response files"),
+    output_dir: Optional[str] = typer.Option(None, help="Override output directory for raw files")
+):
+    """
+    Stage 1: Discover attraction candidates from sources and save raw payloads.
+    """
+    from src.collectors.osm import OSMCollector
+    from src.collectors.google_places import GooglePlacesCollector
+    from src.collectors.official_sites import OfficialSitesCollector
+    from src.storage.writer import save_dataset
+    
+    loop = get_event_loop()
+    
+    async def run_discovery():
+        collectors = []
+        if source in ["osm", "all"]:
+            collectors.append(OSMCollector())
+        if source in ["google-places", "all"]:
+            collectors.append(GooglePlacesCollector())
+        if source in ["official-sites", "all"]:
+            collectors.append(OfficialSitesCollector())
+            
+        all_raw_records = []
+        
+        for col in collectors:
+            if output_dir:
+                col.raw_dir = output_dir
+            try:
+                console.print(f"[bold blue]Running discovery for source: {col.source_name}[/bold blue]")
+                records = await col.discover(region_id=region, keyword=keyword, limit=limit, resume=resume)
+                all_raw_records.extend(records)
+                console.print(f"[green]Discovered {len(records)} raw records for source {col.source_name}[/green]")
+                
+                # Save raw records as list of dicts to standard file
+                if records:
+                    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                    save_dir = os.path.join("data", "raw_records", col.source_name)
+                    res = save_dataset(records, save_dir, f"raw_records_{date_str}")
+                    console.print(f"Saved dataset formats to: {res}")
+            except Exception as e:
+                logger.error(f"Discovery failed for source {col.source_name}: {e}", exc_info=True)
+            finally:
+                await col.close()
+                
+        return all_raw_records
+
+    loop.run_until_complete(run_discovery())
+
+@app.command(name="import-apify")
+def import_apify(
+    input: str = typer.Option("data/raw/apify/google_maps/bandar_lampung/2026-07-13/places.json", help="Path to Apify exported JSON file")
+):
+    """
+    Import raw Apify Google Maps exported dataset.
+    """
+    from src.collectors.apify_google_maps import ApifyGoogleMapsImporter
+    console.print(f"[bold blue]Importing Apify dataset from {input}...[/bold blue]")
+    try:
+        importer = ApifyGoogleMapsImporter()
+        result = importer.import_dataset(input)
+        if result.get("is_skipped"):
+            console.print(f"[yellow]Skipped (already imported): {input}[/yellow]")
+        else:
+            console.print(f"[green]Successfully imported Apify dataset![/green]")
+            console.print(f" - Valid records: {result['valid_count']}")
+            console.print(f" - Failed records: {result['failed_count']}")
+    except Exception as e:
+        console.print(f"[red]Failed to import Apify dataset: {e}[/red]")
+        raise e
+
+@app.command(name="import-apify-all")
+def import_apify_all(
+    root: str = typer.Option("data/raw/apify/google_maps", help="Root directory containing region folders with places.json")
+):
+    """
+    Recursively discover and import all places.json files from the root directory.
+    """
+    from src.collectors.apify_google_maps import ApifyGoogleMapsImporter
+    
+    console.print(f"[bold blue]Scanning for places.json recursively in {root}...[/bold blue]")
+    pattern = os.path.join(root, "**", "places.json")
+    pattern = pattern.replace("\\", "/")
+    files = glob.glob(pattern, recursive=True)
+    
+    if not files:
+        console.print("[yellow]No places.json files found recursively.[/yellow]")
+        return
+        
+    console.print(f"[green]Found {len(files)} places.json file(s) to import.[/green]")
+    importer = ApifyGoogleMapsImporter()
+    
+    total_valid = 0
+    total_failed = 0
+    
+    for filepath in sorted(files):
+        filepath_normalized = filepath.replace("\\", "/")
+        console.print(f"\n[bold]Importing: {filepath_normalized}[/bold]")
+        try:
+            result = importer.import_dataset(filepath_normalized)
+            if result.get("is_skipped"):
+                console.print(f"[yellow]Skipped (already imported): {filepath_normalized}[/yellow]")
+            else:
+                console.print(f"[green]Successfully imported![/green]")
+                console.print(f" - Valid: {result['valid_count']}")
+                console.print(f" - Failed: {result['failed_count']}")
+                total_valid += result['valid_count']
+                total_failed += result['failed_count']
+        except Exception as e:
+            console.print(f"[red]Failed to import {filepath_normalized}: {e}[/red]")
+            
+    console.print(f"\n[bold green]All imports completed. Total new valid: {total_valid}, new failed: {total_failed}[/bold green]")
+
+@app.command()
+def normalize(
+    input_dir: str = typer.Option("data/raw_records", help="Directory containing raw records"),
+    output_dir: str = typer.Option("data/normalized", help="Directory to save normalized records")
+):
+    """
+    Stage 2: Normalize fields like name, address, coordinates, and contact details.
+    """
+    from src.models.schemas import RawAttractionRecord, NormalizedAttractionRecord
+    from src.pipeline.normalize import normalize_record
+    from src.storage.writer import save_dataset
+    
+    import hashlib
+    import re
+
+    console.print("[bold blue]Starting Normalization stage...[/bold blue]")
+    
+    # 1. Load manifest for Apify Google Maps
+    manifest_path = os.path.join(input_dir, "apify_google_maps", "manifest.json")
+    apify_files = []
+    expected_apify_raw = 0
+    
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+        except Exception as e:
+            console.print(f"[red]Failed to load manifest: {e}[/red]")
+            raise typer.Exit(code=1)
+            
+        for entry in manifest:
+            raw_path = entry["filepath"]
+            if not os.path.exists(raw_path):
+                # Try relative to CWD if it was saved as relative
+                raw_path = os.path.join(os.getcwd(), raw_path)
+            if not os.path.exists(raw_path):
+                console.print(f"[red]Reconciliation Error: Raw source file not found: {entry['filepath']}[/red]")
+                raise typer.Exit(code=1)
+                
+            # Validate checksum
+            hasher = hashlib.sha256()
+            with open(raw_path, "rb") as bf:
+                for chunk in iter(lambda: bf.read(4096), b""):
+                    hasher.update(chunk)
+            current_checksum = hasher.hexdigest()
+            if current_checksum != entry["checksum"]:
+                console.print(f"[red]Reconciliation Error: Checksum mismatch for raw file {raw_path}. Expected {entry['checksum']}, got {current_checksum}[/red]")
+                raise typer.Exit(code=1)
+                
+            # Count elements in raw places.json
+            try:
+                with open(raw_path, "r", encoding="utf-8") as rf:
+                    raw_data = json.load(rf)
+                    file_raw_count = len(raw_data)
+                    expected_apify_raw += file_raw_count
+            except Exception as e:
+                console.print(f"[red]Failed to load raw JSON {raw_path}: {e}[/red]")
+                raise typer.Exit(code=1)
+                
+            # Determine date folder from path
+            path_parts = os.path.normpath(raw_path).replace("\\", "/").split("/")
+            date_str = None
+            date_pat = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+            for part in path_parts:
+                if date_pat.match(part):
+                    date_str = part
+                    break
+            if not date_str:
+                date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                
+            staging_jsonl = os.path.join(input_dir, "apify_google_maps", entry["region"], date_str, "places.jsonl")
+            if not os.path.exists(staging_jsonl):
+                console.print(f"[red]Reconciliation Error: Staging jsonl file not found: {staging_jsonl}[/red]")
+                raise typer.Exit(code=1)
+                
+            apify_files.append((staging_jsonl, file_raw_count))
+            
+    # 2. Count OSM raw records
+    osm_files = glob.glob(os.path.join(input_dir, "osm", "*.jsonl"))
+    osm_raw = 0
+    for filepath in osm_files:
+        with open(filepath, "r", encoding="utf-8") as f:
+            osm_raw += sum(1 for line in f if line.strip())
+            
+    expected_total_raw = expected_apify_raw + osm_raw
+    if expected_total_raw == 0:
+        console.print("[yellow]No raw records to process.[/yellow]")
+        return
+        
+    # 3. Load records and verify counts file-by-file
+    raw_records = []
+    
+    def load_jsonl_file(filepath):
+        file_records = []
+        with open(filepath, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    rec = RawAttractionRecord.model_validate(json.loads(line))
+                    file_records.append(rec)
+        return file_records
+
+    # Load Apify
+    for filepath, expected_count in apify_files:
+        with open(filepath, "r", encoding="utf-8") as f:
+            count = sum(1 for line in f if line.strip())
+        if count != expected_count:
+            console.print(f"[red]Reconciliation Error: Staging file {filepath} has {count} records, but raw file has {expected_count} records.[/red]")
+            raise typer.Exit(code=1)
+            
+        file_records = load_jsonl_file(filepath)
+        raw_records.extend(file_records)
+        
+    # Load OSM
+    for filepath in osm_files:
+        file_records = load_jsonl_file(filepath)
+        raw_records.extend(file_records)
+        
+    actual_total_raw = len(raw_records)
+    if actual_total_raw != expected_total_raw:
+        console.print(f"[red]Reconciliation Error: Total loaded raw records ({actual_total_raw}) does not match expected raw records ({expected_total_raw}).[/red]")
+        raise typer.Exit(code=1)
+        
+    # Deduplicate source_record_id for pipeline flow
+    unique_raw_records = []
+    seen_ids = set()
+    for rec in raw_records:
+        if rec.source_record_id not in seen_ids:
+            seen_ids.add(rec.source_record_id)
+            unique_raw_records.append(rec)
+            
+    console.print(f"Loaded {len(raw_records)} raw records before source deduplication, {len(unique_raw_records)} after source deduplication.")
+    raw_records = unique_raw_records
+    
+    normalized_records = []
+    all_normalized_records = []
+    apify_accepted = []
+    apify_manual = []
+    apify_rejected = []
+    
+    for raw in raw_records:
+        try:
+            norm = normalize_record(raw)
+            all_normalized_records.append(norm)
+            
+            # Segregate Apify specific classifications
+            if norm.source == "apify_google_maps":
+                if norm.classification == "accepted":
+                    apify_accepted.append(norm)
+                elif norm.classification == "manual_review":
+                    apify_manual.append(norm)
+                elif norm.classification == "rejected":
+                    apify_rejected.append(norm)
+            
+            # Filter out rejected records from going to deduplication
+            if norm.classification != "rejected":
+                normalized_records.append(norm)
+        except Exception as e:
+            logger.warning(f"Failed to normalize record {raw.source_record_id}: {e}")
+            
+    # Save general normalized records (non-rejected)
+    if normalized_records:
+        res = save_dataset(normalized_records, output_dir, "normalized_attractions")
+        console.print(f"[green]Normalized {len(normalized_records)} records (excluding rejected) and saved: {res}[/green]")
+    else:
+        console.print("[yellow]No records normalized.[/yellow]")
+        
+    # Save all normalized records (including rejected)
+    if all_normalized_records:
+        res_all = save_dataset(all_normalized_records, output_dir, "all_normalized")
+        console.print(f"[green]Saved all {len(all_normalized_records)} normalized records (including rejected) to: {res_all}[/green]")
+        
+    # Save Apify processed outputs
+    apify_processed_dir = os.path.join("data", "processed", "apify")
+    os.makedirs(apify_processed_dir, exist_ok=True)
+    
+    if apify_accepted:
+        res_accepted = save_dataset(apify_accepted, apify_processed_dir, "attractions_accepted")
+        console.print(f"[green]Saved {len(apify_accepted)} accepted Apify records to data/processed/apify/[/green]")
+    else:
+        for ext in ["csv", "jsonl", "parquet"]:
+            open(os.path.join(apify_processed_dir, f"attractions_accepted.{ext}"), "w").close()
+
+    # Save manual review list as CSV
+    df_manual = pd.DataFrame([r.model_dump() for r in apify_manual]) if apify_manual else pd.DataFrame(columns=list(NormalizedAttractionRecord.model_fields.keys()))
+    df_manual.to_csv(os.path.join(apify_processed_dir, "manual_review.csv"), index=False, encoding="utf-8")
+    console.print(f"[yellow]Saved {len(apify_manual)} Apify manual review records to manual_review.csv[/yellow]")
+
+    # Save rejected list as CSV
+    df_rejected = pd.DataFrame([r.model_dump() for r in apify_rejected]) if apify_rejected else pd.DataFrame(columns=list(NormalizedAttractionRecord.model_fields.keys()))
+    df_rejected.to_csv(os.path.join(apify_processed_dir, "rejected_places.csv"), index=False, encoding="utf-8")
+    console.print(f"[red]Saved {len(apify_rejected)} Apify rejected records to rejected_places.csv[/red]")
+
+@app.command()
+def deduplicate(
+    input_file: str = typer.Option("data/normalized/normalized_attractions.jsonl", help="Normalized JSONL file path"),
+    output_dir: str = typer.Option("data/canonical", help="Directory to save canonical records")
+):
+    """
+    Stage 3 & 4: Deduplicate similar records, merge attributes, and enrich with price range/ provenance.
+    """
+    from src.models.schemas import NormalizedAttractionRecord
+    from src.pipeline.deduplicate import deduplicate_records
+    from src.pipeline.enrich import extract_prices_from_text, enrich_canonical_place
+    from src.storage.writer import save_dataset
+    
+    console.print("[bold blue]Starting Deduplication and Enrichment stage...[/bold blue]")
+    
+    if not os.path.exists(input_file):
+        console.print(f"[red]Normalized records file not found at {input_file}. Run normalize first.[/red]")
+        return
+        
+    records = []
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    records.append(NormalizedAttractionRecord.model_validate(json.loads(line)))
+    except Exception as e:
+        logger.error(f"Error reading normalized file: {e}")
+        return
+        
+    console.print(f"Loaded {len(records)} normalized records.")
+    
+    canonical_places, mappings = deduplicate_records(records)
+    
+    # Enrichment: For each canonical place, look for descriptions/address/names to extract price information
+    enriched_places = []
+    for place in canonical_places:
+        text_for_prices = f"{place.name} {place.address or ''} {place.price_notes or ''}"
+        price_records = extract_prices_from_text(text_for_prices, place.website)
+        enriched_place = enrich_canonical_place(place, price_records)
+        enriched_places.append(enriched_place)
+        
+    # Re-save the updated normalized records (with dedup_cluster_id and dedup_reason populated)
+    save_dataset(records, "data/normalized", "normalized_attractions")
+    console.print("[green]Updated normalized_attractions records with cluster and dedup info.[/green]")
+
+    # Restructured Dataset Policy:
+    # 1. Master Verified: accepted records or valid OSM records
+    # 2. Candidates: manual review records only
+    verified_places = []
+    candidate_places = []
+    
+    for place in enriched_places:
+        if place.classification == "accepted" or place.primary_source == "osm":
+            verified_places.append(place)
+        else:
+            candidate_places.append(place)
+            
+    # Save master verified
+    res_verified = save_dataset(verified_places, output_dir, "attractions_master_verified")
+    console.print(f"[green]Created {len(verified_places)} attractions_master_verified records and saved: {res_verified}[/green]")
+    
+    # Save candidates
+    res_candidates = save_dataset(candidate_places, output_dir, "attractions_candidates")
+    console.print(f"[yellow]Created {len(candidate_places)} attractions_candidates records and saved: {res_candidates}[/yellow]")
+    
+    # Save attraction sources mapping table as Parquet format
+    if mappings:
+        df_mappings = pd.DataFrame(mappings)
+        parquet_path = os.path.join(output_dir, "attraction_sources.parquet")
+        df_mappings.to_parquet(parquet_path, index=False, engine="pyarrow")
+        console.print(f"[green]Saved source mapping table to {parquet_path}[/green]")
+        
+        # Save cross_source_matches.csv to reports/
+        reports_dir = "reports"
+        os.makedirs(reports_dir, exist_ok=True)
+        csv_path = os.path.join(reports_dir, "cross_source_matches.csv")
+        df_mappings.to_csv(csv_path, index=False, encoding="utf-8")
+        console.print(f"[green]Saved matches list to {csv_path}[/green]")
+
+@app.command()
+def report():
+    """
+    Generate automated coverage and data quality report.
+    """
+    from src.reporting.reporter import generate_reports
+    
+    console.print("[bold blue]Generating reports...[/bold blue]")
+    try:
+        generate_reports()
+        console.print("[green]Reports generated successfully under reports/ folder.[/green]")
+    except Exception as e:
+        logger.error(f"Failed to generate reports: {e}", exc_info=True)
+
+@app.command()
+def run_pipeline(
+    region: Optional[str] = typer.Option(None, help="Specific region ID"),
+    keyword: Optional[str] = typer.Option(None, help="Specific keyword"),
+    limit: Optional[int] = typer.Option(None, help="Limit number of items to collect per source"),
+    resume: bool = typer.Option(False, "--resume", help="Resume from cached response files"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Verify configuration and pipeline flow without scraping"),
+    include_apify: bool = typer.Option(False, "--include-apify", help="Include Apify import in the pipeline run")
+):
+    """
+    Runs the complete pipeline: discovery -> normalize -> deduplicate -> report.
+    """
+    if dry_run:
+        console.print("[bold green]Dry Run Validation Mode[/bold green]")
+        from src.collectors.google_places import GooglePlacesCollector
+        g = GooglePlacesCollector()
+        console.print(f"Google Places Configured: {'[green]YES[/green]' if g.is_configured() else '[red]NO (will skip execution)[/red]'}")
+        console.print("Validating configurations...")
+        for name in ["regions", "keywords", "sources", "settings"]:
+            path = f"config/{name}.yaml"
+            if os.path.exists(path):
+                console.print(f" - {path}: [green]OK[/green]")
+            else:
+                console.print(f" - {path}: [red]MISSING[/red]")
+        console.print("[green]Dry run validation complete.[/green]")
+        return
+        
+    console.print("[bold green]=== RUNNING FULL DATA PIPELINE ===[/bold green]")
+    
+    # 1. Discover
+    console.print("\n[bold]Step 1: Discovery[/bold]")
+    if include_apify:
+        import_apify_all()
+            
+    discover(source="all", region=region, keyword=keyword, limit=limit, resume=resume)
+    
+    # 2. Normalize
+    console.print("\n[bold]Step 2: Normalization[/bold]")
+    normalize()
+    
+    # 3. Deduplicate
+    console.print("\n[bold]Step 3: Deduplication & Enrichment[/bold]")
+    deduplicate()
+    
+    # 4. Report
+    console.print("\n[bold]Step 4: Reporting[/bold]")
+    report()
+    
+    console.print("\n[bold green]=== PIPELINE RUN COMPLETE ===[/bold green]")
+
+if __name__ == "__main__":
+    app()
