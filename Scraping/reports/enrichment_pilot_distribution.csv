@@ -1,0 +1,13 @@
+dimension,segment,count,percentage
+rating,high,101,33.666666666666664
+rating,medium,74,24.666666666666668
+rating,low,18,6.0
+rating,empty,107,35.66666666666667
+review_count,popular,24,8.0
+review_count,medium,31,10.333333333333334
+review_count,low,138,46.0
+review_count,no_review,107,35.66666666666667
+website,has_website,10,3.3333333333333335
+website,no_website,290,96.66666666666667
+google_place_id,has_google_place_id,271,90.33333333333333
+google_place_id,no_google_place_id,29,9.666666666666666

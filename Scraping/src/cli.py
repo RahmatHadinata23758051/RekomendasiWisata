@@ -483,5 +483,172 @@ def run_pipeline(
     
     console.print("\n[bold green]=== PIPELINE RUN COMPLETE ===[/bold green]")
 
+@app.command(name="create-enrichment-pilot")
+def create_enrichment_pilot(
+    size: int = typer.Option(300, help="Target size of the pilot sample"),
+    seed: int = typer.Option(42, help="Random seed for selection"),
+    input: str = typer.Option("data/canonical/attractions_master_verified.jsonl", help="Input verified canonical attractions JSONL/Parquet path"),
+    output_dir: str = typer.Option("data/enrichment/pilot", help="Output directory for pilot datasets"),
+    min_per_region: int = typer.Option(10, help="Minimum quota per region"),
+    max_region_share: float = typer.Option(0.15, help="Maximum percentage share for a single region"),
+    include_special_samples: bool = typer.Option(True, help="Whether to prioritize special sample pools"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run mode to print metrics and allocations without writing files")
+):
+    """
+    Selects 300 representative pilot attractions, sets up schemas, and compiles coverage reports.
+    """
+    from src.enrichment.pilot_selector import select_pilot_places, write_enrichment_schemas, write_reports
+    import pandas as pd
+    import json
+    
+    console.print(f"[bold blue]Creating Enrichment Pilot: size={size}, seed={seed}...[/bold blue]")
+    
+    try:
+        # If input path doesn't exist but parquet does, fallback to parquet
+        input_path = input
+        if not os.path.exists(input_path) and input_path.endswith(".jsonl"):
+            parq_path = input_path.replace(".jsonl", ".parquet")
+            if os.path.exists(parq_path):
+                input_path = parq_path
+                
+        # Also determine parquet/jsonl paths
+        # We need sources_path and normalized_path
+        sources_path = "data/canonical/attraction_sources.parquet"
+        normalized_path = "data/normalized/all_normalized.jsonl"
+        possible_dup_path = "reports/possible_duplicate_candidates.csv"
+        
+        # Load verified to pass to write_reports
+        if input_path.endswith(".parquet"):
+            df_verified = pd.read_parquet(input_path)
+        else:
+            records = []
+            with open(input_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        records.append(json.loads(line))
+            df_verified = pd.DataFrame(records)
+
+        df_pilot = select_pilot_places(
+            input_path=input_path,
+            sources_path=sources_path,
+            normalized_path=normalized_path,
+            possible_dup_path=possible_dup_path,
+            size=size,
+            seed=seed,
+            min_per_region=min_per_region,
+            max_region_share=max_region_share,
+            include_special=include_special_samples
+        )
+        
+        console.print(f"[green]Successfully selected {len(df_pilot)} pilot attractions![/green]")
+        
+        if dry_run:
+            console.print("[yellow]Dry run mode enabled. No files written.[/yellow]")
+            # Print basic statistics
+            console.print(df_pilot["region"].value_counts())
+            return
+            
+        # Write outputs
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Save pilot places in 3 formats
+        df_pilot.to_csv(os.path.join(output_dir, "pilot_places.csv"), index=False, encoding="utf-8")
+        df_pilot.to_parquet(os.path.join(output_dir, "pilot_places.parquet"), index=False)
+        
+        # Save as JSONL
+        with open(os.path.join(output_dir, "pilot_places.jsonl"), "w", encoding="utf-8") as f:
+            for _, r in df_pilot.iterrows():
+                # Convert list/dict values to JSON strings if they're not strings to ensure clean JSONL
+                r_dict = r.to_dict()
+                if isinstance(r_dict.get("category_tags"), list):
+                    pass # json.dumps handles list perfectly
+                f.write(json.dumps(r_dict) + "\n")
+                
+        # 1. pilot_google_places_input.csv
+        gp_rows = []
+        for _, row in df_pilot.iterrows():
+            g_id = row["google_place_id"]
+            eligible = pd.notna(g_id) and g_id != ""
+            
+            gp_rows.append({
+                "canonical_id": row["canonical_id"],
+                "name": row["name"],
+                "region": row["region"],
+                "google_place_id": g_id if eligible else "",
+                "source_url": row["source_url"],
+                "rating": row["rating"],
+                "review_count": row["review_count"],
+                "positive_review_target": 5,
+                "negative_review_target": 5,
+                "neutral_review_target": 3,
+                "review_scrape_eligible": "true" if eligible else "false",
+                "review_scrape_reason": "" if eligible else "No Google Place ID available"
+            })
+        df_gp = pd.DataFrame(gp_rows)
+        df_gp.to_csv(os.path.join(output_dir, "pilot_google_places_input.csv"), index=False, encoding="utf-8")
+        
+        # 2. pilot_price_research_input.csv
+        pr_rows = []
+        for _, row in df_pilot.iterrows():
+            name = row["name"]
+            reg = row["region"]
+            cat = row["primary_category"]
+            
+            # Determine research priority
+            # High priority if popular or in important category
+            is_popular = str(row["review_count_segment"]) in ["popular", "medium"]
+            is_important_cat = str(cat) in ["nature", "beach", "waterfall", "waterpark"]
+            priority = "high" if (is_popular or is_important_cat) else "medium"
+            
+            pr_rows.append({
+                "canonical_id": row["canonical_id"],
+                "name": name,
+                "region": reg,
+                "primary_category": cat,
+                "website": row["website"],
+                "source_url": row["source_url"],
+                "search_query": f"{name} harga tiket masuk {reg}",
+                "price_status": "to_be_researched",
+                "research_priority": priority
+            })
+        df_pr = pd.DataFrame(pr_rows)
+        df_pr.to_csv(os.path.join(output_dir, "pilot_price_research_input.csv"), index=False, encoding="utf-8")
+        
+        # 3. pilot_selection_manifest.json
+        manifest = {
+            "batch_id": "enrichment_pilot_300_v1",
+            "version": "v1",
+            "selected_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "size": len(df_pilot),
+            "seed": seed,
+            "min_per_region": min_per_region,
+            "max_region_share": max_region_share,
+            "include_special_samples": include_special_samples,
+            "statistics": {
+                "region_counts": df_pilot["region"].value_counts().to_dict(),
+                "category_counts": df_pilot["primary_category"].value_counts().to_dict(),
+                "rating_segments": df_pilot["rating_segment"].value_counts().to_dict(),
+                "review_count_segments": df_pilot["review_count_segment"].value_counts().to_dict(),
+                "website_presence": df_pilot["has_website"].value_counts().to_dict(),
+                "google_place_id_presence": df_pilot["has_google_place_id"].value_counts().to_dict(),
+                "selection_reasons": df_pilot["selection_reason"].value_counts().to_dict()
+            },
+            "selected_canonical_ids": df_pilot["canonical_id"].tolist()
+        }
+        with open(os.path.join(output_dir, "pilot_selection_manifest.json"), "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2)
+            
+        # Write schemas
+        write_enrichment_schemas()
+        
+        # Write reports
+        write_reports(df_pilot, df_verified)
+        
+        console.print("[green]Enrichment Pilot outputs successfully generated![/green]")
+        
+    except Exception as e:
+        logger.error(f"Failed to create enrichment pilot: {e}", exc_info=True)
+        raise e
+
 if __name__ == "__main__":
     app()
