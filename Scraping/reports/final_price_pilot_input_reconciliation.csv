@@ -1,0 +1,3 @@
+check_name,expected,actual,passed
+input_candidates_count,11,11,True
+canonical_id_uniqueness,True,True,True

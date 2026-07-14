@@ -1,0 +1,17 @@
+dimension,metric,value
+Places,completed_with_observation,8
+Places,completed_without_observation,3
+Places,failed,0
+Places,total,11
+Observations,valid,29
+Observations,rejected_false_positive,3
+Observations,total,32
+Final Price Status,verified_current,0
+Final Price Status,provisional_recent,0
+Final Price Status,historical_reference,29
+Final Price Status,unresolved,0
+Final Price Status,rejected,3
+Final Price Status,total,32
+Coverage,places_with_selected_price,8
+Coverage,places_without_selected_price,3
+Coverage,total,11

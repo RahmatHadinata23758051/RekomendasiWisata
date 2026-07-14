@@ -1,0 +1,33 @@
+price_observation_id,canonical_id,raw_price_text,parsed_amount,context_before,context_after,is_valid_price_context,false_positive_type,audit_decision,audit_reason
+obs_0001,can_1fef284e7d10,Paket per Orang = Rp270.000,270000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0002,can_1fef284e7d10,sewa speedboat = Rp700.000,700000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0004,can_151f3bbf542d,"saung nya sendiri ada beberapa variasi harga yakni ada 150k, 100k, dan 50k",50000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0007,can_151f3bbf542d,nyewa kapal untuk nyebrang ke pulau takil harga nya 200k per kapal,200000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0008,can_151f3bbf542d,"Uang Masuk Rp 35.000,-/orang",35000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0009,can_151f3bbf542d,Kamar Mandinya lumayan Bersih Rp 3.000,3000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0010,can_151f3bbf542d,plastik kresek buat baju basah Rp 2.000,2000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0012,can_151f3bbf542d,tagihan parkir mobil 10 ribu,10000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0016,can_cada872752b2,Tiket masuknya 100rb per mobil,100000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0017,can_cada872752b2,sewa perahu dan kena Rp500rb,500000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0018,can_cada872752b2,masuk ke kawasan Tegal mas dikenakan biaya masuk 75rb per org,75000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0020,can_cada872752b2,Motor 10rb,10000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0025,can_cada872752b2,sewa pondokan/gazebo 100 rb/5jam,100000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0026,can_17b24ba62485,Harga masuknya kalo hari kamis jumat 35k,35000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0027,can_17b24ba62485,pas weekend 45k,45000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0028,can_17b24ba62485,ban single Rp.10.000,10000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0032,can_2850f83ad341,biaya masuk yang cukup murah yaitu 10 ribu rupiah,10000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0033,can_58c471e76647,harga tiket anak2 Rp. 35.000,35000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0034,can_58c471e76647,dewasa Rp. 40.000,40000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0035,can_58c471e76647,tambahan atraksi berbayar Rp. 15.000,15000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0036,can_58c471e76647,sewa ban Rp. 35.000,35000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0037,can_58c471e76647,harga tiket 40ribu rupiah,40000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0039,can_1a46f7a6372c,Parkir mobil 10rb,10000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0040,can_1a46f7a6372c,Ongkos jip offroad 500rb,500000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0041,can_1a46f7a6372c,1 paket cemilan gajah (pisang wortel dll) 30rb,30000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0042,can_1a46f7a6372c,Tiket masuk 50rb,50000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0043,can_1a46f7a6372c,Tip foto buat pawang 20rb,20000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0046,can_1a46f7a6372c,rating gajah 4.5,4.5,,,False,rating,reject,Rating score number mistakenly parsed as price.
+obs_0048,can_1a46f7a6372c,tahun 2026,2026.0,,,False,year,reject,Year number mistakenly parsed as price.
+obs_0049,can_1a46f7a6372c,Info kontak kak 081277778888,81277778888.0,,,False,phone_number,reject,Phone number mistakenly parsed as price.
+obs_0057,can_5dd47abc65d1,45 rb buat 2 orang,45000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.
+obs_0058,can_5dd47abc65d1,HTM Hari normal 30 rb,30000.0,,,True,none,accept,Valid pricing keyword and context present in review snippet.

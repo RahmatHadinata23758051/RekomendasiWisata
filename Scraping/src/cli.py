@@ -1232,6 +1232,45 @@ def run_price_research_cmd(
         console.print(f"[red]Error during price research: {e}[/red]")
         raise e
 
+@app.command(name="audit-price-research-pilot")
+def audit_price_research_pilot_cmd(
+    observations: str = typer.Option("data/enrichment/price/research/price_observations.csv", help="Path to observations CSV"),
+    coverage: str = typer.Option("data/enrichment/price/research/price_research_coverage.csv", help="Path to coverage CSV"),
+    final_prices: str = typer.Option("data/enrichment/price/final/prices.csv", help="Path to final prices CSV"),
+    output_dir: str = typer.Option("data/enrichment/price", help="Output directory"),
+    reports_dir: str = typer.Option("reports", help="Reports directory"),
+    strict: bool = typer.Option(False, "--strict", help="Enable strict audit checks"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run only"),
+    audit_version: str = typer.Option("final_price_pilot_audit_v1", help="Audit version tag")
+):
+    """
+    Final audit and freeze of the Price Research Pilot data.
+    """
+    console.print("[bold blue]Starting Price Research Pilot Final Audit...[/bold blue]")
+    from src.enrichment.price_audit import run_price_audit
+    try:
+        res = run_price_audit(
+            observations_path=observations,
+            coverage_path=coverage,
+            final_prices_path=final_prices,
+            output_dir=output_dir,
+            reports_dir=reports_dir,
+            strict=strict,
+            dry_run=dry_run,
+            audit_version=audit_version
+        )
+        stats = res["stats"]
+        console.print("[green]Price Research Pilot Final Audit completed successfully.[/green]")
+        console.print(f"Original observations: {stats['original_observations']}")
+        console.print(f"Valid observations: {stats['valid_observations']}")
+        console.print(f"Rejected false positives: {stats['rejected_observations']}")
+        console.print(f"Destinations with selected prices: {stats['destinations_with_obs']}")
+        console.print(f"Destinations without selected prices: {stats['destinations_without_obs']}")
+        console.print(f"External verification queue count: {stats['queue_count']}")
+    except Exception as e:
+        console.print(f"[red]Error during price research pilot audit: {e}[/red]")
+        raise e
+
 if __name__ == "__main__":
     app()
 

@@ -1,0 +1,33 @@
+price_id,canonical_id,name,price_type,amount,unit,selected_observation_id,verification_status,confidence,selection_reason,price_data_status
+pr_0001,can_1fef284e7d10,Dermaga Pulau Pahawang,package,270000.0,per_person,obs_0001,historical,0.5,Audited from review evidence.,historical_reference
+pr_0002,can_1fef284e7d10,Dermaga Pulau Pahawang,rental,700000.0,per_vehicle,obs_0002,historical,0.5,Audited from review evidence.,historical_reference
+pr_0003,can_151f3bbf542d,Pantai Mutun,rental,50000.0,per_unit,obs_0004,historical,0.5,Audited from review evidence.,historical_reference
+pr_0004,can_151f3bbf542d,Pantai Mutun,boat,200000.0,per_boat,obs_0007,historical,0.5,Audited from review evidence.,historical_reference
+pr_0005,can_151f3bbf542d,Pantai Mutun,entry_ticket,35000.0,per_person,obs_0008,historical,0.5,Audited from review evidence.,historical_reference
+pr_0006,can_151f3bbf542d,Pantai Mutun,service_fee,3000.0,per_person,obs_0009,historical,0.5,Audited from review evidence.,historical_reference
+pr_0007,can_151f3bbf542d,Pantai Mutun,other,2000.0,per_unit,obs_0010,historical,0.5,Audited from review evidence.,historical_reference
+pr_0008,can_151f3bbf542d,Pantai Mutun,parking,10000.0,per_vehicle,obs_0012,historical,0.5,Audited from review evidence.,historical_reference
+pr_0009,can_cada872752b2,Pantai Sari Ringgung,entry_ticket,100000.0,per_vehicle,obs_0016,historical,0.5,Audited from review evidence.,historical_reference
+pr_0010,can_cada872752b2,Pantai Sari Ringgung,boat,500000.0,per_boat,obs_0017,historical,0.5,Audited from review evidence.,historical_reference
+pr_0011,can_cada872752b2,Pantai Sari Ringgung,entry_ticket,75000.0,per_person,obs_0018,historical,0.5,Audited from review evidence.,historical_reference
+pr_0012,can_cada872752b2,Pantai Sari Ringgung,parking,10000.0,per_vehicle,obs_0020,historical,0.5,Audited from review evidence.,historical_reference
+pr_0013,can_cada872752b2,Pantai Sari Ringgung,rental,100000.0,per_unit,obs_0025,historical,0.5,Audited from review evidence.,historical_reference
+pr_0014,can_17b24ba62485,Water Park Citra Garden,entry_ticket,35000.0,per_person,obs_0026,historical,0.5,Audited from review evidence.,historical_reference
+pr_0015,can_17b24ba62485,Water Park Citra Garden,entry_ticket,45000.0,per_person,obs_0027,historical,0.5,Audited from review evidence.,historical_reference
+pr_0016,can_17b24ba62485,Water Park Citra Garden,rental,10000.0,per_unit,obs_0028,historical,0.5,Audited from review evidence.,historical_reference
+pr_0017,can_2850f83ad341,Kolam Renang Perahu Layar,entry_ticket,10000.0,per_person,obs_0032,historical,0.5,Audited from review evidence.,historical_reference
+pr_0018,can_58c471e76647,Slanik Waterpark Lampung,entry_ticket,35000.0,per_person,obs_0033,historical,0.5,Audited from review evidence.,historical_reference
+pr_0019,can_58c471e76647,Slanik Waterpark Lampung,entry_ticket,40000.0,per_person,obs_0034,historical,0.5,Audited from review evidence.,historical_reference
+pr_0020,can_58c471e76647,Slanik Waterpark Lampung,ride,15000.0,per_person,obs_0035,historical,0.5,Audited from review evidence.,historical_reference
+pr_0021,can_58c471e76647,Slanik Waterpark Lampung,rental,35000.0,per_unit,obs_0036,historical,0.5,Audited from review evidence.,historical_reference
+pr_0022,can_58c471e76647,Slanik Waterpark Lampung,entry_ticket,40000.0,per_person,obs_0037,historical,0.5,Audited from review evidence.,historical_reference
+pr_0023,can_1a46f7a6372c,Taman Nasional Way Kambas,parking,10000.0,per_vehicle,obs_0039,historical,0.5,Audited from review evidence.,historical_reference
+pr_0024,can_1a46f7a6372c,Taman Nasional Way Kambas,package,500000.0,per_vehicle,obs_0040,historical,0.5,Audited from review evidence.,historical_reference
+pr_0025,can_1a46f7a6372c,Taman Nasional Way Kambas,activity,30000.0,per_package,obs_0041,historical,0.5,Audited from review evidence.,historical_reference
+pr_0026,can_1a46f7a6372c,Taman Nasional Way Kambas,entry_ticket,50000.0,per_person,obs_0042,historical,0.5,Audited from review evidence.,historical_reference
+pr_0027,can_1a46f7a6372c,Taman Nasional Way Kambas,service_fee,20000.0,per_person,obs_0043,historical,0.5,Audited from review evidence.,historical_reference
+pr_0028,can_1a46f7a6372c,Taman Nasional Way Kambas,entry_ticket,4.5,per_person,obs_0046,unknown_date,0.3,Rejected as false positive.,rejected
+pr_0029,can_1a46f7a6372c,Taman Nasional Way Kambas,entry_ticket,2026.0,per_person,obs_0048,unknown_date,0.3,Rejected as false positive.,rejected
+pr_0030,can_1a46f7a6372c,Taman Nasional Way Kambas,entry_ticket,81277778888.0,per_person,obs_0049,unknown_date,0.3,Rejected as false positive.,rejected
+pr_0031,can_5dd47abc65d1,Kolam Renang Tirta Garden,entry_ticket,45000.0,per_group,obs_0057,historical,0.5,Audited from review evidence.,historical_reference
+pr_0032,can_5dd47abc65d1,Kolam Renang Tirta Garden,entry_ticket,30000.0,per_person,obs_0058,historical,0.5,Audited from review evidence.,historical_reference

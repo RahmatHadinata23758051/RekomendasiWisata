@@ -14,6 +14,18 @@ from src.enrichment.price_research import (
     PRICE_TYPE_PACKAGE
 )
 
+@pytest.fixture
+def restore_price_data_after_test():
+    import shutil
+    src_dir = "data/enrichment/price"
+    backup_dir = "data/enrichment/price_backup_func"
+    if os.path.exists(src_dir):
+        shutil.copytree(src_dir, backup_dir, dirs_exist_ok=True)
+    yield
+    if os.path.exists(backup_dir):
+        shutil.copytree(backup_dir, src_dir, dirs_exist_ok=True)
+        shutil.rmtree(backup_dir)
+
 # 1. Test input candidate audit structure
 def test_task1_input_audit_structure():
     input_path = "data/enrichment/price/validation/research_price_candidates.csv"
@@ -237,7 +249,7 @@ def test_task18_resume_skip():
     assert res["stats"]["completed_count"] == 11
 
 # 19. Test limit parameter limits processing count
-def test_task19_limit():
+def test_task19_limit(restore_price_data_after_test):
     # If we run with force=True (or new manifest) and limit=1, it stops after 1
     res = run_price_research(
         input_path="data/enrichment/price/validation/research_price_candidates.csv",
@@ -247,7 +259,7 @@ def test_task19_limit():
     assert res["stats"]["completed_count"] == 1
 
 # 20. Test single canonical_id parameter
-def test_task20_single_canonical_id():
+def test_task20_single_canonical_id(restore_price_data_after_test):
     res = run_price_research(
         input_path="data/enrichment/price/validation/research_price_candidates.csv",
         canonical_id="can_151f3bbf542d",
