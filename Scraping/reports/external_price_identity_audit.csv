@@ -1,3 +1,12 @@
 source_id,canonical_id,source_url,identity_name_score,identity_region_match,identity_confidence,identity_verification_status
-src_ext_0001,can_151f3bbf542d,https://www.pantaimutun.com,1.0,True,1.0,verified
-src_ext_0002,can_1f6b9f3c2ceb,https://www.travelerlampung.com/camping-sonokeling,1.0,True,0.7,probable
+src_ext_0001,can_1fef284e7d10,https://www.pahawangtour.com,0.8,True,1.0,verified
+src_ext_0002,can_151f3bbf542d,https://www.pantaimutun.com,1.0,True,1.0,verified
+src_ext_0003,can_cada872752b2,https://www.facebook.com/pantaisariringgungofficial,1.0,True,1.0,verified
+src_ext_0004,can_1f6b9f3c2ceb,https://www.travelerlampung.com/camping-sonokeling,1.0,True,0.7,probable
+src_ext_0005,can_a0d4ca18f1f7,https://tanggamuskab.go.id/wisata-kolam-renang-tanggamus,1.0,True,1.0,verified
+src_ext_0006,can_17b24ba62485,https://citragardenwaterpark.co.id,0.8,True,1.0,verified
+src_ext_0007,can_2850f83ad341,https://www.instagram.com/kolamperahulayar,1.0,True,1.0,verified
+src_ext_0008,can_58c471e76647,https://www.slanikwaterpark.co.id,0.8,True,1.0,verified
+src_ext_0009,can_1a46f7a6372c,https://www.lampungtimurkab.go.id/wisata-way-kambas,0.8,True,1.0,verified
+src_ext_0010,can_b4a866f13078,https://www.campingislandpringsewu.com,1.0,True,1.0,verified
+src_ext_0011,can_5dd47abc65d1,https://www.pantauwisata.com/tirta-garden,1.0,True,0.7,probable

@@ -1,0 +1,123 @@
+{
+  "can_1fef284e7d10": [
+    {
+      "url": "https://www.pahawangtour.com",
+      "title": "Official Pahawang Tour - Penyebrangan Dermaga Pahawang",
+      "body": "Sewa kapal penyebrangan perahu kayu dari Dermaga Ketapang ke Pahawang Rp500.000 per trip. Paket snorkeling lengkap alat Rp250.000 per orang.",
+      "source_type": "official_website",
+      "is_official": true,
+      "is_government": false,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_151f3bbf542d": [
+    {
+      "url": "https://www.pantaimutun.com",
+      "title": "Pantai Mutun Lampung - Situs Resmi Pengelola",
+      "body": "Selamat datang di Pantai Mutun. Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000 per orang. Parkir motor Rp5.000, parkir mobil Rp10.000.",
+      "source_type": "official_website",
+      "is_official": true,
+      "is_government": false,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_cada872752b2": [
+    {
+      "url": "https://www.facebook.com/pantaisariringgungofficial",
+      "title": "Pantai Sari Ringgung - Facebook Resmi",
+      "body": "Informasi terbaru dari pengelola: Tiket masuk reguler Pantai Sari Ringgung Rp25.000 per orang. Biaya sewa saung/pondokan Rp100.000. Parkir mobil Rp10.000.",
+      "source_type": "official_social_media",
+      "is_official": true,
+      "is_government": false,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_1f6b9f3c2ceb": [
+    {
+      "url": "https://www.travelerlampung.com/camping-sonokeling",
+      "title": "Review Camping Area Sonokeling 1 Tanggamus",
+      "body": "Jika berkunjung ke Tanggamus, biaya masuk camping area Sonokeling 1 Tanggamus Rp20.000 per malam untuk mendirikan tenda.",
+      "source_type": "blog",
+      "is_official": false,
+      "is_government": false,
+      "identity_verification_status": "probable"
+    }
+  ],
+  "can_a0d4ca18f1f7": [
+    {
+      "url": "https://tanggamuskab.go.id/wisata-kolam-renang-tanggamus",
+      "title": "Pariwisata Tanggamus - Kolam Renang Umum",
+      "body": "Fasilitas kolam renang umum di Tanggamus ini gratis tidak dipungut biaya masuk bagi seluruh warga Lampung.",
+      "source_type": "government",
+      "is_official": false,
+      "is_government": true,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_17b24ba62485": [
+    {
+      "url": "https://citragardenwaterpark.co.id",
+      "title": "Citra Garden Waterpark - Promo Tiket",
+      "body": "Harga tiket masuk Citra Garden Waterpark Bandar Lampung weekday Rp35.000 per orang, weekend Rp45.000 per orang.",
+      "source_type": "official_website",
+      "is_official": true,
+      "is_government": false,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_2850f83ad341": [
+    {
+      "url": "https://www.instagram.com/kolamperahulayar",
+      "title": "Kolam Renang Perahu Layar - Instagram Resmi",
+      "body": "HTM Kolam Renang Perahu Layar Lampung Rp10.000 per orang. Kolam bersih cocok untuk anak-anak.",
+      "source_type": "official_social_media",
+      "is_official": true,
+      "is_government": false,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_58c471e76647": [
+    {
+      "url": "https://www.slanikwaterpark.co.id",
+      "title": "Slanik Waterpark - Wahana Air Terbesar di Lampung",
+      "body": "Harga tiket masuk Slanik Waterpark Lampung terupdate: Weekday Anak Rp35.000, Dewasa Rp40.000. Weekend Anak Rp40.000, Dewasa Rp50.000.",
+      "source_type": "official_website",
+      "is_official": true,
+      "is_government": false,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_1a46f7a6372c": [
+    {
+      "url": "https://www.lampungtimurkab.go.id/wisata-way-kambas",
+      "title": "Dinas Pariwisata Lampung Timur - Way Kambas",
+      "body": "Tiket masuk resmi Taman Nasional Way Kambas untuk WNI Rp30.000 per orang, WNA Rp150.000 per orang. Parkir motor Rp5.000, mobil Rp10.000.",
+      "source_type": "government",
+      "is_official": false,
+      "is_government": true,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_b4a866f13078": [
+    {
+      "url": "https://www.campingislandpringsewu.com",
+      "title": "Camping Island Pringsewu - Official Website",
+      "body": "Camping Island Pringsewu menawarkan pemandangan pulau yang indah. Silakan hubungi kami via WhatsApp untuk informasi pemesanan tenda dan paket acara.",
+      "source_type": "official_website",
+      "is_official": true,
+      "is_government": false,
+      "identity_verification_status": "verified"
+    }
+  ],
+  "can_5dd47abc65d1": [
+    {
+      "url": "https://www.pantauwisata.com/tirta-garden",
+      "title": "Info Rute dan Tiket Kolam Renang Tirta Garden",
+      "body": "Harga tiket masuk Kolam Renang Tirta Garden Tulang Bawang adalah Rp30.000 per orang untuk hari biasa maupun hari libur.",
+      "source_type": "directory",
+      "is_official": false,
+      "is_government": false,
+      "identity_verification_status": "probable"
+    }
+  ]
+}

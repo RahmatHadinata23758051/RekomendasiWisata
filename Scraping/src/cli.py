@@ -1287,7 +1287,10 @@ def verify_external_prices_cmd(
     request_delay: float = typer.Option(0.5, help="Request delay"),
     request_timeout: float = typer.Option(10.0, help="Request timeout"),
     verification_version: str = typer.Option("external_price_verification_pilot_v1", help="Verification version tag"),
-    strict: bool = typer.Option(False, "--strict", help="Strict mode")
+    strict: bool = typer.Option(False, "--strict", help="Strict mode"),
+    real_sources_only: bool = typer.Option(True, "--real-sources-only/--no-real-sources-only", help="Only run with real public sources"),
+    fixture_mode: bool = typer.Option(False, "--fixture-mode/--no-fixture-mode", help="Run in fixture simulation mode using mock fixtures"),
+    fixture_dir: str = typer.Option("tests/fixtures/external_price", help="Directory containing fixtures")
 ):
     """
     Verify current or externally supported price information using authoritative public sources.
@@ -1310,7 +1313,10 @@ def verify_external_prices_cmd(
             request_delay=request_delay,
             request_timeout=request_timeout,
             verification_version=verification_version,
-            strict=strict
+            strict=strict,
+            real_sources_only=real_sources_only,
+            fixture_mode=fixture_mode,
+            fixture_dir=fixture_dir
         )
         if dry_run:
             console.print("[yellow]Dry-run completed successfully. No files written.[/yellow]")

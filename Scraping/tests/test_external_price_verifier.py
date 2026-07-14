@@ -105,7 +105,9 @@ def test_input_queue_validation(restore_price_data_after_test):
 def test_dry_run_execution(restore_price_data_after_test):
     res = run_external_price_verification(
         queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
-        dry_run=True
+        dry_run=True,
+        fixture_mode=True,
+        fixture_dir="tests/fixtures/external_price"
     )
     assert "stats" in res
     assert res["stats"]["total_pilot"] == 11
@@ -116,13 +118,17 @@ def test_identity_verification(restore_price_data_after_test):
     res = run_external_price_verification(
         queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
         canonical_id="can_151f3bbf542d",
-        force=True
+        force=True,
+        fixture_mode=True,
+        fixture_dir="tests/fixtures/external_price"
     )
     stats = res["stats"]
     assert stats["completed_count"] == 11
-    assert stats["verified_count"] == 1
+    # Pantai Mutun is simulated_not_verified in fixture mode, so verified_count = 0
+    assert stats["verified_count"] == 0
     assert stats["observations_count"] == 3
-    assert stats["verified_prices_count"] == 3
+    # simulated_fixture cannot produce a production selected price
+    assert stats["verified_prices_count"] == 0
 
 # 4. Test Resume and Idempotency
 def test_resume_idempotency(restore_price_data_after_test):
@@ -130,17 +136,71 @@ def test_resume_idempotency(restore_price_data_after_test):
     run_external_price_verification(
         queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
         canonical_id="can_151f3bbf542d",
-        force=True
+        force=True,
+        fixture_mode=True,
+        fixture_dir="tests/fixtures/external_price"
     )
     
     # Second, resume with Camping Area Sonokeling 1 (canary 2)
     res = run_external_price_verification(
         queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
         canonical_id="can_1f6b9f3c2ceb",
-        resume=True
+        resume=True,
+        fixture_mode=True,
+        fixture_dir="tests/fixtures/external_price"
     )
     stats = res["stats"]
-    assert stats["verified_count"] == 1
-    assert stats["provisional_count"] == 1
+    assert stats["verified_count"] == 0
+    assert stats["provisional_count"] == 0
     assert stats["observations_count"] == 4
-    assert stats["verified_prices_count"] == 3
+    assert stats["verified_prices_count"] == 0
+
+# 5. Task 11: Production mode cannot load mock_search_results.json automatically
+def test_production_mode_no_mock_auto_load(restore_price_data_after_test):
+    # If run in default production mode (fixture_mode=False) and we don't do real verification (dry run)
+    res = run_external_price_verification(
+        queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+        dry_run=True,
+        fixture_mode=False
+    )
+    assert res["stats"]["queries_count"] == 242 # 11 * 22
+
+# 6. Task 11: simulated_fixture cannot produce verified_current or official_live_unbounded
+def test_simulated_fixture_restrictions(restore_price_data_after_test):
+    res = run_external_price_verification(
+        queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+        fixture_mode=True,
+        fixture_dir="tests/fixtures/external_price"
+    )
+    # Check that verification_status in global_manifest are not counted as verified/official
+    assert res["stats"]["verified_count"] == 0
+    assert res["stats"]["official_unbounded_count"] == 0
+    assert res["stats"]["verified_prices_count"] == 0
+    
+    # Check the actual written CSV files
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    assert (df_obs["data_origin"] == "simulated_fixture").all()
+    assert (df_obs["verification_status"] == "simulated_not_verified").all()
+    assert (df_obs["temporal_status"] == "simulated_only").all()
+    
+    # prices_external_verified.csv must be empty/0 rows
+    df_prices = pd.read_csv("data/enrichment/price/final/prices_external_verified.csv")
+    assert len(df_prices) == 0
+
+# 7. Task 11: Production selected prices verification and retrievability
+def test_production_real_sources_verification(restore_price_data_after_test):
+    # Run in real-sources mode for Pantai Mutun
+    res = run_external_price_verification(
+        queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+        canonical_id="can_151f3bbf542d",
+        fixture_mode=False,
+        force=True
+    )
+    assert res["stats"]["verified_prices_count"] == 3
+    
+    # Check the written files
+    df_prices = pd.read_csv("data/enrichment/price/final/prices_external_verified.csv")
+    assert len(df_prices) == 3
+    assert (df_prices["data_origin"] == "real_public_source").all()
+    assert (df_prices["source_url"].str.startswith("http")).all()
+    assert df_prices["selection_reason"].notna().all()

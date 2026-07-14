@@ -1,2 +1,2 @@
 canonical_id,name,raw_price_text,parsed_amount,false_positive_type,audit_reason,verification_version
-can_151f3bbf542d,Pantai Mutun,"Found number 2026 in text: 'Selamat datang di Pantai Mutun. Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000 per orang. Parkir motor Rp5.000, parkir mobil Rp10.000.'",2026.0,year,Detected number pattern as year.,external_price_verification_pilot_v1
+can_151f3bbf542d,Pantai Mutun,Found number 2026 in text: 'Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000. Parkir motor Rp5.000. parkir mobil Rp10.000.',2026.0,year,Detected number pattern as year.,external_price_verification_pilot_v1
