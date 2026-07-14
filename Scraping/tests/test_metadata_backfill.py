@@ -187,7 +187,7 @@ def test_mapping_rules(tmp_path):
     )
     df_meta = pd.read_parquet(output_dir / "place_metadata.parquet")
     # Not mapped from coordinates, so mapping_method falls back to default/empty mapping
-    assert df_meta.iloc[0]["mapping_method"] == "pilot_places_default"
+    assert df_meta.iloc[0]["mapping_method"] == "unmapped"
     
     # 6. Strict Mapping Option
     # If strict mapping is True, coordinate fallback should be skipped completely
@@ -201,7 +201,7 @@ def test_mapping_rules(tmp_path):
         strict_mapping=True
     )
     df_meta = pd.read_parquet(output_dir / "place_metadata.parquet")
-    assert df_meta.iloc[0]["mapping_method"] == "pilot_places_default"
+    assert df_meta.iloc[0]["mapping_method"] == "unmapped"
 
 # 9. Jam operasional dinormalisasi
 def test_opening_hours_normalization():
@@ -309,7 +309,7 @@ def test_price_candidates_classification():
     for _, row in df_price.iterrows():
         assert pd.isna(row["existing_price_raw_value"]) or str(row["existing_price_raw_value"]).strip() == ""
         # Check priority values are valid
-        assert row["price_research_priority"] in ["high", "medium", "low", "not_applicable"]
+        assert row["price_research_priority"] in ["high", "medium", "low", "not_applicable", "manual_review"]
 
 # 17. Discovery dataset tidak berubah
 # 18. Review final dataset tidak berubah
@@ -336,3 +336,49 @@ def test_dataset_integrity():
     
     # Check reviews final
     assert get_sha256("data/enrichment/final/reviews.parquet") == saved_checksums["reviews.parquet"]["sha256"]
+
+# 19. Website Google Maps/OSM/social media diabaikan dari official website contacts
+def test_website_exclusions():
+    from src.enrichment.metadata_backfill import classify_website_url
+    assert classify_website_url("https://www.google.com/maps/place/...") == "google_maps"
+    assert classify_website_url("https://maps.app.goo.gl/...") == "google_maps"
+    assert classify_website_url("https://www.openstreetmap.org/node/...") == "invalid"
+    assert classify_website_url("https://www.instagram.com/puncakmas") == "social_media"
+    assert classify_website_url("https://www.puncakmas.com") == "official"
+
+# 20. Status unknown dan mapping confidence 0.0 untuk tempat tanpa raw mapping
+def test_unmapped_places_unknown_status():
+    df_meta = pd.read_parquet("data/enrichment/metadata/place_metadata.parquet")
+    # 29 unmapped places should have confidence 0.0, method "unmapped", status "unknown"
+    unmapped_rows = df_meta[df_meta["mapping_method"] == "unmapped"]
+    assert len(unmapped_rows) == 29
+    for _, row in unmapped_rows.iterrows():
+        assert row["mapping_confidence"] == 0.0
+        assert row["operational_status_semantics"] == "unknown"
+        assert row["website"] == ""
+        assert row["phone"] == ""
+
+# 21. Penambahan kolom completeness score dan semantic coverage columns
+def test_completeness_and_semantic_columns():
+    df_meta = pd.read_parquet("data/enrichment/metadata/place_metadata.parquet")
+    required_cols = [
+        "metadata_completeness_score",
+        "website_semantics",
+        "operational_status_semantics",
+        "address_semantics",
+        "phone_semantics",
+        "opening_hours_semantics",
+        "facilities_semantics",
+        "description_semantics"
+    ]
+    for col in required_cols:
+        assert col in df_meta.columns
+        
+# 22. Kriteria provenance untuk open status
+def test_open_status_provenance():
+    # Load metadata provenance and place metadata
+    df_meta = pd.read_parquet("data/enrichment/metadata/place_metadata.parquet")
+    df_prov = pd.read_csv("data/enrichment/metadata/metadata_provenance.csv")
+    
+    # Check that there is at least one provenance entry for operational status
+    assert len(df_prov[df_prov["field_name"] == "operational_status"]) > 0

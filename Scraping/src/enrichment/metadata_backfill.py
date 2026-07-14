@@ -49,6 +49,18 @@ def normalize_url(url: Any) -> str:
             return f"google_maps_place_id:{m.group(1)}"
     return u
 
+def classify_website_url(url: Any) -> str:
+    if not url or pd.isna(url) or str(url).strip() == "":
+        return "missing"
+    u = str(url).strip().lower()
+    if any(p in u for p in ["google.com/maps", "maps.google.com", "maps.app.goo.gl", "google.co.id/maps"]):
+        return "google_maps"
+    if any(p in u for p in ["instagram.com", "facebook.com", "twitter.com", "x.com", "tiktok.com", "youtube.com"]):
+        return "social_media"
+    if any(p in u for p in ["openstreetmap.org", "example.com", "apify.com", "placeholder"]):
+        return "invalid"
+    return "official"
+
 # Normalize Phone
 def normalize_phone(phone: Any) -> str:
     if not phone or pd.isna(phone):
@@ -116,6 +128,8 @@ def get_raw_json_record(raw_payload_path: str, place_id: str) -> Optional[dict]:
 def classify_price_priority(primary_category: str, category_tags: List[str], status: str) -> Tuple[str, str]:
     if status == "permanently_closed":
         return "not_applicable", "Place is permanently closed"
+    if status == "temporarily_closed":
+        return "manual_review", "Place is temporarily closed"
         
     tags_str = " ".join([t.lower() for t in category_tags]) + " " + primary_category.lower()
     
@@ -206,16 +220,40 @@ def run_metadata_backfill(
     }
     
     # 2. Load all raw records
-    parquet_files = glob.glob(os.path.join(raw_root, "**/places.parquet"), recursive=True)
     raw_records = []
     
-    for pf in parquet_files:
+    # Load from all_normalized.parquet if it exists to include both OSM and Apify sources
+    # Resolve relatively to raw_root to avoid loading global files during unit testing
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(raw_root))) or "."
+    norm_path = os.path.normpath(os.path.join(base_dir, "normalized", "all_normalized.parquet"))
+    if os.path.exists(norm_path):
         try:
-            df = pd.read_parquet(pf)
-            for _, r in df.iterrows():
-                raw_records.append(r.to_dict())
+            df_norm = pd.read_parquet(norm_path)
+            for _, r in df_norm.iterrows():
+                r_dict = r.to_dict()
+                # Align key differences
+                r_dict["raw_name"] = r_dict.get("name") or ""
+                r_dict["raw_address"] = r_dict.get("address") or ""
+                
+                # Align closed flags from business_status
+                b_status = str(r_dict.get("business_status") or "").upper()
+                r_dict["permanently_closed"] = (b_status == "CLOSED_PERMANENTLY")
+                r_dict["temporarily_closed"] = (b_status == "CLOSED_TEMPORARILY")
+                
+                raw_records.append(r_dict)
         except Exception as e:
-            logger.error(f"Failed to load raw parquet {pf}: {e}")
+            logger.error(f"Failed to load normalized parquet {norm_path}: {e}")
+            
+    # Fall back to places.parquet if all_normalized.parquet was not loaded or is empty
+    if not raw_records:
+        parquet_files = glob.glob(os.path.join(raw_root, "**/places.parquet"), recursive=True)
+        for pf in parquet_files:
+            try:
+                df = pd.read_parquet(pf)
+                for _, r in df.iterrows():
+                    raw_records.append(r.to_dict())
+            except Exception as e:
+                logger.error(f"Failed to load raw parquet {pf}: {e}")
             
     logger.info(f"Loaded {len(raw_records)} raw records from parquet files.")
     
@@ -349,8 +387,13 @@ def run_metadata_backfill(
         region = pilot["region"]
         lat = pilot["latitude"]
         lon = pilot["longitude"]
-        website = pilot.get("website") or ""
-        phone = pilot.get("phone") or ""
+        
+        pilot_web = pilot.get("website") or ""
+        website = pilot_web if classify_website_url(pilot_web) == "official" else ""
+        
+        pilot_phone = pilot.get("phone") or ""
+        phone = normalize_phone(pilot_phone) if pilot_phone else ""
+        
         g_place_id = pilot.get("google_place_id") or pilot.get("source_place_id") or ""
         source_url = pilot.get("source_url") or ""
         
@@ -362,13 +405,17 @@ def run_metadata_backfill(
         rating_val = pilot.get("rating") or 0.0
         rev_count_val = pilot.get("review_count") or 0
         img_url = ""
-        op_status = "open"
+        op_status = "unknown"
         is_perm_closed = False
         is_temp_closed = False
         
-        mapping_method = newest_rec.get("mapping_method") or "pilot_places_default"
-        mapping_confidence = newest_rec.get("mapping_confidence") or 1.0
-        
+        if newest_rec:
+            mapping_method = newest_rec.get("mapping_method") or "pilot_places_default"
+            mapping_confidence = newest_rec.get("mapping_confidence") or 1.0
+        else:
+            mapping_method = "unmapped"
+            mapping_confidence = 0.0
+            
         # Provenance selected tracking dictionary
         selected_provenance = {} # field_name -> dict
         
@@ -379,8 +426,17 @@ def run_metadata_backfill(
             street = newest_rec.get("street") or ""
             city = newest_rec.get("city") or ""
             postal_code = newest_rec.get("postal_code") or newest_rec.get("postalCode") or ""
+            
+            raw_path_json = newest_rec.get("raw_payload_path")
+            raw_json_item = get_raw_json_record(raw_path_json, newest_rec.get("source_place_id"))
+            
             desc = newest_rec.get("description") or ""
+            if raw_json_item and "description" in raw_json_item:
+                desc = raw_json_item["description"] or desc
+                
             img_url = newest_rec.get("image_url") or ""
+            if raw_json_item and "imageUrl" in raw_json_item:
+                img_url = raw_json_item["imageUrl"] or img_url
             
             # Check closed status (Task 8)
             # Prioritas: permanently_closed > temporarily_closed > open > unknown
@@ -400,10 +456,15 @@ def run_metadata_backfill(
             # Website & Phone from raw
             raw_web = newest_rec.get("website")
             if raw_web and pd.notna(raw_web) and str(raw_web).strip() != "":
-                website = str(raw_web).strip()
+                if classify_website_url(raw_web) == "official":
+                    website = str(raw_web).strip()
+                else:
+                    website = ""
+            else:
+                website = ""
             raw_phone = newest_rec.get("phone")
             if raw_phone and pd.notna(raw_phone) and str(raw_phone).strip() != "":
-                phone = str(raw_phone).strip()
+                phone = normalize_phone(raw_phone)
                 
             # Rating & Review Count
             if pd.notna(newest_rec.get("rating")):
@@ -412,49 +473,53 @@ def run_metadata_backfill(
                 rev_count_val = int(float(newest_rec["review_count"]))
 
         # Detect conflicts across mapped records (Task 10)
-        # website, phone, address, coordinates, operational status
+        # website, phone, address, coordinates, operational status, category, opening hours
         for rec in mapped_records[1:]:
             rec_id = rec.get("source_record_id") or ""
             # Website
             w_candidate = rec.get("website")
-            if w_candidate and pd.notna(w_candidate) and str(w_candidate).strip() != "" and normalize_url(w_candidate) != normalize_url(website):
-                conflict_counter += 1
-                metadata_conflicts_rows.append({
-                    "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "website",
-                    "candidate_value_a": website, "candidate_value_b": str(w_candidate).strip(),
-                    "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
-                    "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
-                    "resolution": "newest_source_priority", "selected_value": website,
-                    "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
-                })
+            if w_candidate and pd.notna(w_candidate) and str(w_candidate).strip() != "" and website:
+                if classify_website_url(w_candidate) == "official":
+                    if normalize_url(w_candidate) != normalize_url(website):
+                        conflict_counter += 1
+                        metadata_conflicts_rows.append({
+                            "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "website",
+                            "candidate_value_a": website, "candidate_value_b": str(w_candidate).strip(),
+                            "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
+                            "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
+                            "resolution": "newest_source_priority", "selected_value": website,
+                            "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
+                        })
             # Phone
             p_candidate = rec.get("phone")
-            if p_candidate and pd.notna(p_candidate) and str(p_candidate).strip() != "" and normalize_phone(p_candidate) != normalize_phone(phone):
-                conflict_counter += 1
-                metadata_conflicts_rows.append({
-                    "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "phone",
-                    "candidate_value_a": phone, "candidate_value_b": str(p_candidate).strip(),
-                    "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
-                    "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
-                    "resolution": "newest_source_priority", "selected_value": phone,
-                    "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
-                })
+            if p_candidate and pd.notna(p_candidate) and str(p_candidate).strip() != "" and phone:
+                if normalize_phone(p_candidate) != normalize_phone(phone):
+                    conflict_counter += 1
+                    metadata_conflicts_rows.append({
+                        "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "phone",
+                        "candidate_value_a": phone, "candidate_value_b": str(p_candidate).strip(),
+                        "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
+                        "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
+                        "resolution": "newest_source_priority", "selected_value": phone,
+                        "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
+                    })
             # Address
             a_candidate = rec.get("raw_address")
-            if a_candidate and pd.notna(a_candidate) and str(a_candidate).strip() != "" and str(a_candidate).strip().lower() != address.lower():
-                conflict_counter += 1
-                metadata_conflicts_rows.append({
-                    "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "address",
-                    "candidate_value_a": address, "candidate_value_b": str(a_candidate).strip(),
-                    "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
-                    "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
-                    "resolution": "newest_source_priority", "selected_value": address,
-                    "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
-                })
+            if a_candidate and pd.notna(a_candidate) and str(a_candidate).strip() != "" and address:
+                if str(a_candidate).strip().lower() != address.lower():
+                    conflict_counter += 1
+                    metadata_conflicts_rows.append({
+                        "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "address",
+                        "candidate_value_a": address, "candidate_value_b": str(a_candidate).strip(),
+                        "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
+                        "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
+                        "resolution": "newest_source_priority", "selected_value": address,
+                        "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
+                    })
             # Coordinates
             lat_cand = rec.get("latitude")
             lon_cand = rec.get("longitude")
-            if pd.notna(lat_cand) and pd.notna(lon_cand):
+            if pd.notna(lat_cand) and pd.notna(lon_cand) and pd.notna(lat) and pd.notna(lon):
                 dist = haversine_distance(lat, lon, lat_cand, lon_cand)
                 if dist > 100.0:
                     conflict_counter += 1
@@ -480,6 +545,38 @@ def run_metadata_backfill(
                     "resolution": "operational_status_priority", "selected_value": op_status,
                     "resolution_reason": "Closed priority logic: permanently_closed > temporarily_closed > open", "requires_manual_review": True
                 })
+            # Category
+            cat_cand = rec.get("categories")
+            if cat_cand and pd.notna(cat_cand) and newest_rec.get("categories"):
+                try:
+                    cats_a = json.loads(newest_rec.get("categories") or "[]") if isinstance(newest_rec.get("categories"), str) else newest_rec.get("categories")
+                    cats_b = json.loads(cat_cand or "[]") if isinstance(cat_cand, str) else cat_cand
+                    if isinstance(cats_a, list) and isinstance(cats_b, list):
+                        if set(cats_a).isdisjoint(set(cats_b)) and len(cats_a) > 0 and len(cats_b) > 0:
+                            conflict_counter += 1
+                            metadata_conflicts_rows.append({
+                                "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "category",
+                                "candidate_value_a": json.dumps(cats_a), "candidate_value_b": json.dumps(cats_b),
+                                "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
+                                "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
+                                "resolution": "newest_source_priority", "selected_value": json.dumps(cats_a),
+                                "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
+                            })
+                except Exception:
+                    pass
+            # Opening Hours
+            h_candidate = rec.get("opening_hours")
+            if h_candidate and pd.notna(h_candidate) and newest_rec.get("opening_hours"):
+                if str(newest_rec.get("opening_hours")).strip().lower() != str(h_candidate).strip().lower():
+                    conflict_counter += 1
+                    metadata_conflicts_rows.append({
+                        "conflict_id": f"conf_{conflict_counter:04d}", "canonical_id": cid, "field_name": "opening_hours",
+                        "candidate_value_a": str(newest_rec.get("opening_hours")).strip(), "candidate_value_b": str(h_candidate).strip(),
+                        "source_a": newest_rec.get("source_record_id") or "pilot_default", "source_b": rec_id,
+                        "observed_at_a": get_collected_time(newest_rec), "observed_at_b": get_collected_time(rec),
+                        "resolution": "newest_source_priority", "selected_value": str(newest_rec.get("opening_hours")).strip(),
+                        "resolution_reason": "Selected value from newest raw scraper run", "requires_manual_review": True
+                    })
 
         # Save Operational Status (Task 8)
         status_counter += 1
@@ -489,37 +586,37 @@ def run_metadata_backfill(
             "operational_status": op_status,
             "is_permanently_closed": is_perm_closed,
             "is_temporarily_closed": is_temp_closed,
-            "raw_status": "permanently_closed" if is_perm_closed else ("temporarily_closed" if is_temp_closed else "open"),
-            "source_name": "apify_google_maps",
-            "source_record_id": newest_rec.get("source_record_id") or "pilot_default",
-            "source_url": newest_rec.get("source_url") or "",
-            "observed_at": get_collected_time(newest_rec) or now_str,
+            "raw_status": "permanently_closed" if is_perm_closed else ("temporarily_closed" if is_temp_closed else ("open" if newest_rec else "unknown")),
+            "source_name": "apify_google_maps" if newest_rec else "none",
+            "source_record_id": newest_rec.get("source_record_id") if newest_rec else "unmapped",
+            "source_url": newest_rec.get("source_url") if newest_rec else "",
+            "observed_at": get_collected_time(newest_rec) if newest_rec else "",
             "confidence": mapping_confidence
         })
 
         # Save Contacts (Task 7)
-        if website:
+        if website and newest_rec:
             contacts_counter += 1
             contacts_rows.append({
                 "contact_id": f"con_{contacts_counter:04d}", "canonical_id": cid, "contact_type": "website",
                 "contact_value": website, "normalized_value": normalize_url(website), "source_name": "apify_google_maps",
-                "source_record_id": newest_rec.get("source_record_id") or "pilot_default", "source_url": newest_rec.get("source_url") or "",
+                "source_record_id": newest_rec.get("source_record_id") or "", "source_url": newest_rec.get("source_url") or "",
                 "observed_at": get_collected_time(newest_rec) or now_str, "confidence": mapping_confidence
             })
-        if phone:
+        if phone and newest_rec:
             contacts_counter += 1
             contacts_rows.append({
                 "contact_id": f"con_{contacts_counter:04d}", "canonical_id": cid, "contact_type": "phone",
                 "contact_value": phone, "normalized_value": normalize_phone(phone), "source_name": "apify_google_maps",
-                "source_record_id": newest_rec.get("source_record_id") or "pilot_default", "source_url": newest_rec.get("source_url") or "",
+                "source_record_id": newest_rec.get("source_record_id") or "", "source_url": newest_rec.get("source_url") or "",
                 "observed_at": get_collected_time(newest_rec) or now_str, "confidence": mapping_confidence
             })
-        if source_url:
+        if source_url and newest_rec:
             contacts_counter += 1
             contacts_rows.append({
                 "contact_id": f"con_{contacts_counter:04d}", "canonical_id": cid, "contact_type": "google_maps_url",
                 "contact_value": source_url, "normalized_value": normalize_url(source_url), "source_name": "apify_google_maps",
-                "source_record_id": newest_rec.get("source_record_id") or "pilot_default", "source_url": newest_rec.get("source_url") or "",
+                "source_record_id": newest_rec.get("source_record_id") or "", "source_url": newest_rec.get("source_url") or "",
                 "observed_at": get_collected_time(newest_rec) or now_str, "confidence": mapping_confidence
             })
 
@@ -670,6 +767,55 @@ def run_metadata_backfill(
                     "conflict_group_id": ""
                 })
 
+        # Determine semantic coverage states for each field (Task 3)
+        # website
+        if website:
+            web_semantics = "observed"
+        elif not g_place_id:
+            web_semantics = "not_applicable"
+        else:
+            web_semantics = "missing"
+            
+        # operational status
+        if newest_rec:
+            op_semantics = "observed"
+        else:
+            op_semantics = "unknown"
+            
+        # address
+        if address:
+            addr_semantics = "observed"
+        else:
+            addr_semantics = "missing"
+            
+        # phone
+        if phone:
+            phone_semantics = "observed"
+        else:
+            phone_semantics = "missing"
+            
+        # opening hours
+        if has_hours:
+            hours_semantics = "observed"
+        elif op_status == "permanently_closed":
+            hours_semantics = "not_applicable"
+        else:
+            hours_semantics = "missing"
+            
+        # facilities
+        if has_facilities:
+            fac_semantics = "observed"
+        elif op_status == "permanently_closed":
+            fac_semantics = "not_applicable"
+        else:
+            fac_semantics = "missing"
+            
+        # description
+        if desc:
+            desc_semantics = "observed"
+        else:
+            desc_semantics = "missing"
+
         # Calculate Completeness Score (Task 11)
         # Bobot: address=15, coordinates=15, website=10, phone=10, opening hours=15, operational status=10, facilities=15, description=5, category tags=5
         comp_score = 0
@@ -732,7 +878,16 @@ def run_metadata_backfill(
             "mapping_method": mapping_method,
             "mapping_confidence": mapping_confidence,
             "last_observed_at": get_collected_time(newest_rec) or now_str,
-            "metadata_version": metadata_version
+            "metadata_version": metadata_version,
+            
+            # Semantic coverage tracking columns
+            "website_semantics": web_semantics,
+            "operational_status_semantics": op_semantics,
+            "address_semantics": addr_semantics,
+            "phone_semantics": phone_semantics,
+            "opening_hours_semantics": hours_semantics,
+            "facilities_semantics": fac_semantics,
+            "description_semantics": desc_semantics
         })
 
     # Save operational_status.csv / parquet
@@ -830,7 +985,7 @@ def run_metadata_backfill(
             "suggested_queries": ";".join(suggested_queries),
             "existing_price_hint": price_hint,
             "existing_price_raw_value": price_raw_val,
-            "requires_manual_review": priority in ["high", "medium"]
+            "requires_manual_review": priority in ["high", "medium", "manual_review"]
         })
         
     price_dir = os.path.join(os.path.dirname(output_dir), "price")
@@ -849,15 +1004,23 @@ def run_metadata_backfill(
     fallback_count = mapping_methods.get("coordinates_name_fallback", 0)
     normalized_url_count = mapping_methods.get("normalized_url", 0)
     
-    # Coverage calculation
-    website_count = sum(1 for r in place_metadata_rows if r["website"])
-    phone_count = sum(1 for r in place_metadata_rows if r["phone"])
-    address_count = sum(1 for r in place_metadata_rows if r["address"])
-    desc_count = sum(1 for r in place_metadata_rows if r["description"])
+    # Coverage calculation (Task 3)
+    fields_list = ["website", "operational_status", "address", "phone", "opening_hours", "facilities", "description"]
+    semantics_counts = {f: {"observed": 0, "inferred": 0, "unknown": 0, "missing": 0, "not_applicable": 0} for f in fields_list}
     
-    oh_covered = len(set(r["canonical_id"] for r in opening_hours_rows))
-    fac_covered = len(set(r["canonical_id"] for r in facilities_rows))
-    op_status_covered = len(set(r["canonical_id"] for r in operational_status_rows if r["operational_status"] != "unknown"))
+    for r in place_metadata_rows:
+        for f in fields_list:
+            sem_val = r[f"{f}_semantics"]
+            semantics_counts[f][sem_val] += 1
+            
+    website_count = semantics_counts["website"]["observed"]
+    phone_count = semantics_counts["phone"]["observed"]
+    address_count = semantics_counts["address"]["observed"]
+    desc_count = semantics_counts["description"]["observed"]
+    
+    oh_covered = semantics_counts["opening_hours"]["observed"]
+    fac_covered = semantics_counts["facilities"]["observed"]
+    op_status_covered = semantics_counts["operational_status"]["observed"]
     
     # Segment distributions
     complete_count = sum(1 for r in place_metadata_rows if r["metadata_completeness_score"] >= 80)
@@ -890,7 +1053,7 @@ def run_metadata_backfill(
         f.write(f"- **Fuzzy Coordinate Fallback Mappings**: {fallback_count}\n")
         f.write(f"- **Ambiguous/Unmapped Raw Scraped Records**: {len(unmapped_records)}\n\n")
         
-        f.write("## Field Coverage Statistics\n")
+        f.write("## Field Coverage Statistics (Task 3)\n")
         f.write(f"- **Address Coverage**: {address_count} ({address_count/total_pilot:.2%})\n")
         f.write(f"- **Website Coverage**: {website_count} ({website_count/total_pilot:.2%})\n")
         f.write(f"- **Phone Coverage**: {phone_count} ({phone_count/total_pilot:.2%})\n")
@@ -898,6 +1061,14 @@ def run_metadata_backfill(
         f.write(f"- **Facilities Coverage**: {fac_covered} ({fac_covered/total_pilot:.2%})\n")
         f.write(f"- **Operational Status Coverage**: {op_status_covered} ({op_status_covered/total_pilot:.2%})\n")
         f.write(f"- **Description Coverage**: {desc_count} ({desc_count/total_pilot:.2%})\n\n")
+        
+        f.write("### Semantic Coverage Distribution\n")
+        f.write("| Field | Observed | Inferred | Unknown | Missing | Not Applicable |\n")
+        f.write("| --- | --- | --- | --- | --- | --- |\n")
+        for fn in fields_list:
+            counts = semantics_counts[fn]
+            f.write(f"| {fn} | {counts['observed']} | {counts['inferred']} | {counts['unknown']} | {counts['missing']} | {counts['not_applicable']} |\n")
+        f.write("\n")
         
         f.write("## Completeness Distribution\n")
         f.write(f"- **Complete (>= 80)**: {complete_count}\n")
