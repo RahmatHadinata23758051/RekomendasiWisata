@@ -129,7 +129,7 @@ def classify_price_priority(primary_category: str, category_tags: List[str], sta
     if status == "permanently_closed":
         return "not_applicable", "Place is permanently closed"
     if status == "temporarily_closed":
-        return "manual_review", "Place is temporarily closed"
+        return "low", "Place is temporarily closed"
         
     tags_str = " ".join([t.lower() for t in category_tags]) + " " + primary_category.lower()
     
@@ -985,7 +985,7 @@ def run_metadata_backfill(
             "suggested_queries": ";".join(suggested_queries),
             "existing_price_hint": price_hint,
             "existing_price_raw_value": price_raw_val,
-            "requires_manual_review": priority in ["high", "medium", "manual_review"]
+            "requires_manual_review": (priority in ["high", "medium"]) or (status == "temporarily_closed")
         })
         
     price_dir = os.path.join(os.path.dirname(output_dir), "price")

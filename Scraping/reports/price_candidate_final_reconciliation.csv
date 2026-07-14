@@ -1,0 +1,18 @@
+category,item,count
+Original Priority,high,76
+Original Priority,medium,90
+Original Priority,low,133
+Original Priority,not_applicable,1
+Original Priority,total,300
+Scope,in_scope,166
+Scope,out_of_scope,134
+Scope,total,300
+Active Decisions,research,11
+Active Decisions,manual_review,144
+Active Decisions,excluded_free,0
+Active Decisions,excluded_non_attraction,11
+Active Decisions,not_applicable,0
+Active Decisions,total,166
+Out-of-Scope State,low_not_evaluated,133
+Out-of-Scope State,original_not_applicable,1
+Out-of-Scope State,total,134

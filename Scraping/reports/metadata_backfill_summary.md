@@ -1,6 +1,6 @@
 # Metadata Backfill Pilot Summary Report
 
-Generated at: 2026-07-14 03:54:23 UTC
+Generated at: 2026-07-14 04:51:35 UTC
 
 ## Mapping Accuracy & Quality
 - **Total Pilot Places**: 300
@@ -10,7 +10,7 @@ Generated at: 2026-07-14 03:54:23 UTC
 - **Source-Record ID Mappings**: 271
 - **Normalized URL Mappings**: 0
 - **Fuzzy Coordinate Fallback Mappings**: 0
-- **Ambiguous/Unmapped Raw Scraped Records**: 4436
+- **Ambiguous/Unmapped Raw Scraped Records**: 4268
 
 ## Field Coverage Statistics (Task 3)
 - **Address Coverage**: 271 (90.33%)
