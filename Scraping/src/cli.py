@@ -1061,5 +1061,136 @@ def backfill_pilot_metadata(
         console.print(f"[red]Error during metadata backfill: {e}[/red]")
         raise e
 
+@app.command(name="validate-price-candidates")
+def validate_price_candidates(
+    input: str = typer.Option("data/enrichment/price/pilot_price_candidates.csv", help="Path to input candidates CSV"),
+    metadata: str = typer.Option("data/enrichment/metadata/place_metadata.parquet", help="Path to metadata Parquet"),
+    facilities: str = typer.Option("data/enrichment/metadata/facilities.parquet", help="Path to facilities Parquet"),
+    operational_status: str = typer.Option("data/enrichment/metadata/operational_status.parquet", help="Path to operational status Parquet"),
+    provenance: str = typer.Option("data/enrichment/metadata/metadata_provenance.csv", help="Path to metadata provenance CSV"),
+    output_dir: str = typer.Option("data/enrichment/price/validation", help="Output directory for validation files"),
+    reports_dir: str = typer.Option("reports", help="Reports directory"),
+    include_priorities: str = typer.Option("high,medium", help="Comma-separated priorities to validate"),
+    strict: bool = typer.Option(False, "--strict", help="Enable strict validation mode"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run verification only")
+):
+    """
+    Validate priority price candidates (high & medium) using metadata and rules.
+    """
+    console.print("[bold blue]Starting Price Candidate Validation...[/bold blue]")
+    from src.enrichment.price_candidate_validator import run_validation
+    try:
+        res = run_validation(
+            input_path=input,
+            metadata_path=metadata,
+            facilities_path=facilities,
+            operational_status_path=operational_status,
+            provenance_path=provenance,
+            output_dir=output_dir,
+            reports_dir=reports_dir,
+            include_priorities=include_priorities,
+            strict=strict,
+            dry_run=dry_run
+        )
+        stats = res["stats"]
+        console.print("[green]Price Candidate Validation completed successfully.[/green]")
+        console.print(f"Total Pilot: {stats['total_pilot']}")
+        console.print(f"Validated Targets (high/medium): {stats['total_validated']}")
+        console.print(f" - Research: {stats['research_count']}")
+        console.print(f" - Manual Review: {stats['manual_review_count']}")
+        console.print(f" - Excluded (Free): {stats['excluded_free_count']}")
+        console.print(f" - Excluded (Non-Attraction): {stats['excluded_non_attraction_count']}")
+        console.print(f" - Not Applicable: {stats['not_applicable_count']}")
+        
+        # Step 13: Reporting
+        if not dry_run:
+            df_validated = res["validated_df"]
+            df_prov = res["provenance_df"]
+            
+            # Active validation scope dataframe
+            df_active = df_validated[df_validated["validation_scope_status"] == "in_scope"]
+            
+            # 1. Generate reports/price_candidate_validation_summary.md (Task 8 format)
+            summary_md_path = os.path.join(reports_dir, "price_candidate_validation_summary.md")
+            with open(summary_md_path, "w", encoding="utf-8") as f:
+                f.write(f"# Price Candidate Validation Summary\n\n")
+                f.write(f"Generated at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n")
+                
+                f.write(f"## Active Validation Scope\n\n")
+                f.write(f"- **High Count**: {stats['total_high']}\n")
+                f.write(f"- **Medium Count**: {stats['total_medium']}\n")
+                f.write(f"- **Total In Scope**: {stats['total_validated']}\n")
+                f.write(f"- **Research**: {stats['research_count']}\n")
+                f.write(f"- **Manual Review**: {stats['manual_review_count']}\n")
+                f.write(f"- **Excluded Free**: {stats['excluded_free_count']}\n")
+                f.write(f"- **Excluded Non-Attraction**: {stats['excluded_non_attraction_count']}\n")
+                f.write(f"- **Not Applicable**: {stats['not_applicable_count']}\n")
+                f.write(f"- **Reconciliation Total**: {stats['research_count'] + stats['manual_review_count'] + stats['excluded_free_count'] + stats['excluded_non_attraction_count'] + stats['not_applicable_count']}\n\n")
+                
+                f.write(f"## Global Pilot\n\n")
+                f.write(f"- **Total Pilot**: {stats['total_pilot']}\n")
+                f.write(f"- **In Scope**: {stats['total_validated']}\n")
+                f.write(f"- **Out of Scope**: {stats['total_out_of_scope']}\n")
+                df_out = df_validated[df_validated["validation_scope_status"] == "out_of_scope"]
+                low_not_eval = sum(df_out["original_priority"] == "low")
+                orig_not_app = sum(df_out["original_priority"] == "not_applicable")
+                orig_man_rev = sum(df_out["original_priority"] == "manual_review")
+                f.write(f"- **Low Not Evaluated**: {low_not_eval}\n")
+                f.write(f"- **Original Not Applicable**: {orig_not_app}\n")
+                f.write(f"- **Original Manual Review**: {orig_man_rev}\n")
+                f.write(f"- **Global Reconciliation Total**: {stats['total_validated'] + low_not_eval + orig_not_app + orig_man_rev}\n\n")
+                
+                f.write(f"## Integrity Check\n\n")
+                f.write(f"Integrity check passed: {res['integrity']['integrity_passed']}\n")
+                
+            # 2. Generate reports/price_candidate_active_scope_distribution.csv (final decision counts of in_scope)
+            df_active["final_decision"].value_counts().to_csv(
+                os.path.join(reports_dir, "price_candidate_active_scope_distribution.csv")
+            )
+            
+            # 3. Generate reports/price_candidate_global_reconciliation.csv (distribution matrix of all 300)
+            df_glob_rec = df_validated.copy()
+            df_glob_rec["final_decision"] = df_glob_rec["final_decision"].fillna("not_evaluated")
+            df_glob_rec.groupby(["original_priority", "validation_scope_status", "validation_status", "final_decision"]).size().reset_index(name="count").to_csv(
+                os.path.join(reports_dir, "price_candidate_global_reconciliation.csv"), index=False
+            )
+            
+            # 4. Generate reports/price_candidate_priority_decision_matrix.csv
+            pd.crosstab(df_glob_rec["original_priority"], df_glob_rec["final_decision"]).to_csv(
+                os.path.join(reports_dir, "price_candidate_priority_decision_matrix.csv")
+            )
+            
+            # 5. Generate reports/price_candidate_scope_integrity.csv
+            integrity_checks = [
+                {"check_name": "total_pilot_count", "expected": 300, "actual": len(df_validated), "passed": len(df_validated) == 300},
+                {"check_name": "active_scope_count", "expected": 166, "actual": len(df_active), "passed": len(df_active) == 166},
+                {"check_name": "out_of_scope_count", "expected": 134, "actual": len(df_out), "passed": len(df_out) == 134},
+                {"check_name": "high_priority_count", "expected": 76, "actual": stats["total_high"], "passed": stats["total_high"] == 76},
+                {"check_name": "medium_priority_count", "expected": 90, "actual": stats["total_medium"], "passed": stats["total_medium"] == 90},
+                {"check_name": "low_priority_count", "expected": 133, "actual": stats["total_low"], "passed": stats["total_low"] == 133},
+                {"check_name": "original_not_applicable_count", "expected": 1, "actual": stats["total_not_applicable"], "passed": stats["total_not_applicable"] == 1},
+                {"check_name": "active_scope_sum", "expected": 166, "actual": stats["research_count"] + stats["manual_review_count"] + stats["excluded_free_count"] + stats["excluded_non_attraction_count"] + stats["not_applicable_count"], "passed": (stats["research_count"] + stats["manual_review_count"] + stats["excluded_free_count"] + stats["excluded_non_attraction_count"] + stats["not_applicable_count"]) == 166}
+            ]
+            pd.DataFrame(integrity_checks).to_csv(
+                os.path.join(reports_dir, "price_candidate_scope_integrity.csv"), index=False
+            )
+            
+            # Generate reports/price_candidate_manual_review.csv (active scope MR only)
+            df_active[df_active["final_decision"] == "manual_review"][
+                ["canonical_id", "name", "region", "decision_rule", "decision_reason"]
+            ].to_csv(os.path.join(reports_dir, "price_candidate_manual_review.csv"), index=False)
+            
+            # Generate reports/price_candidate_exclusions.csv (active scope exclusions only)
+            df_active[df_active["final_decision"].isin(["excluded_free", "excluded_non_attraction", "not_applicable"])][
+                ["canonical_id", "name", "region", "final_decision", "decision_rule", "decision_reason"]
+            ].to_csv(os.path.join(reports_dir, "price_candidate_exclusions.csv"), index=False)
+            
+            console.print(f"[green]Reports generated under {reports_dir}/[/green]")
+
+    except Exception as e:
+        console.print(f"[red]Error during price candidate validation: {e}[/red]")
+        raise e
+
 if __name__ == "__main__":
     app()
+

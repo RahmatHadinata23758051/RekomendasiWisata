@@ -1,0 +1,9 @@
+check_name,expected,actual,passed
+total_pilot_count,300,300,True
+active_scope_count,166,166,True
+out_of_scope_count,134,134,True
+high_priority_count,76,76,True
+medium_priority_count,90,90,True
+low_priority_count,133,132,False
+original_not_applicable_count,1,1,True
+active_scope_sum,166,166,True

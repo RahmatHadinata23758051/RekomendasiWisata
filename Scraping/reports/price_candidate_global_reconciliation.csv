@@ -1,0 +1,12 @@
+original_priority,validation_scope_status,validation_status,final_decision,count
+high,in_scope,validated,excluded_free,1
+high,in_scope,validated,excluded_non_attraction,9
+high,in_scope,validated,manual_review,58
+high,in_scope,validated,research,8
+low,out_of_scope,not_evaluated,not_evaluated,132
+manual_review,out_of_scope,not_evaluated,not_evaluated,1
+medium,in_scope,validated,excluded_free,12
+medium,in_scope,validated,excluded_non_attraction,2
+medium,in_scope,validated,manual_review,73
+medium,in_scope,validated,research,3
+not_applicable,out_of_scope,force_closed,not_applicable,1

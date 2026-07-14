@@ -1,0 +1,146 @@
+canonical_id,name,original_priority,validation_scope_status,previous_decision,audited_decision,free_evidence,evidence_source,has_valid_provenance,audit_reason
+can_59a8f91551ac,Pahawang,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_31542a3adb2e,Air terjun ciupang,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_ea024c308440,Air terjun keranji,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_9f9f62569267,Air terjun ciupang,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_4caecae1c000,Teluk betung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_b279666e08e8,Aero Travelindo,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_cada872752b2,Pantai Sari Ringgung,medium,in_scope,excluded_free,research,,,False,Salah klasifikasi. Sebelumnya salah tandai gratis akibat pencocokan kata description yang terlalu luas. Diperbaiki menjadi research.
+can_83f96132a28e,B.C Lantana,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_4db9b666b071,Air terjun Sukma Ilang,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_9e088d30e726,Lembah Mamabe,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_6b4de3296b39,Air Terjun Talang Beringin,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_00055c1c8161,Wisata Mata Air Gunung Batu,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_142a3fb45d57,POS 1 Gunung Tanggamus,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_dd7cc4c40c55,Ganong mata air,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_93ef14c458ec,Bukit Singkek,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_46344e0deb0c,Old Steel Bridge,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_ea9c6614c456,Kebon duku bpk supar,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_7a3830c677ef,AIR TERJUN (CURUP),low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_b93fe6f09dc1,Pintu 1 Air Terjun Lembah Pelangi Sukamaju,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_01a8f6a5d95c,gunung sari,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_075f59d24b7d,Gunung Loro ireng,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_8bf098941c4b,Air terjun sarjaya,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_a41aa38612f2,Air terjun way handak,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_d72a6355ec71,Nelayan,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_d5c81ed1e161,Tampian baheula,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_a95502ad98a4,ڤُنْچَاكْ ڳُوْس لِيحْ PUNCAK GUSLIKH,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_5172878bb5f9,Lembah Hijau,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_79bfedda5c4d,Teropong Kota Bukit Sindy,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_60372709f532,Lampung Walk,high,in_scope,excluded_free,manual_review,,,False,Salah klasifikasi. Sebelumnya salah tandai gratis akibat pencocokan kata description yang terlalu luas. Diperbaiki menjadi manual_review.
+can_f766e56533cc,Lungsir (Taman Kota),medium,in_scope,excluded_free,excluded_free,taman kota,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_1412b75de30a,Tugu Adipura,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_f42a04fe3b9a,Lembah Batu Heritage,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_e3c1c7ff90f2,Masjid Agung Al-Furqan Bandar Lampung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_adccff754b63,Kampoeng vietnam,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_b32ad9907744,Kawasan Konservasi mangrov kota Bandar Lampung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_106ac0f68f3c,Gus Planters,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0f9e92c32c56,MARTADINATA HILLS,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_3616a9efeb0d,Situs Keratuan Balau,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_05c71e49f699,Mural Pengantin Adat Lampung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_c11290c7c49e,Curug Mbah Gimo,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_01e0764c07d9,Air terjun gadingan,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_dc55b76174dd,TIKUNGAN KEGERINGAN,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_8dbc09e7534f,Curup way ngison,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_029b39f27827,Rumah mbh slamet,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_3b6a4446ea0d,"MT Seminung, 1881 Mdpl",low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_026ddad74f2b,Puncak Gajah,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_363dfc813918,Sebalang Sky,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_45f5aeecef58,Cecakhah way pekhos,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_7ef4299202c4,Menara Siger Lampung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_a992162a2163,Way Telaga Bendungan (WTB),low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_472dcadf2e91,Teluk Nipah Kalianda,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_23c13bac03c9,"WISGRA SUNGAI WAY KANDIS, Trikora",low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_364b0dfc9dea,Keday nelayan vanie,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_a13718fb6f35,Tebing batu manula tnbbs,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0cc93e404ff4,Bukit way pintau,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_6f29bc97913a,Bendungan Cekdam Way laay,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_6997564dc98d,Miso 4 saudara,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_55959c4e17fd,Durian Urut,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_9a5f3d1ef301,Lovina Krui Surf | penginapan krui | Camp Surf Krui,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_2678cb656d1f,"1&2 Beefree Beach Bar & Surf Lesson. sewa papan surfing, open trip",medium,in_scope,excluded_free,manual_review,,,False,Salah klasifikasi. Sebelumnya salah tandai gratis akibat pencocokan kata description yang terlalu luas. Diperbaiki menjadi manual_review.
+can_9027a53eb791,Bukit Sidoluhur,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_f24cc814321b,Batas Desa,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_e053bc385b26,rumah Fei,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_ec20090d02ba,Air terjun umbul eklek,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_131a6aa5a25b,Rumah Pak Suwaliono,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_c48c198af0e6,Lebung gustut,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_528d83eabf29,Embung Dewi Sri Sendangretno,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_c7781714a7d1,"Hutan Mangrove, kuala penet, Lampung Timur",low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_36b9e1f98ce9,Bukit teletabis estetik,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_6ab9ce7897e3,Rest Area Karetan Desa Labuhan Ratu 7,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_31059bd822d1,Ekowisata Sekar Bahari Mangrove,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_e9ab8e769b1a,Gubuk P karse,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_afa73bc2f2c7,Sobo Tirto kali medek,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_5e028583732f,PEMANCINGAN ENTONG,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_111f61b5cbc0,Air terjun apik,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_40a3df3667b4,Lapangan BRAJAASRI,medium,in_scope,excluded_free,excluded_free,lapangan,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_e41ec2b68e07,DANAU PAKU - SUMBER HADI,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_8b11a2aeb1a0,Watu gedi,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_bfec6e506426,Jembatan Pelita Sumbersari Metro Selatan,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_f720fde0e364,Makam,high,in_scope,excluded_free,excluded_free,makam,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_09b986ad7cef,Curup Kereta,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_971ef616f035,Air Terjun KERETA,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_4e34966ef831,Bukit Kramat area tebu,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_32d3e55bc4d9,Pemandian Air Panas Jukuh Batu,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0073d9414900,Embung Pakuan Sakti,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_121ff93e6ff6,Simpang sainal,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_b3eb68df8df3,Olok Kuali,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_a0690d109e96,Embung Way Negara Harja II,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_39fee54e923d,Bundaran FF,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_71fb507d13dc,Puncak Satu 7 Gunung Abung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_f99e2e90304d,Air terjun bunut jaya,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_63edbda4acba,Arum jeram,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0dede19da9e8,Tugu Payan Mas Kotabumi,medium,in_scope,excluded_free,excluded_free,tugu,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_de6fe5f67d19,Ladang Harry Plantations,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_d885ab730ff6,Kebon H. Dahlius Mufti,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_29ee2506c048,Pemancingan,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_c18a686e556c,Water Boom Monlee,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_a5ad28d20e8a,Kuil Ketapang II,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_00e73f54493a,TUGU TAMAN HAYATI MEKARSARI,medium,in_scope,excluded_free,excluded_free,tugu,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_2a97b8804881,EMBUNG ALBARET,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_b0e5185e555e,Kuala Mesuji,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_712fbb4d50b9,Jembatan Gantung 28,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_6d344c26c3c7,Taman Merdeka Kota Metro,medium,in_scope,excluded_free,excluded_free,taman merdeka,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_6fd6f7a7a4fd,Masjid Agung Taqwa Kota Metro,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_6e090b1dc62c,Nuwo Kayew,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0184d61fb09d,Hutan Kota Stadion Tejosari,medium,in_scope,excluded_free,excluded_free,hutan kota,description,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_a782197a9c50,Batas desa Ambarawa barat sumberagung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_87975ba63347,TUGU GAJAH BARBEL PRINGSEWU,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_3349365744d5,Bukit Cemara Tegal sari,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_d44e6dc9baf4,Gadingreju,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_5f8aebc62c3b,Khalisaa,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_021c5626431e,GR.DONK,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_adca6edc5471,LAPKOL GEMPAR,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0776813a925a,Kanal Y,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_b8cd349439a8,Greenhouse PP Nurul Fattah,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_15dc7c773782,Taman Tugu Dodos,medium,in_scope,excluded_free,excluded_free,tugu,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_7ffcb2575c29,Lapangan Banjar Margo,medium,in_scope,excluded_free,excluded_free,lapangan,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_564df5c7de36,Spot toman,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_48b7e18df94a,Tiwii,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_dc3224d929b6,RUMAH MAMAK,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_004135856044,Tugu Empat Marga,medium,in_scope,excluded_free,excluded_free,tugu,name,True,Valid in_scope public monument or free space attraction with valid keyword evidence.
+can_74ca5e6c8a7c,lemahe mbahmu,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_003c18b65ec6,Talang Kappung ST. Agung,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_038cbd6c819e,Heriyansyah Hometown,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_1c185bb8d31e,Embung Way Sumber Jaya,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_07fc88875adc,Embung Way Balam Jaya,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_2c95a7b80b4b,Nyapah Nisom a k,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_06c83a52d214,Tugu Raden Inten II,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_22bf0ec57e34,SANHOK,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_761c34478390,Tugu Pena Ceria,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0eee9f90bb8b,Way Belerang Simpur,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_044dc28e2a87,Bukit Rindingan,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_da49b0d74f1a,Gunung Dempu,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0db511e5fe3f,Simpang tiga,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_10e7609207ba,Tangkit Tebak,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_135649179b4e,Suoh,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_795db152eaed,keramikan,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_1084427b1bc7,TUGU PERBATASAN,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_2f853345a71b,TUGU KB,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_267739168349,TUGU BATAS CANGGU-PEKON BALAK,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_29c719c41a4d,TUGU BATAS CANGGU-KOTA BESI,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0eb029a1fef8,Cagar Budaya Sipahit Lidah,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_32759e1cb3ab,TUGU ANTRIDA,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_0c256d059ae4,BK 2,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
+can_edb376da399b,Simpang WRP Home,low,out_of_scope,excluded_free,not_evaluated,,,False,Only marked as excluded_free because original priority was low. Low priority does not signify free entry.
