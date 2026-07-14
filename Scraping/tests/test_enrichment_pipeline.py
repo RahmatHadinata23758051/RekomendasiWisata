@@ -512,41 +512,147 @@ def test_per_batch_metrics_and_reconciliation():
     costs_csv_path = "reports/review_batch_costs.csv"
     bucket_fill_csv_path = "reports/review_batch_bucket_fill.csv"
     place_coverage_csv_path = "reports/review_batch_place_coverage.csv"
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
     
     assert os.path.exists(comparison_csv_path)
     assert os.path.exists(costs_csv_path)
     assert os.path.exists(bucket_fill_csv_path)
     assert os.path.exists(place_coverage_csv_path)
     
-    df_comp = pd.read_csv(comparison_csv_path)
-    assert len(df_comp) == 2
-    
-    row_001 = df_comp[df_comp["batch_id"] == "batch_001"].iloc[0]
-    assert row_001["strategy_version"] == "review_strategy_v1"
-    assert int(row_001["raw_reviews"]) == 1108
-    assert int(row_001["covered_places"]) == 43
-    assert int(row_001["attempted_places"]) == 70
-    assert row_001["coverage_rate"] == "61.43%"
-    assert float(row_001["actor_cost"]) == 4.82
-    
-    row_002 = df_comp[df_comp["batch_id"] == "batch_002"].iloc[0]
-    assert row_002["strategy_version"] == "review_strategy_v2"
-    assert int(row_002["raw_reviews"]) == 974
-    assert int(row_002["covered_places"]) == 55
-    assert int(row_002["attempted_places"]) == 70
-    assert row_002["coverage_rate"] == "78.57%"
-    
-    assert pd.isna(row_002["actor_cost"]) or row_002["actor_cost"] == "" or str(row_002["actor_cost"]).strip() == "nan" or str(row_002["actor_cost"]).strip() == ""
-    
-    df_costs = pd.read_csv(costs_csv_path)
-    b2_costs = df_costs[df_costs["batch_id"] == "batch_002"]
-    assert len(b2_costs) == 4
-    for _, r in b2_costs.iterrows():
-        assert r["status"] == "unavailable"
-        assert pd.isna(r["cost"]) or str(r["cost"]).strip() == "nan" or str(r["cost"]).strip() == ""
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest = json.load(f)
         
-    b1_costs = df_costs[df_costs["batch_id"] == "batch_001"]
-    assert len(b1_costs) == 4
-    b1_total_row = b1_costs[b1_costs["mode"] == "total"].iloc[0]
-    assert b1_total_row["status"] == "available"
-    assert float(b1_total_row["cost"]) == 4.82
+    # Task 1: Find fully completed batch IDs dynamically
+    batch_modes = {}
+    for b in manifest.get("batches", []):
+        bid = b["batch_id"]
+        if bid not in batch_modes:
+            batch_modes[bid] = []
+        batch_modes[bid].append(b)
+        
+    expected_completed_batch_ids = set()
+    for bid, entries in batch_modes.items():
+        if len(entries) == 3 and all(e.get("status") == "completed" for e in entries):
+            expected_completed_batch_ids.add(bid)
+            
+    df_comp = pd.read_csv(comparison_csv_path)
+    
+    # Task 2: Ganti validasi hardcode
+    assert set(df_comp["batch_id"].tolist()) == expected_completed_batch_ids
+    assert len(df_comp) == len(expected_completed_batch_ids)
+    
+    # Check batch_001 specifically
+    if "batch_001" in expected_completed_batch_ids:
+        row_001 = df_comp[df_comp["batch_id"] == "batch_001"].iloc[0]
+        assert row_001["strategy_version"] == "review_strategy_v1"
+        assert int(row_001["raw_reviews"]) == 1108
+        assert int(row_001["covered_places"]) == 43
+        assert int(row_001["attempted_places"]) == 70
+        assert row_001["coverage_rate"] == "61.43%"
+        assert float(row_001["actor_cost"]) == 4.82
+        
+    # Check batch_002 specifically
+    if "batch_002" in expected_completed_batch_ids:
+        row_002 = df_comp[df_comp["batch_id"] == "batch_002"].iloc[0]
+        assert row_002["strategy_version"] == "review_strategy_v2"
+        assert int(row_002["raw_reviews"]) == 974
+        assert int(row_002["covered_places"]) == 55
+        assert int(row_002["attempted_places"]) == 70
+        assert row_002["coverage_rate"] == "78.57%"
+        
+    # Validate review_batch_costs.csv format (exactly one row per completed batch)
+    df_costs = pd.read_csv(costs_csv_path)
+    assert len(df_costs) == len(expected_completed_batch_ids)
+    assert set(df_costs["batch_id"].tolist()) == expected_completed_batch_ids
+    
+    # Validate place coverage csv only contains completed batch places
+    df_place_cov = pd.read_csv(place_coverage_csv_path)
+    assert set(df_place_cov["pilot_batch"].unique()).issubset(expected_completed_batch_ids)
+
+
+def test_per_batch_metrics_regression(tmp_path):
+    test_manifest_path = tmp_path / "test_manifest.json"
+    test_processed_dir = tmp_path / "processed_reviews"
+    test_final_dir = tmp_path / "final"
+    test_reports_dir = tmp_path / "reports"
+    
+    # Read the actual manifest
+    real_manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    with open(real_manifest_path, "r", encoding="utf-8") as f:
+        real_manifest = json.load(f)
+        
+    def run_regression_scenario(completed_batches_dict, expected_completed_set):
+        # completed_batches_dict maps (batch_id, mode) -> status
+        # Construct temporary manifest
+        temp_manifest = {"batches": []}
+        for b in real_manifest.get("batches", []):
+            b_copy = b.copy()
+            key = (b_copy["batch_id"], b_copy["mode"])
+            if key in completed_batches_dict:
+                b_copy["status"] = completed_batches_dict[key]
+            else:
+                b_copy["status"] = "pending"
+            temp_manifest["batches"].append(b_copy)
+            
+        with open(test_manifest_path, "w", encoding="utf-8") as f:
+            json.dump(temp_manifest, f)
+            
+        from src.enrichment.review_processor import process_and_select_reviews
+        process_and_select_reviews(
+            raw_dir="data/enrichment/raw_reviews",
+            pilot_csv_path="data/enrichment/pilot/pilot_places.csv",
+            manifest_path=str(test_manifest_path),
+            processed_dir=str(test_processed_dir),
+            final_dir=str(test_final_dir),
+            reports_dir=str(test_reports_dir)
+        )
+        
+        # Read final/review_coverage.csv
+        df_comp = pd.read_csv(test_reports_dir / "review_batch_comparison.csv")
+        assert set(df_comp["batch_id"].tolist()) == expected_completed_set
+        assert len(df_comp) == len(expected_completed_set)
+        
+        # Check bucket fill csv
+        df_fill = pd.read_csv(test_reports_dir / "review_batch_bucket_fill.csv")
+        assert len(df_fill) == len(expected_completed_set) * 3
+        
+        # Check place coverage csv
+        df_place_cov = pd.read_csv(test_reports_dir / "review_batch_place_coverage.csv")
+        expected_places_count = 0
+        for bid in expected_completed_set:
+            if bid == "batch_004":
+                expected_places_count += 61
+            else:
+                expected_places_count += 70
+        assert len(df_place_cov) == expected_places_count
+
+    # Scenario 1: Two completed batches (batch_001, batch_002)
+    s1_dict = {}
+    for bid in ["batch_001", "batch_002"]:
+        for mode in ["positive", "negative", "neutral"]:
+            s1_dict[(bid, mode)] = "completed"
+    run_regression_scenario(s1_dict, {"batch_001", "batch_002"})
+
+    # Scenario 2: Three completed batches (batch_001, batch_002, batch_003)
+    s2_dict = {}
+    for bid in ["batch_001", "batch_002", "batch_003"]:
+        for mode in ["positive", "negative", "neutral"]:
+            s2_dict[(bid, mode)] = "completed"
+    run_regression_scenario(s2_dict, {"batch_001", "batch_002", "batch_003"})
+
+    # Scenario 3: Four completed batches (batch_001, batch_002, batch_003, batch_004)
+    s3_dict = {}
+    for bid in ["batch_001", "batch_002", "batch_003", "batch_004"]:
+        for mode in ["positive", "negative", "neutral"]:
+            s3_dict[(bid, mode)] = "completed"
+    run_regression_scenario(s3_dict, {"batch_001", "batch_002", "batch_003", "batch_004"})
+
+    # Scenario 4: Partial completion safety (batch_004 positive is completed, negative/neutral is pending)
+    s4_dict = {}
+    for bid in ["batch_001", "batch_002", "batch_003"]:
+        for mode in ["positive", "negative", "neutral"]:
+            s4_dict[(bid, mode)] = "completed"
+    s4_dict[("batch_004", "positive")] = "completed"
+    s4_dict[("batch_004", "negative")] = "pending"
+    s4_dict[("batch_004", "neutral")] = "pending"
+    run_regression_scenario(s4_dict, {"batch_001", "batch_002", "batch_003"})

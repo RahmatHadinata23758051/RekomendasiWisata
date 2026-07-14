@@ -1,3 +1,5 @@
 batch_id,strategy_version,attempted_places,covered_places,coverage_rate,raw_reviews,duplicate_rate,empty_text_rate,unique_clean_reviews,representative_reviews,representative_yield_rate,positive_fill_rate,negative_fill_rate,neutral_fill_rate,actor_cost,cost_per_covered_place,decision
 batch_001,review_strategy_v1,70,43,61.43%,1108,57.40%,42.51%,472,230,20.76%,40.86%,19.14%,9.52%,4.82,0.11,CONDITIONAL PASS
 batch_002,review_strategy_v2,70,55,78.57%,974,52.67%,39.01%,461,273,28.03%,56.57%,22.86%,19.29%,,,CONDITIONAL PASS
+batch_003,review_strategy_v2,70,55,78.57%,870,47.47%,37.70%,457,249,28.62%,50.00%,28.57%,10.00%,,,CONDITIONAL PASS
+batch_004,review_strategy_v2,61,40,65.57%,588,45.41%,35.20%,321,172,29.25%,39.67%,20.77%,10.66%,,,CONDITIONAL PASS

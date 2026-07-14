@@ -5,9 +5,9 @@ batch_001,neutral,completed,z4UYRSzMdTivVyRD5,P9SOI5koc4zsdBB0e,70
 batch_002,positive,completed,Ovc9fBBi5n5h1PPtC,vNxzljfeHXLPZWrSz,70
 batch_002,negative,completed,GZ0UmqUzMylgcPkjd,hNzfObHao8pQIj7M9,70
 batch_002,neutral,completed,gSzzOYvq6dRom9Fca,uW6MfRxxvygi00axG,70
-batch_003,positive,pending,,,70
-batch_003,negative,pending,,,70
-batch_003,neutral,pending,,,70
-batch_004,positive,pending,,,61
-batch_004,negative,pending,,,61
-batch_004,neutral,pending,,,61
+batch_003,positive,completed,f0f4MNrHFD1qBz5A9,Oy4Ftw9aTDhovACBj,70
+batch_003,negative,completed,KXhoSXjOAqQKzBXaW,D9Y1zlUWrC9IwvUbE,70
+batch_003,neutral,completed,nhEt6Zw4192Wbn2WA,JvtWjlbifLrxsHHTd,70
+batch_004,positive,completed,FkL5zrDrpNvcXdDy7,tmFTuzChWqBn6z7Ye,61
+batch_004,negative,completed,D21b4l0vcU3QvnmQV,ZbiVQIoMTwKO4oYeC,61
+batch_004,neutral,completed,vUdkOoH0uNQ5heI7k,1UcTDvghQUOKCZGTy,61

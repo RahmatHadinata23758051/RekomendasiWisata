@@ -38,14 +38,15 @@ def fetch_run_cost(run_id: str) -> Optional[float]:
             return None
         client = ApifyClient(token)
         run = client.run(run_id).get()
-        # modern client run object may be pydantic or dict
         cost = None
-        if hasattr(run, "usage_usd"):
+        if hasattr(run, "usage_total_usd") and getattr(run, "usage_total_usd") is not None:
+            cost = getattr(run, "usage_total_usd")
+        elif hasattr(run, "usage_usd") and getattr(run, "usage_usd") is not None:
             cost = getattr(run, "usage_usd")
-        elif hasattr(run, "usageUsd"):
+        elif hasattr(run, "usageUsd") and getattr(run, "usageUsd") is not None:
             cost = getattr(run, "usageUsd")
         elif isinstance(run, dict):
-            cost = run.get("usageUsd") or run.get("usage_usd")
+            cost = run.get("usage_total_usd") or run.get("usageUsd") or run.get("usage_usd")
         if cost is not None:
             return float(cost)
     except Exception:
@@ -106,35 +107,69 @@ def process_and_select_reviews(
 
     # 2. Load manifest for statuses & targets & metadata
     batch_to_canon_map = {} # (batch_id, mode) -> list of cids
-    batch_statuses = {}
-    batch_targets_map = {}
-    canon_to_batch = {}
     batch_metadata = {} # (batch_id, mode) -> {strategy_version, apify_run_id, dataset_id, status, raw_review_count}
+    canon_to_batch = {}
+    batch_targets_map = {}
     
     if os.path.exists(manifest_path):
         try:
             with open(manifest_path, "r", encoding="utf-8") as mf:
                 m_data = json.load(mf)
-                for b in m_data.get("batches", []):
-                    bid = b["batch_id"]
-                    mode = b["mode"]
-                    batch_to_canon_map[(bid, mode)] = b.get("canonical_ids", [])
-                    batch_statuses[bid] = b.get("status", "pending")
-                    batch_targets_map[bid] = {
-                        "positive": b.get("representative_target_positive", 5),
-                        "negative": b.get("representative_target_negative", 3 if bid != "batch_001" else 5),
-                        "neutral": b.get("representative_target_neutral", 2 if bid != "batch_001" else 3)
-                    }
-                    for cid in b.get("canonical_ids", []):
-                        canon_to_batch[cid] = bid
+                
+            # First, extract completed batches dynamically based on positive, negative, neutral completeness (Task 1)
+            batch_modes = {}
+            for b in m_data.get("batches", []):
+                bid = b["batch_id"]
+                if bid not in batch_modes:
+                    batch_modes[bid] = []
+                batch_modes[bid].append(b)
+                
+            fully_completed_batches = []
+            for bid, entries in batch_modes.items():
+                modes_present = set(e["mode"] for e in entries)
+                if len(modes_present) == 3:
+                    all_completed = True
+                    for e in entries:
+                        if e.get("status") != "completed":
+                            all_completed = False
+                            break
+                        # Verify raw results are present on disk
+                        raw_file_path = os.path.join(raw_dir, e["mode"], f"{bid}.json")
+                        if not os.path.exists(raw_file_path):
+                            all_completed = False
+                            break
+                    if all_completed:
+                        fully_completed_batches.append(bid)
                         
-                    batch_metadata[(bid, mode)] = {
-                        "strategy_version": b.get("strategy_version", "review_strategy_v1"),
-                        "apify_run_id": b.get("apify_run_id") or "imported_offline",
-                        "dataset_id": b.get("dataset_id") or "imported_offline",
-                        "status": b.get("status", "pending"),
-                        "raw_review_count": b.get("raw_review_count")
-                    }
+            fully_completed_batches = sorted(list(set(fully_completed_batches)))
+            
+            # Map statuses
+            batch_statuses = {}
+            for bid in batch_modes.keys():
+                if bid in fully_completed_batches:
+                    batch_statuses[bid] = "completed"
+                else:
+                    batch_statuses[bid] = "pending"
+                    
+            for b in m_data.get("batches", []):
+                bid = b["batch_id"]
+                mode = b["mode"]
+                batch_to_canon_map[(bid, mode)] = b.get("canonical_ids", [])
+                batch_targets_map[bid] = {
+                    "positive": b.get("representative_target_positive", 5),
+                    "negative": b.get("representative_target_negative", 3 if bid != "batch_001" else 5),
+                    "neutral": b.get("representative_target_neutral", 2 if bid != "batch_001" else 3)
+                }
+                for cid in b.get("canonical_ids", []):
+                    canon_to_batch[cid] = bid
+                    
+                batch_metadata[(bid, mode)] = {
+                    "strategy_version": b.get("strategy_version", "review_strategy_v1"),
+                    "apify_run_id": b.get("apify_run_id") or "imported_offline",
+                    "dataset_id": b.get("dataset_id") or "imported_offline",
+                    "status": b.get("status", "pending"),
+                    "raw_review_count": b.get("raw_review_count")
+                }
         except Exception as e:
             logger.warning(f"Failed to read manifest file: {e}")
 
@@ -410,7 +445,6 @@ def process_and_select_reviews(
         u_sel = len(selected_neu)
         
         # Resolve dynamic coverage status (Task 4)
-        is_eligible = eligible_status.get(cid, True)
         if not is_eligible:
             status = "ineligible"
         else:
@@ -528,7 +562,8 @@ def process_and_select_reviews(
                 completed_runs_count = 0
                 total_reviews_in_runs = 0
                 for b in m_data.get("batches", []):
-                    if b.get("status") == "completed":
+                    # Check if the batch is fully completed
+                    if b.get("status") == "completed" and b.get("batch_id") in fully_completed_batches:
                         run_id = b.get("apify_run_id")
                         if run_id and run_id != "imported_offline":
                             completed_runs_count += 1
@@ -618,9 +653,6 @@ def process_and_select_reviews(
     # ==========================
     # TASK 2-5: BATCH COMPARISON & EVALUATION
     # ==========================
-    # Get distinct batch IDs that are completed or present in the manifest
-    all_batch_ids = sorted(list(set(b[0] for b in batch_metadata.keys())))
-    
     # Cost lookup table per batch
     costs = {}
     for (bid, mode), meta in batch_metadata.items():
@@ -636,7 +668,7 @@ def process_and_select_reviews(
         costs[(bid, mode)] = cost
 
     batch_costs_summary = {}
-    for bid in all_batch_ids:
+    for bid in fully_completed_batches:
         p_cost = costs.get((bid, "positive"))
         n_cost = costs.get((bid, "negative"))
         u_cost = costs.get((bid, "neutral"))
@@ -657,20 +689,17 @@ def process_and_select_reviews(
 
     # Write review_batch_costs.csv
     costs_rows = []
-    for bid in all_batch_ids:
+    for bid in fully_completed_batches:
         c_sum = batch_costs_summary[bid]
-        for mode in ["positive", "negative", "neutral"]:
-            m_cost = costs.get((bid, mode))
-            costs_rows.append({
-                "batch_id": bid,
-                "mode": mode,
-                "cost": f"{m_cost:.2f}" if m_cost is not None else "",
-                "status": c_sum["status"]
-            })
+        p_cost = costs.get((bid, "positive"))
+        n_cost = costs.get((bid, "negative"))
+        u_cost = costs.get((bid, "neutral"))
         costs_rows.append({
             "batch_id": bid,
-            "mode": "total",
-            "cost": f"{c_sum['total']:.2f}" if c_sum["total"] is not None else "",
+            "positive_cost": f"{p_cost:.2f}" if p_cost is not None else "",
+            "negative_cost": f"{n_cost:.2f}" if n_cost is not None else "",
+            "neutral_cost": f"{u_cost:.2f}" if u_cost is not None else "",
+            "total_cost": f"{c_sum['total']:.2f}" if c_sum["total"] is not None else "",
             "status": c_sum["status"]
         })
     pd.DataFrame(costs_rows).to_csv(os.path.join(reports_dir, "review_batch_costs.csv"), index=False)
@@ -679,15 +708,9 @@ def process_and_select_reviews(
     comparison_rows = []
     bucket_fill_rows = []
     
-    for bid in all_batch_ids:
+    for bid in fully_completed_batches:
         df_cov_batch = df_cov[df_cov["pilot_batch"] == bid]
-        
-        # Check if the batch is complete in manifest
-        batch_modes = [b for b in batch_metadata.keys() if b[0] == bid]
-        is_completed = all(batch_metadata[m]["status"] == "completed" for m in batch_modes)
-        
-        if not is_completed or df_cov_batch.empty:
-            # Skip or write pending
+        if df_cov_batch.empty:
             continue
             
         strategy = batch_metadata[(bid, "positive")]["strategy_version"]
@@ -722,7 +745,6 @@ def process_and_select_reviews(
         n_fill = n_sel / (attempted * n_target) if attempted > 0 else 0.0
         u_fill = u_sel / (attempted * u_target) if attempted > 0 else 0.0
         
-        # Add to bucket fill rows
         p_col = sum(df_cov_batch["positive_collected"])
         n_col = sum(df_cov_batch["negative_collected"])
         u_col = sum(df_cov_batch["neutral_collected"])
@@ -779,8 +801,9 @@ def process_and_select_reviews(
     
     pd.DataFrame(bucket_fill_rows).to_csv(os.path.join(reports_dir, "review_batch_bucket_fill.csv"), index=False)
     
-    # Save review_batch_place_coverage.csv sorted by batch
-    df_cov.sort_values(by=["pilot_batch", "canonical_id"]).to_csv(os.path.join(reports_dir, "review_batch_place_coverage.csv"), index=False, encoding="utf-8")
+    # Save review_batch_place_coverage.csv sorted by batch, only including places from completed batches
+    df_cov_completed = df_cov[df_cov["pilot_batch"].isin(fully_completed_batches)]
+    df_cov_completed.sort_values(by=["pilot_batch", "canonical_id"]).to_csv(os.path.join(reports_dir, "review_batch_place_coverage.csv"), index=False, encoding="utf-8")
 
     # Generate review_batch_comparison.md
     with open(os.path.join(reports_dir, "review_batch_comparison.md"), "w", encoding="utf-8") as f:
@@ -806,18 +829,17 @@ def process_and_select_reviews(
             f.write(f"- **Representative Yield Rate**: {row['representative_yield_rate']} (Target: > 25%)\n\n")
             
         f.write("## Recommendations & Strategic Decision\n\n")
-        # Check batch_002 decision for recommendations
-        batch_002_dec = next((r["decision"] for r in comparison_rows if r["batch_id"] == "batch_002"), None)
-        if batch_002_dec in ["PASS", "CONDITIONAL PASS"]:
-            f.write("### Recommendation: [green]PROCEED WITH BATCH_003 AND BATCH_004 USING STRATEGY_V2[/green]\n\n")
-            f.write("Review strategy version v2 has successfully optimized the payload limits (positive: 6, negative: 6, neutral: 10) for batch_002. "
+        # Check batch_002 / batch_003 decision for recommendations
+        decisions_list = [r["decision"] for r in comparison_rows if r["batch_id"] in ["batch_002", "batch_003", "batch_004"]]
+        if decisions_list and all(d in ["PASS", "CONDITIONAL PASS"] for d in decisions_list):
+            f.write("### Recommendation: [green]PROCEED WITH SUBSEQUENT BATCHES USING STRATEGY_V2[/green]\n\n")
+            f.write("Review strategy version v2 has successfully optimized the payload limits for subsequent batches. "
                     "This change led to:\n")
-            f.write("1. High attempted coverage rate of **78.57%** (exceeding the 60% quality gate).\n")
+            f.write("1. High attempted coverage rates (exceeding the 60% quality gate).\n")
             f.write("2. Substantial reductions in scraper payload costs and storage requirements.\n")
             f.write("3. Cleaner, higher-density representative ulasan selections per location.\n\n")
-            f.write("Therefore, it is highly recommended to run batch_003 and batch_004 under `review_strategy_v2` limits and targets.\n")
         else:
-            f.write("### Recommendation: [red]HOLD RUNNING BATCH_003 AND BATCH_004[/red]\n\n")
-            f.write("Batch 002 did not satisfy the primary mapping or coverage quality gates. Please resolve the mapping/scraping anomalies before executing future batches.\n")
+            f.write("### Recommendation: [red]HOLD RUNNING SUBSEQUENT BATCHES[/red]\n\n")
+            f.write("One or more batches did not satisfy the primary mapping or coverage quality gates. Please resolve the mapping/scraping anomalies.\n")
             
     logger.info("Review processing and final selection complete.")
