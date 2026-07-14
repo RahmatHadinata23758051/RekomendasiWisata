@@ -23,7 +23,9 @@ def restore_price_data_after_test():
         shutil.copytree(src_dir, backup_dir, dirs_exist_ok=True)
     yield
     if os.path.exists(backup_dir):
-        shutil.copytree(backup_dir, src_dir, dirs_exist_ok=True)
+        if os.path.exists(src_dir):
+            shutil.rmtree(src_dir)
+        shutil.copytree(backup_dir, src_dir)
         shutil.rmtree(backup_dir)
 
 # 1. Test input candidate audit structure

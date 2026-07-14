@@ -1,0 +1,10 @@
+canonical_id,name,region,unresolved_reason,sources_attempted,best_source_type,best_source_url,local_observation_count,external_observation_count,conflict_count,recommended_next_action,requires_manual_review,verification_version
+can_1fef284e7d10,Dermaga Pulau Pahawang,Kabupaten Pesawaran,No authoritative price observations found.,0,none,,2,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_cada872752b2,Pantai Sari Ringgung,Kabupaten Pesawaran,No authoritative price observations found.,0,none,,5,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_a0d4ca18f1f7,Kolam renang,Kabupaten Tanggamus,No authoritative price observations found.,0,none,,0,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_17b24ba62485,Water Park Citra Garden,Kota Bandar Lampung,No authoritative price observations found.,0,none,,3,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_2850f83ad341,Kolam Renang Perahu Layar,Kabupaten Lampung Selatan,No authoritative price observations found.,0,none,,1,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_58c471e76647,Slanik Waterpark Lampung,Kabupaten Lampung Selatan,No authoritative price observations found.,0,none,,5,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_1a46f7a6372c,Taman Nasional Way Kambas,Kabupaten Lampung Timur,No authoritative price observations found.,0,none,,8,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_b4a866f13078,Camping island,Kabupaten Pringsewu,No authoritative price observations found.,0,none,,0,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1
+can_5dd47abc65d1,Kolam Renang Tirta Garden,Kabupaten Tulang Bawang,No authoritative price observations found.,0,none,,2,0,0,Execute manual research or contact operator.,True,external_price_verification_pilot_v1

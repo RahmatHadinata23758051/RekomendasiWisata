@@ -1271,6 +1271,63 @@ def audit_price_research_pilot_cmd(
         console.print(f"[red]Error during price research pilot audit: {e}[/red]")
         raise e
 
+@app.command(name="verify-external-prices")
+def verify_external_prices_cmd(
+    queue: str = typer.Option("data/enrichment/price/research/external_price_verification_queue.csv", help="Path to queue CSV"),
+    local_observations: str = typer.Option("data/enrichment/price/research/price_observations.csv", help="Path to local observations CSV"),
+    local_prices: str = typer.Option("data/enrichment/price/final/prices.csv", help="Path to local prices CSV"),
+    output_dir: str = typer.Option("data/enrichment/price", help="Output directory"),
+    reports_dir: str = typer.Option("reports", help="Reports directory"),
+    canonical_id: str = typer.Option(None, help="Process single canonical ID"),
+    limit: int = typer.Option(None, help="Limit execution count"),
+    resume: bool = typer.Option(False, "--resume", help="Resume safely"),
+    force: bool = typer.Option(False, "--force", help="Force complete execution"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run only"),
+    max_sources_per_place: int = typer.Option(10, help="Max sources per place"),
+    request_delay: float = typer.Option(0.5, help="Request delay"),
+    request_timeout: float = typer.Option(10.0, help="Request timeout"),
+    verification_version: str = typer.Option("external_price_verification_pilot_v1", help="Verification version tag"),
+    strict: bool = typer.Option(False, "--strict", help="Strict mode")
+):
+    """
+    Verify current or externally supported price information using authoritative public sources.
+    """
+    console.print("[bold blue]Starting External Price Verification...[/bold blue]")
+    from src.enrichment.external_price_verifier import run_external_price_verification
+    try:
+        res = run_external_price_verification(
+            queue_path=queue,
+            local_observations_path=local_observations,
+            local_prices_path=local_prices,
+            output_dir=output_dir,
+            reports_dir=reports_dir,
+            canonical_id=canonical_id,
+            limit=limit,
+            resume=resume,
+            force=force,
+            dry_run=dry_run,
+            max_sources_per_place=max_sources_per_place,
+            request_delay=request_delay,
+            request_timeout=request_timeout,
+            verification_version=verification_version,
+            strict=strict
+        )
+        if dry_run:
+            console.print("[yellow]Dry-run completed successfully. No files written.[/yellow]")
+        else:
+            stats = res["stats"]
+            console.print("[green]External Price Verification completed successfully.[/green]")
+            console.print(f"Total processed candidates: {stats['completed_count']}")
+            console.print(f"Verified current: {stats['verified_count']}")
+            console.print(f"Official live unbounded: {stats['official_unbounded_count']}")
+            console.print(f"Provisional: {stats['provisional_count']}")
+            console.print(f"Unresolved: {stats['unresolved_count']}")
+            console.print(f"Total external observations: {stats['observations_count']}")
+            console.print(f"Selected external prices: {stats['verified_prices_count']}")
+    except Exception as e:
+        console.print(f"[red]Error during external price verification: {e}[/red]")
+        raise e
+
 if __name__ == "__main__":
     app()
 

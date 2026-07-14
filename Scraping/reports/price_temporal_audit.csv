@@ -1,33 +1,33 @@
 price_observation_id,canonical_id,raw_price_text,observed_at,source_temporal_quality,verification_status,confidence
-obs_0001,can_1fef284e7d10,Paket per Orang = Rp270.000,2026-07-14T06:52:07.745338+00:00,historical,historical,0.5
-obs_0002,can_1fef284e7d10,sewa speedboat = Rp700.000,2026-07-14T06:52:07.745808+00:00,historical,historical,0.5
-obs_0004,can_151f3bbf542d,"saung nya sendiri ada beberapa variasi harga yakni ada 150k, 100k, dan 50k",2026-07-14T06:52:07.748730+00:00,historical,historical,0.5
-obs_0007,can_151f3bbf542d,nyewa kapal untuk nyebrang ke pulau takil harga nya 200k per kapal,2026-07-14T06:52:07.749396+00:00,historical,historical,0.5
-obs_0008,can_151f3bbf542d,"Uang Masuk Rp 35.000,-/orang",2026-07-14T06:52:07.749920+00:00,historical,historical,0.5
-obs_0009,can_151f3bbf542d,Kamar Mandinya lumayan Bersih Rp 3.000,2026-07-14T06:52:07.750422+00:00,historical,historical,0.5
-obs_0010,can_151f3bbf542d,plastik kresek buat baju basah Rp 2.000,2026-07-14T06:52:07.751479+00:00,historical,historical,0.5
-obs_0012,can_151f3bbf542d,tagihan parkir mobil 10 ribu,2026-07-14T06:52:07.753117+00:00,historical,historical,0.5
-obs_0016,can_cada872752b2,Tiket masuknya 100rb per mobil,2026-07-14T06:52:07.759994+00:00,historical,historical,0.5
-obs_0017,can_cada872752b2,sewa perahu dan kena Rp500rb,2026-07-14T06:52:07.760218+00:00,historical,historical,0.5
-obs_0018,can_cada872752b2,masuk ke kawasan Tegal mas dikenakan biaya masuk 75rb per org,2026-07-14T06:52:07.761139+00:00,historical,historical,0.5
-obs_0020,can_cada872752b2,Motor 10rb,2026-07-14T06:52:07.761629+00:00,historical,historical,0.5
-obs_0025,can_cada872752b2,sewa pondokan/gazebo 100 rb/5jam,2026-07-14T06:52:07.764845+00:00,historical,historical,0.5
-obs_0026,can_17b24ba62485,Harga masuknya kalo hari kamis jumat 35k,2026-07-14T06:52:07.771785+00:00,historical,historical,0.5
-obs_0027,can_17b24ba62485,pas weekend 45k,2026-07-14T06:52:07.772059+00:00,historical,historical,0.5
-obs_0028,can_17b24ba62485,ban single Rp.10.000,2026-07-14T06:52:07.774001+00:00,historical,historical,0.5
-obs_0032,can_2850f83ad341,biaya masuk yang cukup murah yaitu 10 ribu rupiah,2026-07-14T06:52:07.778375+00:00,historical,historical,0.5
-obs_0033,can_58c471e76647,harga tiket anak2 Rp. 35.000,2026-07-14T06:52:07.781469+00:00,historical,historical,0.5
-obs_0034,can_58c471e76647,dewasa Rp. 40.000,2026-07-14T06:52:07.781861+00:00,historical,historical,0.5
-obs_0035,can_58c471e76647,tambahan atraksi berbayar Rp. 15.000,2026-07-14T06:52:07.782177+00:00,historical,historical,0.5
-obs_0036,can_58c471e76647,sewa ban Rp. 35.000,2026-07-14T06:52:07.782518+00:00,historical,historical,0.5
-obs_0037,can_58c471e76647,harga tiket 40ribu rupiah,2026-07-14T06:52:07.782952+00:00,historical,historical,0.5
-obs_0039,can_1a46f7a6372c,Parkir mobil 10rb,2026-07-14T06:52:07.787691+00:00,historical,historical,0.5
-obs_0040,can_1a46f7a6372c,Ongkos jip offroad 500rb,2026-07-14T06:52:07.788124+00:00,historical,historical,0.5
-obs_0041,can_1a46f7a6372c,1 paket cemilan gajah (pisang wortel dll) 30rb,2026-07-14T06:52:07.788551+00:00,historical,historical,0.5
-obs_0042,can_1a46f7a6372c,Tiket masuk 50rb,2026-07-14T06:52:07.788945+00:00,historical,historical,0.5
-obs_0043,can_1a46f7a6372c,Tip foto buat pawang 20rb,2026-07-14T06:52:07.789407+00:00,historical,historical,0.5
-obs_0046,can_1a46f7a6372c,rating gajah 4.5,2026-07-14T06:52:07.792054+00:00,unknown,unknown_date,0.3
-obs_0048,can_1a46f7a6372c,tahun 2026,2026-07-14T06:52:07.792921+00:00,unknown,unknown_date,0.3
-obs_0049,can_1a46f7a6372c,Info kontak kak 081277778888,2026-07-14T06:52:07.793438+00:00,unknown,unknown_date,0.3
-obs_0057,can_5dd47abc65d1,45 rb buat 2 orang,2026-07-14T06:52:07.809566+00:00,historical,historical,0.5
-obs_0058,can_5dd47abc65d1,HTM Hari normal 30 rb,2026-07-14T06:52:07.810773+00:00,historical,historical,0.5
+obs_0001,can_1fef284e7d10,Paket per Orang = Rp270.000,2026-07-14T07:26:34.863859+00:00,historical,historical,0.5
+obs_0002,can_1fef284e7d10,sewa speedboat = Rp700.000,2026-07-14T07:26:34.864226+00:00,historical,historical,0.5
+obs_0004,can_151f3bbf542d,"saung nya sendiri ada beberapa variasi harga yakni ada 150k, 100k, dan 50k",2026-07-14T07:26:34.868028+00:00,historical,historical,0.5
+obs_0007,can_151f3bbf542d,nyewa kapal untuk nyebrang ke pulau takil harga nya 200k per kapal,2026-07-14T07:26:34.869145+00:00,historical,historical,0.5
+obs_0008,can_151f3bbf542d,"Uang Masuk Rp 35.000,-/orang",2026-07-14T07:26:34.870338+00:00,historical,historical,0.5
+obs_0009,can_151f3bbf542d,Kamar Mandinya lumayan Bersih Rp 3.000,2026-07-14T07:26:34.870905+00:00,historical,historical,0.5
+obs_0010,can_151f3bbf542d,plastik kresek buat baju basah Rp 2.000,2026-07-14T07:26:34.871756+00:00,historical,historical,0.5
+obs_0012,can_151f3bbf542d,tagihan parkir mobil 10 ribu,2026-07-14T07:26:34.873187+00:00,historical,historical,0.5
+obs_0016,can_cada872752b2,Tiket masuknya 100rb per mobil,2026-07-14T07:26:34.878288+00:00,historical,historical,0.5
+obs_0017,can_cada872752b2,sewa perahu dan kena Rp500rb,2026-07-14T07:26:34.878480+00:00,historical,historical,0.5
+obs_0018,can_cada872752b2,masuk ke kawasan Tegal mas dikenakan biaya masuk 75rb per org,2026-07-14T07:26:34.879507+00:00,historical,historical,0.5
+obs_0020,can_cada872752b2,Motor 10rb,2026-07-14T07:26:34.880021+00:00,historical,historical,0.5
+obs_0025,can_cada872752b2,sewa pondokan/gazebo 100 rb/5jam,2026-07-14T07:26:34.883709+00:00,historical,historical,0.5
+obs_0026,can_17b24ba62485,Harga masuknya kalo hari kamis jumat 35k,2026-07-14T07:26:34.891175+00:00,historical,historical,0.5
+obs_0027,can_17b24ba62485,pas weekend 45k,2026-07-14T07:26:34.891369+00:00,historical,historical,0.5
+obs_0028,can_17b24ba62485,ban single Rp.10.000,2026-07-14T07:26:34.892541+00:00,historical,historical,0.5
+obs_0032,can_2850f83ad341,biaya masuk yang cukup murah yaitu 10 ribu rupiah,2026-07-14T07:26:34.895710+00:00,historical,historical,0.5
+obs_0033,can_58c471e76647,harga tiket anak2 Rp. 35.000,2026-07-14T07:26:34.898248+00:00,historical,historical,0.5
+obs_0034,can_58c471e76647,dewasa Rp. 40.000,2026-07-14T07:26:34.898745+00:00,historical,historical,0.5
+obs_0035,can_58c471e76647,tambahan atraksi berbayar Rp. 15.000,2026-07-14T07:26:34.899063+00:00,historical,historical,0.5
+obs_0036,can_58c471e76647,sewa ban Rp. 35.000,2026-07-14T07:26:34.899339+00:00,historical,historical,0.5
+obs_0037,can_58c471e76647,harga tiket 40ribu rupiah,2026-07-14T07:26:34.899750+00:00,historical,historical,0.5
+obs_0039,can_1a46f7a6372c,Parkir mobil 10rb,2026-07-14T07:26:34.903347+00:00,historical,historical,0.5
+obs_0040,can_1a46f7a6372c,Ongkos jip offroad 500rb,2026-07-14T07:26:34.903576+00:00,historical,historical,0.5
+obs_0041,can_1a46f7a6372c,1 paket cemilan gajah (pisang wortel dll) 30rb,2026-07-14T07:26:34.903786+00:00,historical,historical,0.5
+obs_0042,can_1a46f7a6372c,Tiket masuk 50rb,2026-07-14T07:26:34.903991+00:00,historical,historical,0.5
+obs_0043,can_1a46f7a6372c,Tip foto buat pawang 20rb,2026-07-14T07:26:34.904194+00:00,historical,historical,0.5
+obs_0046,can_1a46f7a6372c,rating gajah 4.5,2026-07-14T07:26:34.905689+00:00,unknown,unknown_date,0.3
+obs_0048,can_1a46f7a6372c,tahun 2026,2026-07-14T07:26:34.906252+00:00,unknown,unknown_date,0.3
+obs_0049,can_1a46f7a6372c,Info kontak kak 081277778888,2026-07-14T07:26:34.906559+00:00,unknown,unknown_date,0.3
+obs_0057,can_5dd47abc65d1,45 rb buat 2 orang,2026-07-14T07:26:34.931965+00:00,historical,historical,0.5
+obs_0058,can_5dd47abc65d1,HTM Hari normal 30 rb,2026-07-14T07:26:34.933096+00:00,historical,historical,0.5
