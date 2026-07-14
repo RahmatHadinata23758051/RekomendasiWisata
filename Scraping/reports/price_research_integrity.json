@@ -1,0 +1,18 @@
+{
+  "checksums_before": {
+    "attractions_master_verified.parquet": "d9dd9500c0ab50cf3d0a6735c469ce95f75e2227782dce7072b010f282b9bde0",
+    "attractions_candidates.parquet": "4f5dc5c3637ac3b54cb57665e1b9f0d3fb3975195dc8d547425fcac33328a87d",
+    "reviews.parquet": "6fdef9b6ddf0015aa3d8bd62e9d47396c08f314b1a2ee491574d5d31749a1c6f",
+    "place_metadata.parquet": "f27d66b7f40850ed1f8e4903cad94a018b9724304eb29f8cbacd76fea82de4c0",
+    "research_price_candidates.csv": "b0f9758b3785407c647a181c77f131fa4f2ba774dcb4535cd6bde8aa98d2ef78"
+  },
+  "checksums_after": {
+    "attractions_master_verified.parquet": "d9dd9500c0ab50cf3d0a6735c469ce95f75e2227782dce7072b010f282b9bde0",
+    "attractions_candidates.parquet": "4f5dc5c3637ac3b54cb57665e1b9f0d3fb3975195dc8d547425fcac33328a87d",
+    "reviews.parquet": "6fdef9b6ddf0015aa3d8bd62e9d47396c08f314b1a2ee491574d5d31749a1c6f",
+    "place_metadata.parquet": "f27d66b7f40850ed1f8e4903cad94a018b9724304eb29f8cbacd76fea82de4c0",
+    "research_price_candidates.csv": "b0f9758b3785407c647a181c77f131fa4f2ba774dcb4535cd6bde8aa98d2ef78"
+  },
+  "integrity_passed": true,
+  "timestamp": "2026-07-14T06:38:03.162250+00:00"
+}

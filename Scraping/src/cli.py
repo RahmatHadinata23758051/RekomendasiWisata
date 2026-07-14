@@ -1191,6 +1191,48 @@ def validate_price_candidates(
         console.print(f"[red]Error during price candidate validation: {e}[/red]")
         raise e
 
+@app.command(name="run-price-research")
+def run_price_research_cmd(
+    input: str = typer.Option("data/enrichment/price/validation/research_price_candidates.csv", help="Path to research candidates CSV"),
+    output_dir: str = typer.Option("data/enrichment/price/validation", help="Output directory"),
+    reports_dir: str = typer.Option("reports", help="Reports directory"),
+    limit: Optional[int] = typer.Option(None, help="Limit execution count"),
+    canonical_id: Optional[str] = typer.Option(None, help="Process single canonical ID"),
+    resume: bool = typer.Option(False, "--resume", help="Resume safely from previous state"),
+    force: bool = typer.Option(False, "--force", help="Force complete execution from scratch"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run query queue build only")
+):
+    """
+    Execute price research for validated candidates.
+    """
+    console.print("[bold blue]Starting Price Research...[/bold blue]")
+    from src.enrichment.price_research import run_price_research
+    try:
+        res = run_price_research(
+            input_path=input,
+            output_dir=output_dir,
+            reports_dir=reports_dir,
+            limit=limit,
+            canonical_id=canonical_id,
+            resume=resume,
+            force=force,
+            dry_run=dry_run
+        )
+        if dry_run:
+            console.print("[yellow]Dry-run completed. Query queue generated.[/yellow]")
+        else:
+            stats = res["stats"]
+            console.print("[green]Price Research completed successfully.[/green]")
+            console.print(f"Total Research Candidates: {stats['total_validated']}")
+            console.print(f"Completed with price count: {stats['completed_count'] - stats['unresolved_count']}")
+            console.print(f"Unresolved (no current price) count: {stats['unresolved_count']}")
+            console.print(f"Total Price Observations found: {stats['observations_count']}")
+            console.print(f"Total Selected Prices: {stats['selected_count']}")
+    except Exception as e:
+        console.print(f"[red]Error during price research: {e}[/red]")
+        raise e
+
 if __name__ == "__main__":
     app()
+
 

@@ -1,0 +1,4 @@
+conflict_id,canonical_id,price_type,observation_id_a,observation_id_b,value_a,value_b,source_a,source_b,date_a,date_b,conflict_type,resolution_status,selected_observation_id,resolution_reason,requires_manual_review
+con_0001,can_151f3bbf542d,entry_ticket,obs_0001,obs_0006,30000,35000,google_maps,google_maps,2026-07-14T06:38:03.014604+00:00,2026-07-14T06:38:03.017059+00:00,nominal_difference,resolved,obs_0006,Selected most consistent price mentioned in reviews.,False
+con_0002,can_151f3bbf542d,entry_ticket,obs_0001,obs_0009,30000,35000,google_maps,google_maps,2026-07-14T06:38:03.014604+00:00,2026-07-14T06:38:03.019303+00:00,nominal_difference,resolved,obs_0009,Selected most consistent price mentioned in reviews.,False
+con_0003,can_151f3bbf542d,entry_ticket,obs_0001,obs_0013,30000,35000,google_maps,google_maps,2026-07-14T06:38:03.014604+00:00,2026-07-14T06:38:03.022917+00:00,nominal_difference,resolved,obs_0013,Selected most consistent price mentioned in reviews.,False
