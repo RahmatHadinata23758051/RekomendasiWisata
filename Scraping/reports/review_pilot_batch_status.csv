@@ -2,9 +2,9 @@ batch_id,mode,status,apify_run_id,dataset_id,place_count
 batch_001,positive,completed,MVrGztxpiTCIXSLsH,OVCrxe8AdxFdcpkHk,70
 batch_001,negative,completed,0VCtRHHFadp9JudlV,NbaZzpfCd8mqiMDA3,70
 batch_001,neutral,completed,z4UYRSzMdTivVyRD5,P9SOI5koc4zsdBB0e,70
-batch_002,positive,pending,,,70
-batch_002,negative,pending,,,70
-batch_002,neutral,pending,,,70
+batch_002,positive,completed,Ovc9fBBi5n5h1PPtC,vNxzljfeHXLPZWrSz,70
+batch_002,negative,completed,GZ0UmqUzMylgcPkjd,hNzfObHao8pQIj7M9,70
+batch_002,neutral,completed,gSzzOYvq6dRom9Fca,uW6MfRxxvygi00axG,70
 batch_003,positive,pending,,,70
 batch_003,negative,pending,,,70
 batch_003,neutral,pending,,,70

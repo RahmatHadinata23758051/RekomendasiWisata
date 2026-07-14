@@ -1,7 +1,12 @@
 canonical_id,name,region,pilot_batch,total_reviews_collected,positive_collected,negative_collected,neutral_collected,positive_selected,negative_selected,neutral_selected,coverage_status,target_positive,target_negative,target_neutral
+can_4caecae1c000,Teluk betung,Kabupaten Pesawaran,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_142a3fb45d57,POS 1 Gunung Tanggamus,Kabupaten Tanggamus,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_46344e0deb0c,Old Steel Bridge,Kabupaten Tanggamus,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_01a8f6a5d95c,gunung sari,Kabupaten Tanggamus,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_075f59d24b7d,Gunung Loro ireng,Kabupaten Tanggamus,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_4479573dce23,Kebun lada sinar laut,Kabupaten Tanggamus,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
+can_43e0dc8c2d98,Teluk berak,Kabupaten Tanggamus,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
+can_26b28da9aa2c,Dermaga Pulau Pasaran,Kota Bandar Lampung,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_106ac0f68f3c,Gus Planters,Kabupaten Pesisir Barat,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_04a90c3fe54e,POHON KEHIDUPAN FESINDO,Kota Bandar Lampung,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_00d338703fa6,Taman komarudin,Kota Bandar Lampung,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
@@ -11,7 +16,9 @@ can_1c55fb1a056f,Taman TOGA (Tanaman Obat Keluarga),Kabupaten Lampung Selatan,ba
 can_03f151672366,Pantai kerang mas,Kabupaten Lampung Selatan,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_032df40e15a9,BARAQBAH BEACH NATURE,Kabupaten Lampung Selatan,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_0cc93e404ff4,Bukit way pintau,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_55959c4e17fd,Durian Urut,Kabupaten Pesisir Barat,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_00f33a88d2dd,Bukit Gg. Gaul,Kabupaten Lampung Tengah,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_36b9e1f98ce9,Bukit teletabis estetik,Kota Metro,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_111f61b5cbc0,Air terjun apik,Kabupaten Lampung Timur,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_173d9bd63841,Wisata taman mbh jo,Kabupaten Lampung Timur,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_0073d9414900,Embung Pakuan Sakti,Kabupaten Way Kanan,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
@@ -19,10 +26,18 @@ can_121ff93e6ff6,Simpang sainal,Kabupaten Way Kanan,batch_001,0,0,0,0,0,0,0,no_g
 can_067001992225,Kebun Sawit - Putra Benawa,Kabupaten Way Kanan,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_1864fa0869eb,Kebun elen,Kabupaten Way Kanan,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_076831a1881b,Air Terjun Putera Senja,Kabupaten Way Kanan,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_248208cda700,Pantai keduk,Kabupaten Lampung Utara,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
+can_380cd068a4e4,Simpang rengas wisata,Kabupaten Lampung Utara,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
+can_29ee2506c048,Pemancingan,Kabupaten Lampung Utara,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_03a8601a9bdd,Persawahan desa fajar Baru blok A,Kabupaten Mesuji,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_47488bf0fc45,sawah adnan,Kabupaten Mesuji,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
+can_58c807b2db79,Taman berwarna pingled 22,Kota Metro,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
+can_2f84aa658420,Sawahku 4300,Kabupaten Pringsewu,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_021c5626431e,GR.DONK,Kabupaten Pringsewu,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_168c0626e801,Sawah dede lili,Kabupaten Pringsewu,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_0776813a925a,Kanal Y,Kabupaten Tulang Bawang,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_15dc7c773782,Taman Tugu Dodos,Kabupaten Tulang Bawang,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_48b7e18df94a,Tiwii,Kabupaten Tulang Bawang,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
 can_1c185bb8d31e,Embung Way Sumber Jaya,Kabupaten Tulang Bawang Barat,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
 can_07fc88875adc,Embung Way Balam Jaya,Kabupaten Tulang Bawang Barat,batch_001,0,0,0,0,0,0,0,no_google_reviews,5,5,3
+can_43fd39fb5671,Agro wisata,Kabupaten Tulang Bawang Barat,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2

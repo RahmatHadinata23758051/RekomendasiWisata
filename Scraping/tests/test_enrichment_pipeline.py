@@ -388,28 +388,120 @@ def test_strategy_optimization_manifest():
             assert b["raw_limit_neutral"] == 10
 
 def test_coverage_status_classification():
-    # 4. Pending places classified as not_scheduled, not no_google_reviews
-    # 5. Attempted coverage rate denominator is exactly 70
     coverage_path = "data/enrichment/final/review_coverage.csv"
-    if os.path.exists(coverage_path):
+    pilot_input_path = "data/enrichment/pilot/pilot_google_places_input.csv"
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    
+    if os.path.exists(coverage_path) and os.path.exists(pilot_input_path) and os.path.exists(manifest_path):
         df_cov = pd.read_csv(coverage_path)
+        df_pilot = pd.read_csv(pilot_input_path)
         
-        # Ineligible places check (29 places)
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+            
+        # 5. Hitung expected secara dinamis
+        total_pilot = len(df_pilot["canonical_id"].unique())
+        
+        # ineligible_count
+        ineligible_count = sum(df_pilot["review_scrape_eligible"].astype(str).str.lower() == "false")
+        eligible_count = total_pilot - ineligible_count
+        
+        # attempted_count based on unique canonical_ids in completed batches
+        attempted_cids = set()
+        for b in manifest.get("batches", []):
+            if b.get("status") == "completed":
+                attempted_cids.update(b.get("canonical_ids", []))
+                
+        attempted_count = len(attempted_cids)
+        pending_count = eligible_count - attempted_count
+        
+        # 6. Validasi coverage file
+        ineligible_df = df_cov[df_cov["coverage_status"] == "ineligible"]
+        assert len(ineligible_df) == ineligible_count
+        
+        pending_df = df_cov[df_cov["coverage_status"] == "not_scheduled"]
+        assert len(pending_df) == pending_count
+        
+        attempted_statuses = ["no_google_reviews", "reviews_without_text", "partial_bucket_coverage", "complete_bucket_coverage", "failed_scrape"]
+        attempted_df = df_cov[df_cov["coverage_status"].isin(attempted_statuses)]
+        assert len(attempted_df) == attempted_count
+        
+        # 7. Tambahkan rekonsiliasi:
+        # total_pilot = ineligible + not_scheduled + attempted_statuses
+        assert total_pilot == len(ineligible_df) + len(pending_df) + len(attempted_df)
+        
+        # Verify attempted with/without reviews counts sum to attempted_count
+        with_reviews = sum(attempted_df["total_reviews_collected"] > 0)
+        without_reviews = sum(attempted_df["total_reviews_collected"] == 0)
+        assert with_reviews + without_reviews == attempted_count
+
+
+def test_coverage_status_classification_regression(tmp_path):
+    # Setup temporary paths for manifest and output dirs
+    test_manifest_path = tmp_path / "test_manifest.json"
+    test_processed_dir = tmp_path / "processed_reviews"
+    test_final_dir = tmp_path / "final"
+    test_reports_dir = tmp_path / "reports"
+    
+    # Let's read the real manifest so we have the valid structures and canonical IDs
+    real_manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    with open(real_manifest_path, "r", encoding="utf-8") as f:
+        real_manifest = json.load(f)
+        
+    # Helper to run processing and verify expected counts
+    def run_and_verify(completed_batches, expected_attempted, expected_pending):
+        # Construct temporary manifest where only specified batches are "completed"
+        temp_manifest = {"batches": []}
+        for b in real_manifest.get("batches", []):
+            b_copy = b.copy()
+            if b_copy["batch_id"] in completed_batches:
+                b_copy["status"] = "completed"
+            else:
+                b_copy["status"] = "pending"
+            temp_manifest["batches"].append(b_copy)
+            
+        with open(test_manifest_path, "w", encoding="utf-8") as f:
+            json.dump(temp_manifest, f)
+            
+        # Run process_and_select_reviews
+        from src.enrichment.review_processor import process_and_select_reviews
+        process_and_select_reviews(
+            raw_dir="data/enrichment/raw_reviews",  # use actual raw reviews
+            pilot_csv_path="data/enrichment/pilot/pilot_places.csv",
+            manifest_path=str(test_manifest_path),
+            processed_dir=str(test_processed_dir),
+            final_dir=str(test_final_dir),
+            reports_dir=str(test_reports_dir)
+        )
+        
+        # Read final/review_coverage.csv
+        df_cov = pd.read_csv(test_final_dir / "review_coverage.csv")
+        
+        # ineligible check (always 29)
         ineligible_df = df_cov[df_cov["coverage_status"] == "ineligible"]
         assert len(ineligible_df) == 29
         
-        # Pending places check (201 places should be not_scheduled)
+        # pending check
         pending_df = df_cov[df_cov["coverage_status"] == "not_scheduled"]
-        assert len(pending_df) == 201
+        assert len(pending_df) == expected_pending
         
-        # Attempted places check (70 places)
-        attempted_df = df_cov[~df_cov["coverage_status"].isin(["ineligible", "not_scheduled"])]
-        assert len(attempted_df) == 70
+        # attempted check
+        attempted_statuses = ["no_google_reviews", "reviews_without_text", "partial_bucket_coverage", "complete_bucket_coverage", "failed_scrape"]
+        attempted_df = df_cov[df_cov["coverage_status"].isin(attempted_statuses)]
+        assert len(attempted_df) == expected_attempted
         
-        # Attempted reviews coverage rate denominator verification
-        # 43 with reviews, 27 without reviews
-        with_reviews = sum(attempted_df["total_reviews_collected"] > 0)
-        assert with_reviews == 43
-        
-        without_reviews = sum(attempted_df["total_reviews_collected"] == 0)
-        assert without_reviews == 27
+        # reconciliation check
+        assert len(df_cov) == 300
+        assert len(ineligible_df) + len(pending_df) + len(attempted_df) == 300
+
+    # Scenario A: One completed batch (batch_001)
+    # Expected: attempted = 70, pending = 201
+    run_and_verify(["batch_001"], 70, 201)
+    
+    # Scenario B: Two completed batches (batch_001, batch_002)
+    # Expected: attempted = 140, pending = 131
+    run_and_verify(["batch_001", "batch_002"], 140, 131)
+    
+    # Scenario C: All batches completed
+    # Expected: attempted = 271, pending = 0
+    run_and_verify(["batch_001", "batch_002", "batch_003", "batch_004"], 271, 0)
