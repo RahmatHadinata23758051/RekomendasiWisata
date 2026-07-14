@@ -270,32 +270,32 @@ can_e8066416c183,FMM Panaragan,Kabupaten Tulang Bawang Barat,batch_004,0,0,0,0,0
 can_9460594145a4,Taman kuda mulyosari,Kabupaten Tulang Bawang Barat,batch_003,0,0,0,0,0,0,0,not_scheduled,5,3,2
 can_ea28fb1041fe,Bumi Perkemahan Bangun Jaya,Kabupaten Tulang Bawang Barat,batch_004,0,0,0,0,0,0,0,not_scheduled,5,3,2
 can_43fd39fb5671,Agro wisata,Kabupaten Tulang Bawang Barat,batch_002,0,0,0,0,0,0,0,no_google_reviews,5,3,2
-can_03603652006f,Satwa Wahana & Wisata Bumi Kedaton,Kota Bandar Lampung,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_06c83a52d214,Tugu Raden Inten II,Kota Bandar Lampung,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_22bf0ec57e34,SANHOK,Kota Bandar Lampung,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_761c34478390,Tugu Pena Ceria,Kota Metro,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_a05151d6b1d4,Trumpoong Park,Kabupaten Lampung Tengah,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_0eee9f90bb8b,Way Belerang Simpur,Kabupaten Lampung Selatan,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_084c24db31c1,Tirtayasa Summit,Kabupaten Lampung Selatan,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_25a23bbd64cd,Siger Park Bakauheni Harbour City,Kabupaten Lampung Selatan,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_044dc28e2a87,Bukit Rindingan,Kabupaten Lampung Tengah,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_da49b0d74f1a,Gunung Dempu,Kabupaten Lampung Tengah,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_0db511e5fe3f,Simpang tiga,Kabupaten Lampung Tengah,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_198553114e0e,Lapangan Pemuda Ketapang,Kabupaten Lampung Tengah,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_fd1dbf505059,Waterpark Kali miring,Kabupaten Lampung Tengah,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_10e7609207ba,Tangkit Tebak,Kabupaten Lampung Utara,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_23857140564f,Water Boom Galaxy,Kabupaten Lampung Utara,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_0f49826fcdf9,Alun-alun Panarangan,Kabupaten Lampung Utara,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_135649179b4e,Suoh,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_795db152eaed,keramikan,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_1084427b1bc7,TUGU PERBATASAN,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_2f853345a71b,TUGU KB,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_267739168349,TUGU BATAS CANGGU-PEKON BALAK,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_29c719c41a4d,TUGU BATAS CANGGU-KOTA BESI,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_0eb029a1fef8,Cagar Budaya Sipahit Lidah,Kabupaten Lampung Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_09bb1abed975,Sunrise Beach of PLS,Kabupaten Pesisir Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_170f589d3b6c,Snorkeling point,Kabupaten Pesisir Barat,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_32759e1cb3ab,TUGU ANTRIDA,Kabupaten Tulang Bawang,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_0568deac000e,TAMAN KOTA Unit II Banjar Agung,Kabupaten Tulang Bawang,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_0c256d059ae4,BK 2,Kabupaten Way Kanan,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
-can_edb376da399b,Simpang WRP Home,Kabupaten Way Kanan,batch_001,0,0,0,0,0,0,0,ineligible,5,5,3
+can_03603652006f,Satwa Wahana & Wisata Bumi Kedaton,Kota Bandar Lampung,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_06c83a52d214,Tugu Raden Inten II,Kota Bandar Lampung,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_22bf0ec57e34,SANHOK,Kota Bandar Lampung,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_761c34478390,Tugu Pena Ceria,Kota Metro,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_a05151d6b1d4,Trumpoong Park,Kabupaten Lampung Tengah,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_0eee9f90bb8b,Way Belerang Simpur,Kabupaten Lampung Selatan,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_084c24db31c1,Tirtayasa Summit,Kabupaten Lampung Selatan,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_25a23bbd64cd,Siger Park Bakauheni Harbour City,Kabupaten Lampung Selatan,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_044dc28e2a87,Bukit Rindingan,Kabupaten Lampung Tengah,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_da49b0d74f1a,Gunung Dempu,Kabupaten Lampung Tengah,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_0db511e5fe3f,Simpang tiga,Kabupaten Lampung Tengah,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_198553114e0e,Lapangan Pemuda Ketapang,Kabupaten Lampung Tengah,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_fd1dbf505059,Waterpark Kali miring,Kabupaten Lampung Tengah,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_10e7609207ba,Tangkit Tebak,Kabupaten Lampung Utara,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_23857140564f,Water Boom Galaxy,Kabupaten Lampung Utara,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_0f49826fcdf9,Alun-alun Panarangan,Kabupaten Lampung Utara,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_135649179b4e,Suoh,Kabupaten Lampung Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_795db152eaed,keramikan,Kabupaten Lampung Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_1084427b1bc7,TUGU PERBATASAN,Kabupaten Lampung Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_2f853345a71b,TUGU KB,Kabupaten Lampung Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_267739168349,TUGU BATAS CANGGU-PEKON BALAK,Kabupaten Lampung Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_29c719c41a4d,TUGU BATAS CANGGU-KOTA BESI,Kabupaten Lampung Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_0eb029a1fef8,Cagar Budaya Sipahit Lidah,Kabupaten Lampung Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_09bb1abed975,Sunrise Beach of PLS,Kabupaten Pesisir Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_170f589d3b6c,Snorkeling point,Kabupaten Pesisir Barat,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_32759e1cb3ab,TUGU ANTRIDA,Kabupaten Tulang Bawang,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_0568deac000e,TAMAN KOTA Unit II Banjar Agung,Kabupaten Tulang Bawang,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_0c256d059ae4,BK 2,Kabupaten Way Kanan,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2
+can_edb376da399b,Simpang WRP Home,Kabupaten Way Kanan,ineligible,0,0,0,0,0,0,0,ineligible,5,3,2

@@ -1,0 +1,7 @@
+batch_id,strategy_version,sentiment_bucket,collected,selected,target,fill_rate
+batch_001,review_strategy_v1,positive,341,143,350,40.86%
+batch_001,review_strategy_v1,negative,108,67,350,19.14%
+batch_001,review_strategy_v1,neutral,23,20,210,9.52%
+batch_002,review_strategy_v2,positive,335,198,350,56.57%
+batch_002,review_strategy_v2,negative,84,48,210,22.86%
+batch_002,review_strategy_v2,neutral,42,27,140,19.29%

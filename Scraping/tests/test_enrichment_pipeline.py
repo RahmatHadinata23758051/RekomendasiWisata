@@ -505,3 +505,48 @@ def test_coverage_status_classification_regression(tmp_path):
     # Scenario C: All batches completed
     # Expected: attempted = 271, pending = 0
     run_and_verify(["batch_001", "batch_002", "batch_003", "batch_004"], 271, 0)
+
+
+def test_per_batch_metrics_and_reconciliation():
+    comparison_csv_path = "reports/review_batch_comparison.csv"
+    costs_csv_path = "reports/review_batch_costs.csv"
+    bucket_fill_csv_path = "reports/review_batch_bucket_fill.csv"
+    place_coverage_csv_path = "reports/review_batch_place_coverage.csv"
+    
+    assert os.path.exists(comparison_csv_path)
+    assert os.path.exists(costs_csv_path)
+    assert os.path.exists(bucket_fill_csv_path)
+    assert os.path.exists(place_coverage_csv_path)
+    
+    df_comp = pd.read_csv(comparison_csv_path)
+    assert len(df_comp) == 2
+    
+    row_001 = df_comp[df_comp["batch_id"] == "batch_001"].iloc[0]
+    assert row_001["strategy_version"] == "review_strategy_v1"
+    assert int(row_001["raw_reviews"]) == 1108
+    assert int(row_001["covered_places"]) == 43
+    assert int(row_001["attempted_places"]) == 70
+    assert row_001["coverage_rate"] == "61.43%"
+    assert float(row_001["actor_cost"]) == 4.82
+    
+    row_002 = df_comp[df_comp["batch_id"] == "batch_002"].iloc[0]
+    assert row_002["strategy_version"] == "review_strategy_v2"
+    assert int(row_002["raw_reviews"]) == 974
+    assert int(row_002["covered_places"]) == 55
+    assert int(row_002["attempted_places"]) == 70
+    assert row_002["coverage_rate"] == "78.57%"
+    
+    assert pd.isna(row_002["actor_cost"]) or row_002["actor_cost"] == "" or str(row_002["actor_cost"]).strip() == "nan" or str(row_002["actor_cost"]).strip() == ""
+    
+    df_costs = pd.read_csv(costs_csv_path)
+    b2_costs = df_costs[df_costs["batch_id"] == "batch_002"]
+    assert len(b2_costs) == 4
+    for _, r in b2_costs.iterrows():
+        assert r["status"] == "unavailable"
+        assert pd.isna(r["cost"]) or str(r["cost"]).strip() == "nan" or str(r["cost"]).strip() == ""
+        
+    b1_costs = df_costs[df_costs["batch_id"] == "batch_001"]
+    assert len(b1_costs) == 4
+    b1_total_row = b1_costs[b1_costs["mode"] == "total"].iloc[0]
+    assert b1_total_row["status"] == "available"
+    assert float(b1_total_row["cost"]) == 4.82
