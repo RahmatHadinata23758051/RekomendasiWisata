@@ -1,0 +1,10 @@
+metric,count,explanation
+external_observations,0,No live sources passed content validation.
+valid_unselected_observations,0,No live sources passed content validation.
+selected_observations,0,No live sources passed content validation.
+historical_observations,0,No live sources passed content validation.
+expired_observations,0,No live sources passed content validation.
+rejected_observations,0,No live sources passed content validation.
+observations_per_price_type,0,No live sources passed content validation.
+observations_per_temporal_status,0,No live sources passed content validation.
+observations_per_source_type,0,No live sources passed content validation.
