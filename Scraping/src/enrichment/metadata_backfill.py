@@ -833,9 +833,10 @@ def run_metadata_backfill(
             "requires_manual_review": priority in ["high", "medium"]
         })
         
-    os.makedirs("data/enrichment/price", exist_ok=True)
+    price_dir = os.path.join(os.path.dirname(output_dir), "price")
+    os.makedirs(price_dir, exist_ok=True)
     df_price = pd.DataFrame(price_candidates)
-    df_price.to_csv("data/enrichment/price/pilot_price_candidates.csv", index=False, encoding="utf-8")
+    df_price.to_csv(os.path.join(price_dir, "pilot_price_candidates.csv"), index=False, encoding="utf-8")
 
     # 6. Save Reports (Task 12)
     # metadata_backfill_summary.md
