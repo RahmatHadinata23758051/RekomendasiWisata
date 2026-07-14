@@ -1026,5 +1026,40 @@ def recover_review_batch(
             console.print(f"[red]Failed to recover {mode} run {run_id}: {e}[/red]")
             raise e
 
+@app.command(name="backfill-pilot-metadata")
+def backfill_pilot_metadata(
+    pilot: str = typer.Option("data/enrichment/pilot/pilot_places.parquet", help="Path to pilot places parquet"),
+    source_map: str = typer.Option("data/canonical/attraction_sources.parquet", help="Path to attraction sources mapping"),
+    raw_root: str = typer.Option("data/raw_records/apify_google_maps", help="Path to raw Apify records directory"),
+    output_dir: str = typer.Option("data/enrichment/metadata", help="Output directory for metadata"),
+    reports_dir: str = typer.Option("reports", help="Reports directory"),
+    metadata_version: str = typer.Option("metadata_backfill_pilot_v1", help="Metadata version versioning"),
+    strict_mapping: bool = typer.Option(False, "--strict-mapping", help="Only map with exact Place ID or source record ID"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run verification only")
+):
+    """
+    Backfill and normalize metadata for 300 pilot places.
+    """
+    console.print("[bold blue]Starting Metadata Backfill Pilot...[/bold blue]")
+    from src.enrichment.metadata_backfill import run_metadata_backfill
+    try:
+        run_metadata_backfill(
+            pilot_path=pilot,
+            source_map_path=source_map,
+            raw_root=raw_root,
+            output_dir=output_dir,
+            reports_dir=reports_dir,
+            metadata_version=metadata_version,
+            strict_mapping=strict_mapping,
+            dry_run=dry_run
+        )
+        if not dry_run:
+            console.print("[green]Metadata backfill pilot completed successfully.[/green]")
+        else:
+            console.print("[yellow]Dry run completed successfully.[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error during metadata backfill: {e}[/red]")
+        raise e
+
 if __name__ == "__main__":
     app()
