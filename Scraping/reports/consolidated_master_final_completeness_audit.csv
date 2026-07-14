@@ -1,0 +1,7 @@
+metric,expected_value,actual_value,matching
+all_scores_in_range,True,True,True
+complete_count,19,19,True
+strong_count,70,70,True
+moderate_count,175,175,True
+sparse_count,36,36,True
+total_count,300,300,True

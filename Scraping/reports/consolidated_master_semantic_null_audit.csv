@@ -1,0 +1,19 @@
+field_name,non_null_count,null_count,unknown_count,missing_count,not_applicable_count,false_count,zero_count,semantic_issue_count,audit_notes
+name,300,0,0,0,0,0,0,0,Looks clean.
+primary_category,300,0,0,0,0,0,0,0,Looks clean.
+latitude,300,0,0,0,0,0,0,0,Looks clean.
+longitude,300,0,0,0,0,0,0,0,Looks clean.
+official_website,300,0,0,292,0,0,0,0,Looks clean.
+website_status,300,0,0,0,0,0,0,0,Looks clean.
+operational_status,300,0,29,0,0,0,0,0,Looks clean.
+facilities,300,0,0,0,0,0,0,0,Looks clean.
+has_opening_hours,300,0,0,0,0,201,402,0,Looks clean.
+price_validation_scope,300,0,0,0,0,0,0,0,Looks clean.
+price_final_decision,167,133,133,133,134,0,0,0,Looks clean.
+has_local_price_evidence,300,0,0,0,0,292,584,0,Looks clean.
+local_price_min,8,292,292,292,292,0,0,0,Looks clean.
+local_price_max,8,292,292,292,292,0,0,0,Looks clean.
+external_verification_status,300,0,0,0,0,0,0,0,Looks clean.
+external_selected_price_count,300,0,0,0,0,300,600,0,Looks clean.
+external_price_min,0,300,300,300,300,0,0,0,Looks clean.
+external_price_max,0,300,300,300,300,0,0,0,Looks clean.

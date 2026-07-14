@@ -1,0 +1,9 @@
+metric,value
+total_pilot_canonical_ids,300
+total_verified_canonical_attractions,3130
+pilot_matched_in_canonical,300
+pilot_matched_in_metadata,300
+pilot_matched_in_price_candidates,300
+pilot_eligible_for_reviews,271
+pilot_not_eligible_for_reviews,29
+pilot_with_actual_reviews_scraped,172

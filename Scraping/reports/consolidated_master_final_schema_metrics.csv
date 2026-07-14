@@ -1,0 +1,10 @@
+metric,value
+master_row_count,300
+unique_canonical_id_count,300
+total_column_count,99
+required_column_count,75
+nullable_column_count,24
+enum_column_count,87
+numeric_column_count,31
+boolean_column_count,24
+timestamp_column_count,0

@@ -1,0 +1,14 @@
+source_name,source_path,join_key,source_rows,source_unique_ids,pilot_matched_ids,pilot_unmatched_ids,source_orphan_ids,expected_cardinality,actual_cardinality,requires_aggregation,aggregation_method,join_risk,audit_status
+canonical_verified,data/canonical/attractions_master_verified.parquet,canonical_id,3130,3130,300,0,2830,one-to-one,one-to-one,false,N/A,low,passed
+attractions_candidates,data/canonical/attractions_candidates.parquet,canonical_id,1048,1048,0,300,1048,one-to-one,one-to-one,false,N/A,low,passed
+place_metadata,data/enrichment/metadata/place_metadata.parquet,canonical_id,300,300,300,0,0,zero-or-one to one,zero-or-one to one,false,N/A,low,passed
+reviews,data/enrichment/final/reviews.parquet,canonical_id,924,172,172,128,0,one-to-many,one-to-many,true,Aggregate rating statistics and text counts,medium (requires aggregation first),passed
+facilities,data/enrichment/metadata/facilities.parquet,canonical_id,596,223,223,77,0,one-to-many,one-to-many,true,"Flat summary field in master, normalized detailed rows in relations",medium (requires aggregation first),passed
+opening_hours,data/enrichment/metadata/opening_hours.parquet,canonical_id,692,99,99,201,0,one-to-many,one-to-many,true,"Flat summary field in master, normalized detailed rows in relations",medium (requires aggregation first),passed
+operational_status,data/enrichment/metadata/operational_status.parquet,canonical_id,300,300,300,0,0,one-to-one,one-to-one,false,N/A,low,passed
+research_price_candidates,data/enrichment/price/validation/research_price_candidates.csv,canonical_id,11,11,11,289,0,zero-or-one to one,zero-or-one to one,false,N/A,low,passed
+price_observations,data/enrichment/price/research/price_observations.csv,canonical_id,32,8,8,292,0,one-to-many,one-to-many,true,"Flat summary field in master, normalized detailed rows in relations",medium (requires aggregation first),passed
+prices,data/enrichment/price/final/prices.csv,canonical_id,30,8,8,292,0,one-to-many,one-to-many,true,"Flat summary field in master, normalized detailed rows in relations",medium (requires aggregation first),passed
+external_price_verification_queue,data/enrichment/price/research/external_price_verification_queue.csv,canonical_id,11,11,11,289,0,zero-or-one to one,zero-or-one to one,false,N/A,low,passed
+external_verification_coverage,data/enrichment/price/external/external_verification_coverage.csv,canonical_id,11,11,11,289,0,zero-or-one to one,zero-or-one to one,false,N/A,low,passed
+prices_external_verified,data/enrichment/price/final/prices_external_verified.csv,canonical_id,0,0,0,300,0,one-to-many,one-to-many,true,"Flat summary field in master, normalized detailed rows in relations",medium (requires aggregation first),passed

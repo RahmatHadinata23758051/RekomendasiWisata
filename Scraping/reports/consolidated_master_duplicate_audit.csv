@@ -1,0 +1,2 @@
+check_name,total_rows,unique_canonical_ids,duplicates,passed
+canonical_id_uniqueness,300,300,0,True

@@ -1,6 +1,0 @@
-safety_criterion,result,is_safe,details
-no_stale_prices,0 stale prices found in data/enrichment/price/final/prices_external_verified.csv,True,All 75 stale/mock-derived records were archived and eliminated.
-no_mock_prices,0 mock prices found,True,Mock search results isolated to tests/fixtures/external_price/.
-no_simulated_prices,0 simulated prices found,True,Clean-room execution was performed with live real-sources mode (--no-fixture-mode).
-no_prices_without_exact_excerpt,0 prices without exact excerpt found,True,"All real public sources checked against downloaded text, rejecting all 20 previous rows due to missing price excerpts."
-no_third_party_official_misclassification,0 misclassified prices found,True,Strict classification enforces that third-party reference/news/marketplace sources cannot produce official_live_unbounded or verified_current prices.

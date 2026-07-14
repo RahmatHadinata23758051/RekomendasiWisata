@@ -1,6 +1,6 @@
 # Price Research Summary Report
 
-Generated at: 2026-07-14 08:27:27 UTC
+Generated at: 2026-07-14 11:18:42 UTC
 
 ## 1. Metrics & Coverage
 - **Total Candidates Processed**: 1

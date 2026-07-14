@@ -1,0 +1,8 @@
+metric,value
+total_places,300
+in_scope,166
+out_of_scope,134
+has_local_price_evidence,8
+has_external_price_data,0
+external_unresolved_price,1
+completed_no_price,10

@@ -1338,6 +1338,81 @@ def verify_external_prices_cmd(
         console.print(f"[red]Error during external price verification: {e}[/red]")
         raise e
 
+@app.command(name="build-consolidated-master")
+def build_consolidated_master_cmd(
+    pilot_population: str = typer.Option("data/enrichment/consolidated/pilot_population.csv", help="Path to pilot population CSV"),
+    canonical: str = typer.Option("data/canonical/attractions_master_verified.parquet", help="Path to canonical attractions verified parquet"),
+    reviews: str = typer.Option("data/enrichment/final/reviews.parquet", help="Path to final reviews parquet"),
+    metadata: str = typer.Option("data/enrichment/metadata/place_metadata.parquet", help="Path to metadata parquet"),
+    facilities: str = typer.Option("data/enrichment/metadata/facilities.parquet", help="Path to facilities parquet"),
+    opening_hours: str = typer.Option("data/enrichment/metadata/opening_hours.parquet", help="Path to opening hours parquet"),
+    local_price_observations: str = typer.Option("data/enrichment/price/research/price_observations.csv", help="Path to local price observations CSV"),
+    external_verification_coverage: str = typer.Option("data/enrichment/price/external/external_verification_coverage.csv", help="Path to external verification coverage CSV"),
+    external_verified_prices: str = typer.Option("data/enrichment/price/final/prices_external_verified.csv", help="Path to external verified prices CSV"),
+    output_dir: str = typer.Option("data/enrichment/consolidated", help="Output directory"),
+    reports_dir: str = typer.Option("reports", help="Reports directory"),
+    master_version: str = typer.Option("consolidated_enrichment_pilot_v1", help="Version tag of master consolidated dataset"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run only"),
+    strict: bool = typer.Option(False, "--strict", help="Strict schema validation"),
+    force: bool = typer.Option(False, "--force", help="Force rebuild")
+):
+    """
+    Build a Consolidated Enrichment Master Dataset for the deterministic 300-place pilot.
+    """
+    console.print("[bold blue]Starting Consolidated Enrichment Master Dataset Build...[/bold blue]")
+    from src.enrichment.consolidated_master import (
+        run_master_consolidation,
+        generate_coverage_reports,
+        write_provenance_manifest,
+        run_consolidation_audits
+    )
+    try:
+        # Load pilot places just to have pilot df for validation checks
+        if os.path.exists(pilot_population):
+            pilot = pd.read_csv(pilot_population)
+        else:
+            raise FileNotFoundError(f"Pilot population file not found: {pilot_population}")
+            
+        # We need external prices to pass to validate_master_dataset
+        df_ext_prices = pd.read_csv(external_verified_prices) if os.path.exists(external_verified_prices) else pd.DataFrame()
+
+        df_master = run_master_consolidation(
+            pilot_population_path=pilot_population,
+            canonical_path=canonical,
+            reviews_path=reviews,
+            metadata_path=metadata,
+            facilities_path=facilities,
+            opening_hours_path=opening_hours,
+            local_price_obs_path=local_price_observations,
+            external_coverage_path=external_verification_coverage,
+            external_prices_path=external_verified_prices,
+            output_dir=output_dir,
+            reports_dir=reports_dir,
+            master_version=master_version,
+            dry_run=dry_run,
+            strict=strict,
+            force=force
+        )
+        if dry_run:
+            console.print("[yellow]Dry-run completed. No files written.[/yellow]")
+        else:
+            console.print("[green]Consolidated Enrichment Master dataset generated successfully![/green]")
+            console.print(f" - Rows: {len(df_master)}")
+            console.print(f" - Unique canonical IDs: {df_master['canonical_id'].nunique()}")
+            
+            # TASK 19: Generate summary and distribution reports
+            generate_coverage_reports(df_master, reports_dir)
+            
+            # TASK 13: Write Provenance Manifest
+            write_provenance_manifest(df_master, output_dir, reports_dir, master_version)
+            
+            # TASK 16, 17, 18: Audits
+            run_consolidation_audits(df_master, output_dir, reports_dir)
+            
+    except Exception as e:
+        console.print(f"[red]Error building consolidated master: {e}[/red]")
+        raise e
+
 if __name__ == "__main__":
     app()
 

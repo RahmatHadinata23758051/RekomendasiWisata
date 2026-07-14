@@ -1,0 +1,10 @@
+warning_name,place_count,percentage,severity,source_layer,notes
+external_price_not_verified,289,96.33333333333334,low,external_prices,External prices have not been verified
+opening_hours_missing,201,67.0,low,opening_hours,No opening hours schedules observed
+no_review_data,128,42.66666666666667,low,reviews,No reviews have been scraped for this place
+facility_data_unknown,77,25.666666666666664,low,facilities,No facility or amenity records found
+metadata_unmapped,29,9.666666666666666,medium,metadata,Metadata could not be mapped to source records
+unknown_operational_status,29,9.666666666666666,medium,metadata,Operational status could not be verified
+low_identity_confidence,24,8.0,high,identity,Classification confidence is below threshold
+local_price_historical_only,8,2.666666666666667,low,local_prices,Local prices observed are historical reference only
+external_price_unresolved,1,0.33333333333333337,medium,external_prices,External prices are unresolved

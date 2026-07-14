@@ -1,0 +1,28 @@
+{
+  "matching": true,
+  "unexpected_differences": [],
+  "hashes_run1": {
+    "master_csv": "f35c79359c1f559cda2805aba43ee31c0584cf960f3548e40a70aff317c8b4e1",
+    "master_parquet": "e170e8151961d7a0eaf91e6612a728d8e7116a00489ccd19365579403938a226",
+    "master_jsonl": "f729c5187ba04e74dcd56b49dcda74c64ffbb7217353e2775ad40ee5a3ffd7e4",
+    "review_summary": "1841b44c69f48d2135934b01e2bf2306d76ef5f828538b612366feb7d75a9d34",
+    "opening_hours": "59653f03c99bf7f86719e92495bcd7c110a37243cf2838dc02dd0591e51181de",
+    "facilities": "fe2ec7858a61d0512302fa6b5679bbc675423e5ec4438ddae31dc8804f58433a",
+    "local_price": "863edccc782f2decdb2f695436a306a231536d54aebd0eb9f611e40bd6475fec",
+    "external_price": "43b5ef5a64cdf2d33372fff87efc8a650b53cff58b3d1b772b17f4c398e9f637",
+    "schema_json": "929fb09acf34c97c0b626fdc39d2d8833619e1e29310176e26fc915d5b4d25e6",
+    "manifest": "b167a6452cb6d3c07723d0b07d1ccf9b876e01e9c4a3da6e5722ff20025503a2"
+  },
+  "hashes_run2": {
+    "master_csv": "f35c79359c1f559cda2805aba43ee31c0584cf960f3548e40a70aff317c8b4e1",
+    "master_parquet": "e170e8151961d7a0eaf91e6612a728d8e7116a00489ccd19365579403938a226",
+    "master_jsonl": "f729c5187ba04e74dcd56b49dcda74c64ffbb7217353e2775ad40ee5a3ffd7e4",
+    "review_summary": "1841b44c69f48d2135934b01e2bf2306d76ef5f828538b612366feb7d75a9d34",
+    "opening_hours": "59653f03c99bf7f86719e92495bcd7c110a37243cf2838dc02dd0591e51181de",
+    "facilities": "fe2ec7858a61d0512302fa6b5679bbc675423e5ec4438ddae31dc8804f58433a",
+    "local_price": "863edccc782f2decdb2f695436a306a231536d54aebd0eb9f611e40bd6475fec",
+    "external_price": "43b5ef5a64cdf2d33372fff87efc8a650b53cff58b3d1b772b17f4c398e9f637",
+    "schema_json": "929fb09acf34c97c0b626fdc39d2d8833619e1e29310176e26fc915d5b4d25e6",
+    "manifest": "b167a6452cb6d3c07723d0b07d1ccf9b876e01e9c4a3da6e5722ff20025503a2"
+  }
+}

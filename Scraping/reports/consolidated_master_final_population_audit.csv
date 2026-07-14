@@ -1,0 +1,8 @@
+metric,value,expected,status
+pilot_population_rows,300,300,passed
+pilot_population_unique_canonical_ids,300,300,passed
+master_rows,300,300,passed
+master_unique_canonical_ids,300,300,passed
+all_pilot_ids_in_canonical,True,True,passed
+no_extra_ids_in_master,True,True,passed
+is_sorted_by_canonical_id,True,True,passed

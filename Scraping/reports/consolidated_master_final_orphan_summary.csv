@@ -1,0 +1,10 @@
+orphan_category,count
+critical_orphans,0
+warning_orphans,0
+informational_orphans,0
+review_ids_outside_pilot,0
+metadata_ids_outside_pilot,0
+local_price_ids_outside_pilot,0
+external_status_ids_outside_pilot,0
+relation_rows_without_master_rows,0
+pilot_ids_missing_from_canonical,0

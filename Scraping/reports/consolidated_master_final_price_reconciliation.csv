@@ -1,0 +1,11 @@
+metric,expected_value,actual_value,matching,notes
+valid_local_observations,29,29,True,From prices.csv accepted observations
+rejected_false_positives,3,3,True,Exempt from final prices
+places_with_local_evidence,8,8,True,Valid local pricing found
+local_evidence_status,historical_only,historical_only,True,No current verified local prices
+external_places_covered,11,11,True,Attraction verification queue size
+completed_no_price,10,10,True,Zero price found on external query
+completed_unresolved,1,1,True,Conflicting source info without resolution
+selected_external_prices,0,0,True,No active external selected prices
+verified_current,0,0,True,No active external verified current
+official_live_unbounded,0,0,True,No official live unbounded price records
