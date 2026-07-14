@@ -48,13 +48,13 @@ def test_payload_generation_constraints():
             assert payload["reviewsOrigin"] == "google"
             
             if mode == "positive":
-                assert payload["maxReviews"] == 8
+                assert payload["maxReviews"] == (8 if b["batch_id"] == "batch_001" else 6)
                 assert payload["reviewsSort"] == "highestRanking"
             elif mode == "negative":
-                assert payload["maxReviews"] == 8
+                assert payload["maxReviews"] == (8 if b["batch_id"] == "batch_001" else 6)
                 assert payload["reviewsSort"] == "lowestRanking"
             elif mode == "neutral":
-                assert payload["maxReviews"] == 25
+                assert payload["maxReviews"] == (25 if b["batch_id"] == "batch_001" else 10)
                 assert payload["reviewsSort"] == "newest"
                 
             # Uniqueness per mode
@@ -353,3 +353,63 @@ def test_recover_run_logic(monkeypatch):
     finally:
         if os.path.exists(test_manifest_dir):
             shutil.rmtree(test_manifest_dir)
+
+def test_strategy_optimization_manifest():
+    # 1. Batch_001 does not change, strategy v1 is preserved
+    manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
+    if os.path.exists(manifest_path):
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+            
+        batches = manifest.get("batches", [])
+        
+        # Verify batch_001 is locked to strategy_v1 and has correct limits/targets
+        batch_001_entries = [b for b in batches if b["batch_id"] == "batch_001"]
+        assert len(batch_001_entries) > 0
+        for b in batch_001_entries:
+            assert b["strategy_version"] == "review_strategy_v1"
+            assert b["representative_target_positive"] == 5
+            assert b["representative_target_negative"] == 5
+            assert b["representative_target_neutral"] == 3
+            assert b["raw_limit_positive"] == 8
+            assert b["raw_limit_negative"] == 8
+            assert b["raw_limit_neutral"] == 25
+            
+        # 2. Batch_002, 003, 004 get strategy_v2
+        other_batches = [b for b in batches if b["batch_id"] in ["batch_002", "batch_003", "batch_004"]]
+        assert len(other_batches) > 0
+        for b in other_batches:
+            assert b["strategy_version"] == "review_strategy_v2"
+            assert b["representative_target_positive"] == 5
+            assert b["representative_target_negative"] == 3
+            assert b["representative_target_neutral"] == 2
+            assert b["raw_limit_positive"] == 6
+            assert b["raw_limit_negative"] == 6
+            assert b["raw_limit_neutral"] == 10
+
+def test_coverage_status_classification():
+    # 4. Pending places classified as not_scheduled, not no_google_reviews
+    # 5. Attempted coverage rate denominator is exactly 70
+    coverage_path = "data/enrichment/final/review_coverage.csv"
+    if os.path.exists(coverage_path):
+        df_cov = pd.read_csv(coverage_path)
+        
+        # Ineligible places check (29 places)
+        ineligible_df = df_cov[df_cov["coverage_status"] == "ineligible"]
+        assert len(ineligible_df) == 29
+        
+        # Pending places check (201 places should be not_scheduled)
+        pending_df = df_cov[df_cov["coverage_status"] == "not_scheduled"]
+        assert len(pending_df) == 201
+        
+        # Attempted places check (70 places)
+        attempted_df = df_cov[~df_cov["coverage_status"].isin(["ineligible", "not_scheduled"])]
+        assert len(attempted_df) == 70
+        
+        # Attempted reviews coverage rate denominator verification
+        # 43 with reviews, 27 without reviews
+        with_reviews = sum(attempted_df["total_reviews_collected"] > 0)
+        assert with_reviews == 43
+        
+        without_reviews = sum(attempted_df["total_reviews_collected"] == 0)
+        assert without_reviews == 27

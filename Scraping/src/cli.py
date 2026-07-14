@@ -654,15 +654,21 @@ def create_enrichment_pilot(
 def prepare_review_scraping(
     input: str = typer.Option("data/enrichment/pilot/pilot_google_places_input.csv", help="Path to pilot places input CSV"),
     batch_size: int = typer.Option(70, help="Maximum place IDs per batch"),
-    output_dir: str = typer.Option("data/enrichment/apify_review_inputs", help="Output directory for Apify payloads")
+    output_dir: str = typer.Option("data/enrichment/apify_review_inputs", help="Output directory for Apify payloads"),
+    strategy_version: str = typer.Option("review_strategy_v2", help="Strategy version: review_strategy_v1 or review_strategy_v2")
 ):
     """
     Task 2: Partition eligible pilot places and build Apify review scraping payloads.
     """
     from src.enrichment.review_payload_builder import build_review_payloads
-    console.print(f"[bold blue]Building review scraping payloads from {input}...[/bold blue]")
+    console.print(f"[bold blue]Building review scraping payloads from {input} with strategy {strategy_version}...[/bold blue]")
     try:
-        manifest = build_review_payloads(input_csv_path=input, output_dir=output_dir, batch_size=batch_size)
+        manifest = build_review_payloads(
+            input_csv_path=input, 
+            output_dir=output_dir, 
+            batch_size=batch_size,
+            strategy_version=strategy_version
+        )
         console.print(f"[green]Successfully generated payloads! Manifest updated at {output_dir}/review_batch_manifest.json[/green]")
     except Exception as e:
         console.print(f"[red]Error preparing payloads: {e}[/red]")
