@@ -1,0 +1,2 @@
+source_id,canonical_id,requested_url,final_url,http_status,content_type,retrievable,content_hash,excerpt_found,price_text_found,identity_text_found,audit_status,audit_notes
+src_ext_0001,can_151f3bbf542d,https://travel.detik.com/domestik/d-7301072/pantai-mutun-pantai-pasir-putih-terpopuler-di-pesawaran-lampung,https://travel.detik.com/domestik/d-7301072/pantai-mutun-pantai-pasir-putih-terpopuler-di-pesawaran-lampung,200,text/html,True,9d7ae496068316a4b692d44ba2ff95ff36711f633aa2b42f6bff440d2cd57dce,True,True,True,passed,

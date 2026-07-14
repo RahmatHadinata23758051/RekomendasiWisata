@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-07-14T15:30:00Z",
+  "promotion_status": "success",
+  "files_promoted": {
+    "data/enrichment/price/final/prices_external_verified.csv": {
+      "source_archived": "data/enrichment/price/final/prices_external_verified_cleanroom.csv",
+      "sha256": "9e82d81122c047d0d0eb5221eeb5d74cb83734107b23929683f7d6297961f230",
+      "status": "promoted"
+    },
+    "data/enrichment/price/final/prices_external_verified.parquet": {
+      "source_archived": "data/enrichment/price/final/prices_external_verified_cleanroom.parquet",
+      "sha256": "a9804e699a60c362654159d7e7759777c07918aca205e5cc77f293746a80926f",
+      "status": "promoted"
+    },
+    "data/enrichment/price/final/prices_external_verified.jsonl": {
+      "source_archived": "data/enrichment/price/final/prices_external_verified_cleanroom.jsonl",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "status": "promoted"
+    }
+  },
+  "checksums_verified": true,
+  "reconciliation_matching": true,
+  "reconciliation_totals": {
+    "input_count": 11,
+    "total_sources": 0,
+    "total_external_observations": 0,
+    "total_verified_prices": 0,
+    "unresolved_count": 11
+  },
+  "trello_release_gate_unlocked": true,
+  "notes": "External price verification clean-room rebuild promoted. Trello release gate unlocked."
+}

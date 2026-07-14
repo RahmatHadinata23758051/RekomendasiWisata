@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-07-14T15:35:00Z",
+  "integrity_status": "passed",
+  "files_audited": [
+    {
+      "file_key": "attractions_master_verified.parquet",
+      "file_path": "data/canonical/attractions_master_verified.parquet",
+      "sha256": "d9dd9500c0ab50cf3d0a6735c469ce95f75e2227782dce7072b010f282b9bde0",
+      "exists": true,
+      "audit_status": "passed"
+    },
+    {
+      "file_key": "attractions_candidates.parquet",
+      "file_path": "data/canonical/attractions_candidates.parquet",
+      "sha256": "4f5dc5c3637ac3b54cb57665e1b9f0d3fb3975195dc8d547425fcac33328a87d",
+      "exists": true,
+      "audit_status": "passed"
+    },
+    {
+      "file_key": "reviews.parquet",
+      "file_path": "data/enrichment/final/reviews.parquet",
+      "sha256": "6fdef9b6ddf0015aa3d8bd62e9d47396c08f314b1a2ee491574d5d31749a1c6f",
+      "exists": true,
+      "audit_status": "passed"
+    },
+    {
+      "file_key": "place_metadata.parquet",
+      "file_path": "data/enrichment/metadata/place_metadata.parquet",
+      "sha256": "f27d66b7f40850ed1f8e4903cad94a018b9724304eb29f8cbacd76fea82de4c0",
+      "exists": true,
+      "audit_status": "passed"
+    },
+    {
+      "file_key": "research_price_candidates.csv",
+      "file_path": "data/enrichment/price/validation/research_price_candidates.csv",
+      "sha256": "b0f9758b3785407c647a181c77f131fa4f2ba774dcb4535cd6bde8aa98d2ef78",
+      "exists": true,
+      "audit_status": "passed"
+    },
+    {
+      "file_key": "price_observations.csv",
+      "file_path": "data/enrichment/price/research/price_observations.csv",
+      "sha256": "322b6f2b5e9fabbbc5bc3213ce42a01519d13f0b2322c0ee5d7c262b2260d164",
+      "exists": true,
+      "audit_status": "passed"
+    },
+    {
+      "file_key": "prices.csv",
+      "file_path": "data/enrichment/price/final/prices.csv",
+      "sha256": "c40a339903bacae6d91fd09961b6f4f2392e57566a2c5273848aeb45ad338dca",
+      "exists": true,
+      "audit_status": "passed"
+    },
+    {
+      "file_key": "external_price_verification_queue.csv",
+      "file_path": "data/enrichment/price/research/external_price_verification_queue.csv",
+      "sha256": "24e3456ca23b5131f3ccb0dd59d89b6794eab463ea5f5233670d833cd072179c",
+      "exists": true,
+      "audit_status": "passed"
+    }
+  ],
+  "zero_drift_verified": true,
+  "notes": "All frozen input artifacts verified with 100% agreement. Zero drift confirmed."
+}

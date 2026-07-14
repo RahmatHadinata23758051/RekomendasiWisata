@@ -1,0 +1,11 @@
+{
+  "external_query_queue.csv": "b0c35b33867d37b555d266bbe57b7401385366c5214f55547f1455f8f9c5db08",
+  "external_source_registry.csv": "38d11c4656f19197798973bd57407bff899502fef2ab046d9d3194d7662c5b55",
+  "external_price_observations.csv": "96e9c60323120db289fcf7df34f450df9e8fa5fa9c0a93384087087500bcd0a1",
+  "local_external_price_comparison.csv": "de217c08ae6fbc0c23e1afff58b0fdb25c35785f610ea147a7d4e59bedd58aae",
+  "external_price_conflicts.csv": "a2896b57482e8d6071c12db38c2677d7143ca2cf3b40d4453c08391b76630e2b",
+  "external_verification_coverage.csv": "5880dceb21e26e89445ac670cae2f6f6b23d50d8e9dd8d1e7717128af13c80b9",
+  "unresolved_external_prices.csv": "5b853e52177578031febc8b969710458507660404c8d9e28bd8df85e502a9fa0",
+  "external_verification_manifest.json": "455ec6c7a8a54840443a67a554a2ff93aef11e8ae39b58e4d1faabee47f6ffc0",
+  "prices_external_verified.csv": "42df84c61bff300b8717434876d4ccabb81c390931e8aa8e62251bd279492241"
+}

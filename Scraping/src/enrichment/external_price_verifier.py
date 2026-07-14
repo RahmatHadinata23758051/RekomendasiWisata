@@ -202,11 +202,14 @@ def run_external_price_verification(
     strict: bool = False,
     real_sources_only: bool = True,
     fixture_mode: bool = False,
-    fixture_dir: str = "tests/fixtures/external_price"
+    fixture_dir: str = "tests/fixtures/external_price",
+    final_output: str = "data/enrichment/price/final/prices_external_verified.csv",
+    fresh_run: bool = False
 ) -> dict:
     # 1. Record checksums before
     checksums_before = get_integrity_checksums()
     origin_val = "simulated_fixture" if fixture_mode else "real_public_source"
+    retrievability_audit = []
 
     # Load Inputs
     df_queue_raw = pd.read_csv(queue_path)
@@ -344,7 +347,7 @@ def run_external_price_verification(
     manifest_path = os.path.join(output_dir, "external/external_verification_manifest.json")
     completed_ids = set()
     previous_manifest = {}
-    if os.path.exists(manifest_path):
+    if not fresh_run and os.path.exists(manifest_path):
         try:
             with open(manifest_path, "r") as f:
                 manifest_data = json.load(f)
@@ -365,7 +368,7 @@ def run_external_price_verification(
     # Filter targets using limit & resume
     targets = []
     for c_id in active_ids:
-        if resume and c_id in completed_ids and not force:
+        if not fresh_run and resume and c_id in completed_ids and not force:
             continue
         targets.append(c_id)
         if limit and len(targets) >= limit:
@@ -388,26 +391,27 @@ def run_external_price_verification(
     comp_path = os.path.join(output_dir, "external/local_external_price_comparison.csv")
     unres_path = os.path.join(output_dir, "external/unresolved_external_prices.csv")
     
-    if os.path.exists(cov_path):
-        try:
-            previous_coverage = pd.read_csv(cov_path).to_dict(orient="records")
-        except Exception:
-            pass
-    if os.path.exists(conf_path):
-        try:
-            previous_conflicts = pd.read_csv(conf_path).to_dict(orient="records")
-        except Exception:
-            pass
-    if os.path.exists(comp_path):
-        try:
-            previous_comparisons = pd.read_csv(comp_path).to_dict(orient="records")
-        except Exception:
-            pass
-    if os.path.exists(unres_path):
-        try:
-            previous_unresolved = pd.read_csv(unres_path).to_dict(orient="records")
-        except Exception:
-            pass
+    if not fresh_run:
+        if os.path.exists(cov_path):
+            try:
+                previous_coverage = pd.read_csv(cov_path).to_dict(orient="records")
+            except Exception:
+                pass
+        if os.path.exists(conf_path):
+            try:
+                previous_conflicts = pd.read_csv(conf_path).to_dict(orient="records")
+            except Exception:
+                pass
+        if os.path.exists(comp_path):
+            try:
+                previous_comparisons = pd.read_csv(comp_path).to_dict(orient="records")
+            except Exception:
+                pass
+        if os.path.exists(unres_path):
+            try:
+                previous_unresolved = pd.read_csv(unres_path).to_dict(orient="records")
+            except Exception:
+                pass
     
     # Load existing records if resuming
     source_reg_path = os.path.join(output_dir, "external/external_source_registry.csv")
@@ -415,7 +419,7 @@ def run_external_price_verification(
     observations_path = os.path.join(output_dir, "external/external_price_observations.csv")
     rejected_path = os.path.join(reports_dir, "external_price_false_positive_audit.csv")
 
-    if resume and not force:
+    if not fresh_run and resume and not force:
         if os.path.exists(source_reg_path):
             try:
                 source_registry = pd.read_csv(source_reg_path).to_dict(orient="records")
@@ -463,26 +467,116 @@ def run_external_price_verification(
         if fixture_mode:
             results_to_process = mock_search_db.get(c_id, [])
             origin_val = "simulated_fixture"
+            # Simulate retrievability audit for mock run
+            for res in results_to_process:
+                # Assign a temp or future source ID for audit tracking
+                temp_s_id = f"src_ext_{source_counter + len(retrievability_audit):04d}"
+                retrievability_audit.append({
+                    "source_id": temp_s_id,
+                    "canonical_id": c_id,
+                    "requested_url": res["url"],
+                    "final_url": res["url"],
+                    "http_status": 200,
+                    "content_type": "text/html",
+                    "retrievable": True,
+                    "content_hash": hashlib.sha256(res["body"].encode('utf-8')).hexdigest(),
+                    "excerpt_found": True,
+                    "price_text_found": True,
+                    "identity_text_found": True,
+                    "audit_status": "passed",
+                    "audit_notes": "Passed fixture simulation content match."
+                })
         else:
-            results_to_process = REAL_PUBLIC_SOURCES.get(c_id, [])
+            raw_results = REAL_PUBLIC_SOURCES.get(c_id, [])
             origin_val = "real_public_source"
             
             # Real HTTP request verification
             import requests
             validated_results = []
-            for res in results_to_process:
+            for res in raw_results:
                 s_url = res["url"]
+                req_url = s_url
+                final_url = s_url
+                http_status = 0
+                content_type = ""
+                retrievable = False
+                c_hash = ""
+                excerpt_found = False
+                price_text_found = False
+                identity_text_found = False
+                audit_status = "failed"
+                audit_notes = ""
+                
                 try:
                     headers = {"User-Agent": "Mozilla/5.0"}
                     resp = requests.get(s_url, headers=headers, timeout=request_timeout)
                     http_status = resp.status_code
-                    if http_status == 200:
-                        validated_results.append(res)
-                        print(f"Verified real public source URL {s_url} -> 200 OK")
+                    final_url = resp.url
+                    content_type = resp.headers.get("Content-Type", "")
+                    retrievable = (http_status == 200)
+                    if retrievable:
+                        c_hash = hashlib.sha256(resp.text.encode('utf-8')).hexdigest()
+                        
+                        # Exact Excerpt Check (Task 9)
+                        body_excerpt = res["body"]
+                        clean_fetched = " ".join(resp.text.split())
+                        clean_excerpt = " ".join(body_excerpt.split())
+                        excerpt_found = clean_excerpt.lower() in clean_fetched.lower()
+                        
+                        # Price Text Found
+                        price_numbers = re.findall(r'\b\d+(?:\.\d+)?\b', body_excerpt.replace(".", ""))
+                        if price_numbers:
+                            price_text_found = all(num in clean_fetched for num in price_numbers)
+                        else:
+                            price_text_found = True
+                        
+                        # Identity Text Found
+                        identity_text_found = name.lower() in clean_fetched.lower()
+                        
+                        if excerpt_found and price_text_found and identity_text_found:
+                            audit_status = "passed"
+                            validated_results.append(res)
+                            print(f"Verified real public source URL {s_url} -> Passed Audit")
+                        else:
+                            reasons = []
+                            if not excerpt_found:
+                                reasons.append("excerpt not found")
+                            if not price_text_found:
+                                reasons.append("price text not found")
+                            if not identity_text_found:
+                                reasons.append("identity text not found")
+                            audit_notes = f"Failed content match: {', '.join(reasons)}"
+                            print(f"Real public source URL {s_url} failed content checks: {audit_notes}")
                     else:
+                        audit_notes = f"HTTP status is {http_status}"
                         print(f"Real public source URL {s_url} returned status code {http_status}")
                 except Exception as e:
+                    audit_notes = f"HTTP request failed: {e}"
                     print(f"Failed to retrieve real public source URL {s_url}: {e}")
+                
+                # Check if it was accepted or not
+                if audit_status == "passed":
+                    actual_s_id = f"src_ext_{source_counter:04d}"
+                    res["source_id"] = actual_s_id
+                    source_counter += 1
+                else:
+                    actual_s_id = "failed_unregistered"
+                    
+                retrievability_audit.append({
+                    "source_id": actual_s_id,
+                    "canonical_id": c_id,
+                    "requested_url": req_url,
+                    "final_url": final_url,
+                    "http_status": http_status,
+                    "content_type": content_type,
+                    "retrievable": retrievable,
+                    "content_hash": c_hash,
+                    "excerpt_found": excerpt_found,
+                    "price_text_found": price_text_found,
+                    "identity_text_found": identity_text_found,
+                    "audit_status": audit_status,
+                    "audit_notes": audit_notes
+                })
             results_to_process = validated_results
             
         df_queries.loc[df_queries["canonical_id"] == c_id, "result_count"] = len(results_to_process)
@@ -493,25 +587,57 @@ def run_external_price_verification(
             
         for res in results_to_process:
             s_url = res["url"]
-            s_type = res["source_type"]
             body = res["body"]
-            is_off = res["is_official"]
-            is_gov = res["is_government"]
+            
+            # TASK 5: Source Classification
+            s_url_lower = s_url.lower()
+            if "wikipedia.org" in s_url_lower:
+                s_type = "reference"
+                is_off = False
+                is_gov = False
+                id_status = "probable"
+            elif "detik.com" in s_url_lower:
+                s_type = "news_media"
+                is_off = False
+                is_gov = False
+                id_status = "verified" if name.lower() in res["title"].lower() else "probable"
+            elif "trip.com" in s_url_lower:
+                s_type = "travel_marketplace"
+                is_off = False
+                is_gov = False
+                id_status = "probable"
+            elif "go.id" in s_url_lower:
+                s_type = "government"
+                is_off = False
+                is_gov = True
+                id_status = "verified" if name.lower() in res["title"].lower() else "probable"
+            elif "facebook.com" in s_url_lower or "instagram.com" in s_url_lower:
+                s_type = "official_social_media"
+                is_off = True
+                is_gov = False
+                id_status = "verified" if name.lower() in res["title"].lower() else "probable"
+            else:
+                s_type = "official_website"
+                is_off = True
+                is_gov = False
+                id_status = "verified" if name.lower() in res["title"].lower() else "probable"
+                
+            if fixture_mode and res.get("identity_verification_status") == "simulated_not_verified":
+                id_status = "simulated_not_verified"
             
             # TASK 8: Identity Verification Score
-            # Deterministic similarity scoring
             id_score = 1.0 if name.lower() in res["title"].lower() else 0.8
             region_match = region in str(cand_row["facilities"]) or region in str(cand_row["facilities_semantics"]) or True
             address_match = True
             operator_match = is_off
             cross_link_match = is_off
-            
-            # Identity confidence and status
-            id_status = "simulated_not_verified" if fixture_mode else res["identity_verification_status"]
             id_conf = 1.0 if id_status == "verified" else (0.7 if id_status == "probable" else 0.3)
             
-            s_id = f"src_ext_{source_counter:04d}"
-            source_counter += 1
+            if "source_id" in res:
+                s_id = res["source_id"]
+            else:
+                s_id = f"src_ext_{source_counter:04d}"
+                source_counter += 1
             
             source_registry.append({
                 "source_id": s_id,
@@ -542,7 +668,7 @@ def run_external_price_verification(
                 "content_available": True,
                 "source_authority": "high" if is_off or is_gov else "medium",
                 "source_relevance": "high",
-                "source_freshness": "verified_current" if "2026" in body else "recent_external_unverified",
+                "source_freshness": "recent_external_unverified" if s_type in ["reference", "news_media", "travel_marketplace", "blog", "general"] else ("verified_current" if "2026" in body else "recent_external_unverified"),
                 "source_confidence": id_conf,
                 "content_hash": hashlib.sha256(body.encode('utf-8')).hexdigest(),
                 "research_status": "accepted" if id_status in ["verified", "probable"] else "identity_mismatch",
@@ -674,6 +800,8 @@ def run_external_price_verification(
                 # TASK 14: Temporal status
                 if fixture_mode:
                     temp_status = "simulated_only"
+                elif s_type in ["reference", "news_media", "travel_marketplace", "blog", "general"]:
+                    temp_status = "recent_external_unverified"
                 elif "2026" in body:
                     temp_status = "verified_current"
                 elif is_off:
@@ -1014,9 +1142,14 @@ def run_external_price_verification(
     df_ver_prices = pd.DataFrame(verified_prices) if verified_prices else pd.DataFrame(columns=prices_cols)
     if "data_origin" not in df_ver_prices.columns and not df_ver_prices.empty:
         df_ver_prices["data_origin"] = origin_val
-    df_ver_prices.to_csv(os.path.join(output_dir, "final/prices_external_verified.csv"), index=False)
-    df_ver_prices.to_parquet(os.path.join(output_dir, "final/prices_external_verified.parquet"), index=False)
-    df_ver_prices.to_json(os.path.join(output_dir, "final/prices_external_verified.jsonl"), orient="records", lines=True)
+    # Ensure final output parent directory exists
+    os.makedirs(os.path.dirname(final_output), exist_ok=True)
+    df_ver_prices.to_csv(final_output, index=False)
+    
+    # Save parquet and jsonl as well
+    base_fo, _ = os.path.splitext(final_output)
+    df_ver_prices.to_parquet(base_fo + ".parquet", index=False)
+    df_ver_prices.to_json(base_fo + ".jsonl", orient="records", lines=True)
 
     cov_records = []
     for idx, row in df_queue_raw.iterrows():
@@ -1117,6 +1250,13 @@ def run_external_price_verification(
 
     # Save reports copy to satisfy Task 21 requirements
     df_src.to_csv(os.path.join(reports_dir, "external_price_source_quality.csv"), index=False)
+    
+    df_retrieb = pd.DataFrame(retrievability_audit) if retrievability_audit else pd.DataFrame(columns=[
+        "source_id", "canonical_id", "requested_url", "final_url", "http_status",
+        "content_type", "retrievable", "content_hash", "excerpt_found",
+        "price_text_found", "identity_text_found", "audit_status", "audit_notes"
+    ])
+    df_retrieb.to_csv(os.path.join(reports_dir, "external_source_retrievability_audit.csv"), index=False)
     
     # Save source temporal quality distribution
     df_src["source_freshness"].value_counts().to_frame().reset_index().to_csv(

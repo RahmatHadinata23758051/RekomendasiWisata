@@ -1,0 +1,12 @@
+canonical_id,attraction_name,previous_price_count,cleanroom_price_count,variance,status,primary_reason
+can_1fef284e7d10,Dermaga Pulau Pahawang,2,0,-2,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_151f3bbf542d,Pantai Mutun,3,0,-3,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_cada872752b2,Pantai Sari Ringgung,3,0,-3,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_1f6b9f3c2ceb,Camping Area Sonokeling 1,0,0,0,consistent,Both previous mock run and clean-room run produced 0 selected prices.
+can_a0d4ca18f1f7,Kolam renang,1,0,-1,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_17b24ba62485,Water Park Citra Garden,2,0,-2,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_2850f83ad341,Kolam Renang Perahu Layar,1,0,-1,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_58c471e76647,Slanik Waterpark Lampung,4,0,-4,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_1a46f7a6372c,Taman Nasional Way Kambas,4,0,-4,drift_detected,Mock-derived pricing text is missing from the retrieved live page content.
+can_b4a866f13078,Camping island,0,0,0,consistent,Both previous mock run and clean-room run produced 0 selected prices.
+can_5dd47abc65d1,Kolam Renang Tirta Garden,0,0,0,consistent,Both previous mock run and clean-room run produced 0 selected prices.

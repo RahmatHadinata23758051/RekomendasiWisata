@@ -1290,7 +1290,9 @@ def verify_external_prices_cmd(
     strict: bool = typer.Option(False, "--strict", help="Strict mode"),
     real_sources_only: bool = typer.Option(True, "--real-sources-only/--no-real-sources-only", help="Only run with real public sources"),
     fixture_mode: bool = typer.Option(False, "--fixture-mode/--no-fixture-mode", help="Run in fixture simulation mode using mock fixtures"),
-    fixture_dir: str = typer.Option("tests/fixtures/external_price", help="Directory containing fixtures")
+    fixture_dir: str = typer.Option("tests/fixtures/external_price", help="Directory containing fixtures"),
+    final_output: str = typer.Option("data/enrichment/price/final/prices_external_verified.csv", help="Path to write final selected external prices CSV"),
+    fresh_run: bool = typer.Option(False, "--fresh-run", help="Clean-room run starting from an empty state")
 ):
     """
     Verify current or externally supported price information using authoritative public sources.
@@ -1316,7 +1318,9 @@ def verify_external_prices_cmd(
             strict=strict,
             real_sources_only=real_sources_only,
             fixture_mode=fixture_mode,
-            fixture_dir=fixture_dir
+            fixture_dir=fixture_dir,
+            final_output=final_output,
+            fresh_run=fresh_run
         )
         if dry_run:
             console.print("[yellow]Dry-run completed successfully. No files written.[/yellow]")

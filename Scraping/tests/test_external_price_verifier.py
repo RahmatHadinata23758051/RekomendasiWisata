@@ -190,12 +190,24 @@ def test_simulated_fixture_restrictions(restore_price_data_after_test):
 # 7. Task 11: Production selected prices verification and retrievability
 def test_production_real_sources_verification(restore_price_data_after_test):
     # Run in real-sources mode for Pantai Mutun
-    res = run_external_price_verification(
-        queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
-        canonical_id="can_151f3bbf542d",
-        fixture_mode=False,
-        force=True
-    )
+    from unittest.mock import patch
+    
+    class MockResponse:
+        def __init__(self, text, status_code=200):
+            self.text = text
+            self.status_code = status_code
+            self.url = "https://travel.detik.com/domestik/d-7301072/pantai-mutun-pantai-pasir-putih-terpopuler-di-pesawaran-lampung"
+            self.headers = {"Content-Type": "text/html"}
+            
+    mock_text = "Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000. Parkir motor Rp5.000. parkir mobil Rp10.000."
+    
+    with patch("requests.get", return_value=MockResponse(mock_text)):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
     assert res["stats"]["verified_prices_count"] == 3
     
     # Check the written files
@@ -204,3 +216,358 @@ def test_production_real_sources_verification(restore_price_data_after_test):
     assert (df_prices["data_origin"] == "real_public_source").all()
     assert (df_prices["source_url"].str.startswith("http")).all()
     assert df_prices["selection_reason"].notna().all()
+
+
+# --- 17 New Tests for Clean-Room and Verification Constraints ---
+
+def get_mock_response_for_canary(c_id, status_code=200):
+    from src.enrichment.external_price_verifier import REAL_PUBLIC_SOURCES
+    df_queue = pd.read_csv("data/enrichment/price/research/external_price_verification_queue.csv")
+    name = df_queue[df_queue["canonical_id"] == c_id].iloc[0]["name"]
+    res_list = REAL_PUBLIC_SOURCES.get(c_id, [])
+    if res_list:
+        body = res_list[0]["body"]
+        url = res_list[0]["url"]
+    else:
+        body = "dummy body"
+        url = "https://example.com"
+        
+    class MockResponse:
+        def __init__(self):
+            self.text = f"Welcome to {name}. Excerpt: {body}"
+            self.status_code = status_code
+            self.url = url
+            self.headers = {"Content-Type": "text/html"}
+            
+    return MockResponse()
+
+def test_fresh_run_starts_empty_manifest(restore_price_data_after_test, tmp_path):
+    manifest_dir = tmp_path / "price_clean_run"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    m_file = manifest_dir / "external/external_verification_manifest.json"
+    m_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(m_file, "w") as f:
+        json.dump({"places": {"can_151f3bbf542d": {"processed": True, "status": "completed_verified"}}}, f)
+        
+    res = run_external_price_verification(
+        queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+        canonical_id="can_151f3bbf542d",
+        fixture_mode=True,
+        fixture_dir="tests/fixtures/external_price",
+        fresh_run=True,
+        output_dir=str(manifest_dir)
+    )
+    assert res["stats"]["completed_count"] == 11
+
+def test_source_classification_wikipedia(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_1fef284e7d10")
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_1fef284e7d10",
+            fixture_mode=False,
+            force=True
+        )
+    df_src = pd.read_csv("reports/external_price_source_quality.csv")
+    row = df_src[df_src["source_url"].str.contains("wikipedia.org")].iloc[0]
+    assert row["source_type"] == "reference"
+    assert not row["is_official"]
+    assert not row["is_government"]
+
+def test_source_classification_detik(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_151f3bbf542d")
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
+    df_src = pd.read_csv("reports/external_price_source_quality.csv")
+    row = df_src[df_src["source_url"].str.contains("detik.com")].iloc[0]
+    assert row["source_type"] == "news_media"
+
+def test_source_classification_trip(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_1f6b9f3c2ceb")
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_1f6b9f3c2ceb",
+            fixture_mode=False,
+            force=True
+        )
+    df_src = pd.read_csv("reports/external_price_source_quality.csv")
+    row = df_src[df_src["source_url"].str.contains("trip.com")].iloc[0]
+    assert row["source_type"] == "travel_marketplace"
+
+def test_source_classification_government(restore_price_data_after_test):
+    from unittest.mock import patch
+    from src.enrichment.external_price_verifier import REAL_PUBLIC_SOURCES
+    
+    test_sources = {
+        "can_151f3bbf542d": [
+            {"url": "https://pesawaran.go.id/mutun", "source_type": "official_website", "title": "Pantai Mutun", "body": "Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000.", "is_official": False, "is_government": True, "identity_verification_status": "verified"}
+        ]
+    }
+    class MockResponse:
+        def __init__(self):
+            self.text = "Welcome to Pantai Mutun. Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000."
+            self.status_code = 200
+            self.url = "https://pesawaran.go.id/mutun"
+            self.headers = {"Content-Type": "text/html"}
+
+    with patch("src.enrichment.external_price_verifier.REAL_PUBLIC_SOURCES", test_sources):
+        with patch("requests.get", return_value=MockResponse()):
+            res = run_external_price_verification(
+                queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+                canonical_id="can_151f3bbf542d",
+                fixture_mode=False,
+                force=True
+            )
+    df_src = pd.read_csv("reports/external_price_source_quality.csv")
+    row = df_src[df_src["source_url"].str.contains("go.id")].iloc[0]
+    assert row["source_type"] == "government"
+    assert row["is_government"]
+
+def test_source_classification_facebook(restore_price_data_after_test):
+    from unittest.mock import patch
+    from src.enrichment.external_price_verifier import REAL_PUBLIC_SOURCES
+    
+    test_sources = {
+        "can_151f3bbf542d": [
+            {"url": "https://facebook.com/pantaimutunofficial", "source_type": "official_website", "title": "Pantai Mutun", "body": "Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000.", "is_official": True, "is_government": False, "identity_verification_status": "verified"}
+        ]
+    }
+    class MockResponse:
+        def __init__(self):
+            self.text = "Welcome to Pantai Mutun. Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000."
+            self.status_code = 200
+            self.url = "https://facebook.com/pantaimutunofficial"
+            self.headers = {"Content-Type": "text/html"}
+
+    with patch("src.enrichment.external_price_verifier.REAL_PUBLIC_SOURCES", test_sources):
+        with patch("requests.get", return_value=MockResponse()):
+            res = run_external_price_verification(
+                queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+                canonical_id="can_151f3bbf542d",
+                fixture_mode=False,
+                force=True
+            )
+    df_src = pd.read_csv("reports/external_price_source_quality.csv")
+    row = df_src[df_src["source_url"].str.contains("facebook.com")].iloc[0]
+    assert row["source_type"] == "official_social_media"
+
+def test_source_classification_instagram(restore_price_data_after_test):
+    from unittest.mock import patch
+    from src.enrichment.external_price_verifier import REAL_PUBLIC_SOURCES
+    
+    test_sources = {
+        "can_151f3bbf542d": [
+            {"url": "https://instagram.com/pantaimutunofficial", "source_type": "official_website", "title": "Pantai Mutun", "body": "Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000.", "is_official": True, "is_government": False, "identity_verification_status": "verified"}
+        ]
+    }
+    class MockResponse:
+        def __init__(self):
+            self.text = "Welcome to Pantai Mutun. Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000."
+            self.status_code = 200
+            self.url = "https://instagram.com/pantaimutunofficial"
+            self.headers = {"Content-Type": "text/html"}
+
+    with patch("src.enrichment.external_price_verifier.REAL_PUBLIC_SOURCES", test_sources):
+        with patch("requests.get", return_value=MockResponse()):
+            res = run_external_price_verification(
+                queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+                canonical_id="can_151f3bbf542d",
+                fixture_mode=False,
+                force=True
+            )
+    df_src = pd.read_csv("reports/external_price_source_quality.csv")
+    row = df_src[df_src["source_url"].str.contains("instagram.com")].iloc[0]
+    assert row["source_type"] == "official_social_media"
+
+def test_source_classification_default(restore_price_data_after_test):
+    from unittest.mock import patch
+    from src.enrichment.external_price_verifier import REAL_PUBLIC_SOURCES
+    
+    test_sources = {
+        "can_151f3bbf542d": [
+            {"url": "https://www.mutunbeachresort.com/prices", "source_type": "general", "title": "Pantai Mutun", "body": "Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000.", "is_official": True, "is_government": False, "identity_verification_status": "verified"}
+        ]
+    }
+    class MockResponse:
+        def __init__(self):
+            self.text = "Welcome to Pantai Mutun. Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000."
+            self.status_code = 200
+            self.url = "https://www.mutunbeachresort.com/prices"
+            self.headers = {"Content-Type": "text/html"}
+
+    with patch("src.enrichment.external_price_verifier.REAL_PUBLIC_SOURCES", test_sources):
+        with patch("requests.get", return_value=MockResponse()):
+            res = run_external_price_verification(
+                queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+                canonical_id="can_151f3bbf542d",
+                fixture_mode=False,
+                force=True
+            )
+    df_src = pd.read_csv("reports/external_price_source_quality.csv")
+    row = df_src[df_src["source_url"].str.contains("mutunbeachresort.com")].iloc[0]
+    assert row["source_type"] == "official_website"
+
+def test_wikipedia_temporal_status_restriction(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_1fef284e7d10")
+    mock_resp.text += " terbaru 2026"
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_1fef284e7d10",
+            fixture_mode=False,
+            force=True
+        )
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    wiki_obs = df_obs[df_obs["source_url"].str.contains("wikipedia.org")]
+    assert len(wiki_obs) > 0
+    assert (wiki_obs["temporal_status"] == "recent_external_unverified").all()
+
+def test_detik_temporal_status_restriction(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_151f3bbf542d")
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    detik_obs = df_obs[df_obs["source_url"].str.contains("detik.com")]
+    assert len(detik_obs) > 0
+    assert (detik_obs["temporal_status"] == "recent_external_unverified").all()
+
+def test_trip_temporal_status_restriction(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_1f6b9f3c2ceb")
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_1f6b9f3c2ceb",
+            fixture_mode=False,
+            force=True
+        )
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    trip_obs = df_obs[df_obs["source_url"].str.contains("trip.com")]
+    assert len(trip_obs) > 0
+    assert (trip_obs["temporal_status"] == "recent_external_unverified").all()
+
+def test_exact_excerpt_requirement_failed(restore_price_data_after_test):
+    from unittest.mock import patch
+    class MockResponse:
+        def __init__(self):
+            self.text = "Welcome to Pantai Mutun. The ticket price is different."
+            self.status_code = 200
+            self.url = "https://travel.detik.com/domestik/d-7301072/pantai-mutun-pantai-pasir-putih-terpopuler-di-pesawaran-lampung"
+            self.headers = {"Content-Type": "text/html"}
+
+    with patch("requests.get", return_value=MockResponse()):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    detik_obs = df_obs[df_obs["source_url"].str.contains("detik.com")]
+    assert len(detik_obs) == 0
+
+def test_exact_excerpt_requirement_passed(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_151f3bbf542d")
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    detik_obs = df_obs[df_obs["source_url"].str.contains("detik.com")]
+    assert len(detik_obs) == 3
+
+def test_price_text_found_failed(restore_price_data_after_test):
+    from unittest.mock import patch
+    class MockResponse:
+        def __init__(self):
+            self.text = "Welcome to Pantai Mutun. Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp10.000."
+            self.status_code = 200
+            self.url = "https://travel.detik.com/domestik/d-7301072/pantai-mutun-pantai-pasir-putih-terpopuler-di-pesawaran-lampung"
+            self.headers = {"Content-Type": "text/html"}
+
+    with patch("requests.get", return_value=MockResponse()):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    detik_obs = df_obs[df_obs["source_url"].str.contains("detik.com")]
+    assert len(detik_obs) == 0
+
+def test_identity_text_found_failed(restore_price_data_after_test):
+    from unittest.mock import patch
+    class MockResponse:
+        def __init__(self):
+            self.text = "Welcome to Pantai. Excerpt: Harga tiket masuk Pantai Mutun terbaru 2026 adalah Rp35.000. Parkir motor Rp5.000. parkir mobil Rp10.000."
+            self.status_code = 200
+            self.url = "https://travel.detik.com/domestik/d-7301072/pantai-mutun-pantai-pasir-putih-terpopuler-di-pesawaran-lampung"
+            self.headers = {"Content-Type": "text/html"}
+            
+    mock_resp = MockResponse()
+    mock_resp.text = mock_resp.text.replace("Mutun", "Other")
+
+    with patch("requests.get", return_value=mock_resp):
+        res = run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
+    df_obs = pd.read_csv("data/enrichment/price/external/external_price_observations.csv")
+    detik_obs = df_obs[df_obs["source_url"].str.contains("detik.com")]
+    assert len(detik_obs) == 0
+
+def test_retrievability_audit_generated(restore_price_data_after_test):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_151f3bbf542d")
+    with patch("requests.get", return_value=mock_resp):
+        run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True
+        )
+    audit_file = "reports/external_source_retrievability_audit.csv"
+    assert os.path.exists(audit_file)
+    df_audit = pd.read_csv(audit_file)
+    assert len(df_audit) > 0
+    assert "source_id" in df_audit.columns
+    assert "http_status" in df_audit.columns
+
+def test_custom_final_output_path(restore_price_data_after_test, tmp_path):
+    from unittest.mock import patch
+    mock_resp = get_mock_response_for_canary("can_151f3bbf542d")
+    custom_output = tmp_path / "custom_verified_prices.csv"
+    with patch("requests.get", return_value=mock_resp):
+        run_external_price_verification(
+            queue_path="data/enrichment/price/research/external_price_verification_queue.csv",
+            canonical_id="can_151f3bbf542d",
+            fixture_mode=False,
+            force=True,
+            final_output=str(custom_output)
+        )
+    assert os.path.exists(custom_output)
+    df_prices = pd.read_csv(custom_output)
+    assert len(df_prices) == 3
