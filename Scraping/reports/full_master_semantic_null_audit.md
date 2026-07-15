@@ -1,0 +1,23 @@
+# Full Master Semantic Null Audit Report
+
+| Field Name | Non-Null Count | Null Count | Unknown Count | Missing Count | False Count | Zero Count | Violation Count | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| review_count | 3130 | 0 | 0 | 0 | 2958 | 5916 | 0 | No violations. |
+| review_rating_mean | 172 | 2958 | 2958 | 2958 | 0 | 0 | 0 | No violations. |
+| review_rating_median | 172 | 2958 | 2958 | 2958 | 0 | 0 | 0 | No violations. |
+| review_rating_min | 172 | 2958 | 2958 | 2958 | 0 | 0 | 0 | No violations. |
+| review_rating_max | 172 | 2958 | 2958 | 2958 | 0 | 0 | 0 | No violations. |
+| official_website | 3130 | 0 | 0 | 3047 | 0 | 0 | 0 | No violations. |
+| website_status | 3130 | 0 | 0 | 0 | 0 | 0 | 0 | No violations. |
+| operational_status | 3130 | 0 | 138 | 0 | 0 | 0 | 0 | No violations. |
+| facilities | 3130 | 0 | 0 | 0 | 0 | 0 | 0 | No violations. |
+| has_opening_hours | 3130 | 0 | 0 | 0 | 1989 | 3978 | 0 | No violations. |
+| price_validation_scope | 3130 | 0 | 0 | 0 | 0 | 0 | 0 | No violations. |
+| price_final_decision | 167 | 2963 | 2963 | 2963 | 0 | 0 | 0 | No violations. |
+| has_local_price_evidence | 3130 | 0 | 0 | 0 | 3122 | 6244 | 0 | No violations. |
+| local_price_min | 8 | 3122 | 3122 | 3122 | 0 | 0 | 0 | No violations. |
+| local_price_max | 8 | 3122 | 3122 | 3122 | 0 | 0 | 0 | No violations. |
+| external_verification_status | 3130 | 0 | 0 | 0 | 0 | 0 | 0 | No violations. |
+| external_selected_price_count | 3130 | 0 | 0 | 0 | 3130 | 6260 | 0 | No violations. |
+| external_price_min | 0 | 3130 | 3130 | 3130 | 0 | 0 | 0 | No violations. |
+| external_price_max | 0 | 3130 | 3130 | 3130 | 0 | 0 | 0 | No violations. |

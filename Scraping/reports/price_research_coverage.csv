@@ -1,2 +1,2 @@
 canonical_id,name,research_status,queries_attempted,sources_checked,accepted_sources,observations_found,selected_prices,conflicts_found,has_entry_ticket,has_parking_price,has_activity_price,has_package_price,best_source_type,best_source_date,research_confidence,unresolved_reason,completed_at
-can_151f3bbf542d,Pantai Mutun,completed_with_price,12,1,1,13,11,3,True,True,False,False,google_maps,2026-07-15T03:15:35.722945+00:00,0.9,,2026-07-15T03:15:35.722961+00:00
+can_151f3bbf542d,Pantai Mutun,completed_with_price,12,1,1,13,11,3,True,True,False,False,google_maps,2026-07-15T03:29:44.979530+00:00,0.9,,2026-07-15T03:29:44.979541+00:00
