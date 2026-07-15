@@ -1,8 +1,8 @@
 layer_name,covered_count,coverage_percentage
-identity,300,100.0
-reviews,172,57.333333333333336
-metadata,271,90.33333333333333
-facilities,223,74.33333333333333
-opening_hours,99,33.0
-local_prices,8,2.666666666666667
+identity,3130,100.0
+reviews,172,5.49520766773163
+metadata,2992,95.59105431309905
+facilities,2445,78.1150159744409
+opening_hours,1141,36.45367412140575
+local_prices,8,0.25559105431309903
 external_prices,0,0.0

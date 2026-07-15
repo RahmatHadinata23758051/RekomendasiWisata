@@ -1,10 +1,10 @@
 warning_type,occurrence_count
-external_price_not_verified,289
-opening_hours_missing,201
-no_review_data,128
-facility_data_unknown,77
-metadata_unmapped,29
-unknown_operational_status,29
-low_identity_confidence,24
+external_price_not_verified,3119
+no_review_data,2958
+opening_hours_missing,1989
+facility_data_unknown,685
+metadata_unmapped,138
+unknown_operational_status,138
+low_identity_confidence,84
 local_price_historical_only,8
 external_price_unresolved,1

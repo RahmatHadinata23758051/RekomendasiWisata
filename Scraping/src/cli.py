@@ -1391,7 +1391,7 @@ def verify_external_prices_cmd(
 
 @app.command(name="build-consolidated-master")
 def build_consolidated_master_cmd(
-    pilot_population: str = typer.Option("data/enrichment/consolidated/pilot_population.csv", help="Path to pilot population CSV"),
+    pilot_population: str = typer.Option("data/enrichment/consolidated/pilot_population.csv", help="Path to pilot population CSV/Parquet"),
     canonical: str = typer.Option("data/canonical/attractions_master_verified.parquet", help="Path to canonical attractions verified parquet"),
     reviews: str = typer.Option("data/enrichment/final/reviews.parquet", help="Path to final reviews parquet"),
     metadata: str = typer.Option("data/enrichment/metadata/place_metadata.parquet", help="Path to metadata parquet"),
@@ -1405,12 +1405,26 @@ def build_consolidated_master_cmd(
     master_version: str = typer.Option("consolidated_enrichment_pilot_v1", help="Version tag of master consolidated dataset"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Dry run only"),
     strict: bool = typer.Option(False, "--strict", help="Strict schema validation"),
-    force: bool = typer.Option(False, "--force", help="Force rebuild")
+    force: bool = typer.Option(False, "--force", help="Force rebuild"),
+    full: bool = typer.Option(False, "--full", help="Scale to full 3,130 canonical attractions")
 ):
     """
-    Build a Consolidated Enrichment Master Dataset for the deterministic 300-place pilot.
+    Build a Consolidated Enrichment Master Dataset for the deterministic 300-place pilot or the full 3,130 attractions.
     """
     console.print("[bold blue]Starting Consolidated Enrichment Master Dataset Build...[/bold blue]")
+    
+    if full:
+        if pilot_population == "data/enrichment/consolidated/pilot_population.csv":
+            pilot_population = "data/canonical/attractions_master_verified.parquet"
+        if metadata == "data/enrichment/metadata/place_metadata.parquet":
+            metadata = "data/enrichment/metadata/full/place_metadata_full.parquet"
+        if facilities == "data/enrichment/metadata/facilities.parquet":
+            facilities = "data/enrichment/metadata/relations/facilities_full.parquet"
+        if opening_hours == "data/enrichment/metadata/opening_hours.parquet":
+            opening_hours = "data/enrichment/metadata/relations/opening_hours_full.parquet"
+        if master_version == "consolidated_enrichment_pilot_v1":
+            master_version = "consolidated_enrichment_full_v1"
+            
     from src.enrichment.consolidated_master import (
         run_master_consolidation,
         generate_coverage_reports,
@@ -1418,15 +1432,18 @@ def build_consolidated_master_cmd(
         run_consolidation_audits
     )
     try:
-        # Load pilot places just to have pilot df for validation checks
+        # Load population for validation checks
         if os.path.exists(pilot_population):
-            pilot = pd.read_csv(pilot_population)
+            if pilot_population.endswith(".parquet"):
+                pilot = pd.read_parquet(pilot_population)
+            else:
+                pilot = pd.read_csv(pilot_population)
         else:
-            raise FileNotFoundError(f"Pilot population file not found: {pilot_population}")
+            raise FileNotFoundError(f"Population file not found: {pilot_population}")
             
         # We need external prices to pass to validate_master_dataset
         df_ext_prices = pd.read_csv(external_verified_prices) if os.path.exists(external_verified_prices) else pd.DataFrame()
-
+        
         df_master = run_master_consolidation(
             pilot_population_path=pilot_population,
             canonical_path=canonical,
