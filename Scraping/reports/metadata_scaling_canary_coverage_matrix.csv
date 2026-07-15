@@ -1,0 +1,31 @@
+canonical_id,region,category,pilot_member,mapping_case,website_case,opening_hours_case,facility_case,operational_status_case,risk_case
+can_31ddff90dde7,Kabupaten Pesawaran,forest,False,mapped,missing,present,unknown,open,low
+can_460af15d5421,Kabupaten Pesawaran,forest,False,mapped,missing,present,present,open,low
+can_0d6fb4b4f5f5,Kabupaten Pesawaran,forest,False,mapped,missing,missing,present,open,low
+can_2d293ffd5968,Kabupaten Pringsewu,forest,False,mapped,missing,present,present,open,low
+can_59a8f91551ac,Kabupaten Pesawaran,other,True,mapped,missing,present,present,open,low
+can_1fef284e7d10,Kabupaten Pesawaran,island,True,mapped,missing,missing,present,open,low
+can_dac76df4e41d,Kabupaten Pesawaran,recreation,False,mapped,present,present,present,open,low
+can_151f3bbf542d,Kabupaten Lampung Selatan,beach,True,mapped,present,missing,unknown,open,low
+can_b279666e08e8,Kabupaten Pesawaran,other,True,mapped,present,missing,present,open,low
+can_8ab3384516b1,Kota Bandar Lampung,beach,False,mapped,missing,missing,unknown,open,low
+can_62baf15e0b65,Kabupaten Lampung Tengah,agrotourism,False,mapped,missing,missing,present,open,low
+can_a4717fc3d0d0,Kabupaten Tanggamus,other,False,mapped,missing,present,present,open,low
+can_3741c2c75bac,Kabupaten Tanggamus,nature,True,mapped,missing,missing,present,temporarily_closed,low
+can_4724a4080829,Kabupaten Tanggamus,waterfall,False,mapped,missing,missing,unknown,temporarily_closed,low
+can_99a07afcd050,Kabupaten Tanggamus,beach,False,mapped,present,missing,unknown,open,low
+can_fc960b7cae7f,Kabupaten Lampung Barat,other,False,mapped,missing,missing,present,open,low
+can_43e0dc8c2d98,Kabupaten Tanggamus,other,True,mapped,missing,present,present,permanently_closed,low
+can_5172878bb5f9,Kota Bandar Lampung,other,True,mapped,present,present,present,open,low
+can_3dfaf1ab6bd5,Kabupaten Tulang Bawang,other,False,mapped,missing,missing,present,open,low
+can_10ef515fd263,Kota Bandar Lampung,forest,False,mapped,missing,present,present,permanently_closed,low
+can_106ac0f68f3c,Kabupaten Pesisir Barat,other,True,mapped,missing,missing,present,open,low
+can_8fc565f41061,Kabupaten Lampung Barat,agrotourism,False,mapped,present,missing,unknown,temporarily_closed,low
+can_b6c7d5a77c88,Kabupaten Lampung Timur,waterpark,False,mapped,missing,missing,unknown,open,low
+can_c101d32a3d74,Kota Metro,hill,False,mapped,missing,missing,present,open,low
+can_12014c41253d,Kabupaten Way Kanan,recreation,False,mapped,missing,present,present,open,low
+can_b4b171bfa40f,Kabupaten Tulang Bawang Barat,island,False,mapped,missing,missing,unknown,open,low
+can_0adeb1580500,Kabupaten Lampung Utara,hill,False,mapped,missing,missing,present,open,low
+can_4b0cad3a8f7d,Kabupaten Mesuji,park,False,mapped,missing,present,present,open,low
+can_f3e81e60a2c8,Kota Bandar Lampung,mountain,False,unmapped,missing,missing,unknown,unknown,high
+can_03603652006f,Kota Bandar Lampung,park,True,unmapped,missing,missing,unknown,unknown,high

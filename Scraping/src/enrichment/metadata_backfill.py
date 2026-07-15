@@ -2120,30 +2120,35 @@ def assemble_and_write_outputs(df_pop, manifest_dict, output_dir, relations_dir,
     df_addresses = pd.DataFrame(addresses_rows)
     if df_addresses.empty:
         df_addresses = pd.DataFrame(columns=["canonical_id", "address_id", "raw_address", "normalized_address", "village", "district", "city_or_regency", "province", "postal_code", "latitude", "longitude", "source_id", "source_type", "confidence", "is_selected", "conflict_group"])
+    df_addresses.drop_duplicates(inplace=True)
     df_addresses.to_csv(os.path.join(relations_dir, "addresses_full.csv"), index=False, encoding="utf-8")
     df_addresses.to_parquet(os.path.join(relations_dir, "addresses_full.parquet"), index=False)
     
     df_phones = pd.DataFrame(phones_rows)
     if df_phones.empty:
         df_phones = pd.DataFrame(columns=["canonical_id", "phone_id", "raw_phone", "normalized_phone", "country_code", "phone_type", "source_id", "source_type", "confidence", "is_selected", "status"])
+    df_phones.drop_duplicates(inplace=True)
     df_phones.to_csv(os.path.join(relations_dir, "phones_full.csv"), index=False, encoding="utf-8")
     df_phones.to_parquet(os.path.join(relations_dir, "phones_full.parquet"), index=False)
     
     df_websites = pd.DataFrame(website_sources_rows)
     if df_websites.empty:
         df_websites = pd.DataFrame(columns=["canonical_id", "website_url", "website_type", "website_status", "identity_match_status", "domain", "is_official", "classification_reason", "source_id"])
+    df_websites.drop_duplicates(inplace=True)
     df_websites.to_csv(os.path.join(relations_dir, "website_sources_full.csv"), index=False, encoding="utf-8")
     df_websites.to_parquet(os.path.join(relations_dir, "website_sources_full.parquet"), index=False)
     
     df_oh = pd.DataFrame(opening_hours_rows)
     if df_oh.empty:
         df_oh = pd.DataFrame(columns=["canonical_id", "day_of_week", "interval_index", "open_time", "close_time", "is_closed", "is_open_24_hours", "status", "source_id", "confidence"])
+    df_oh.drop_duplicates(inplace=True)
     df_oh.to_csv(os.path.join(relations_dir, "opening_hours_full.csv"), index=False, encoding="utf-8")
     df_oh.to_parquet(os.path.join(relations_dir, "opening_hours_full.parquet"), index=False)
     
     df_fac = pd.DataFrame(facilities_rows)
     if df_fac.empty:
         df_fac = pd.DataFrame(columns=["canonical_id", "facility_type", "raw_label", "availability_status", "source_id", "source_type", "confidence", "status", "notes"])
+    df_fac.drop_duplicates(inplace=True)
     df_fac.to_csv(os.path.join(relations_dir, "facilities_full.csv"), index=False, encoding="utf-8")
     df_fac.to_parquet(os.path.join(relations_dir, "facilities_full.parquet"), index=False)
     

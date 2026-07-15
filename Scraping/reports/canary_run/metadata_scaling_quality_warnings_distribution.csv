@@ -1,8 +1,8 @@
 warning_type,frequency
-official_website_missing,9
-opening_hours_missing,8
-phone_missing,7
-facility_data_unknown,4
-address_missing,3
-metadata_unmapped,3
-unknown_operational_status,3
+official_website_missing,24
+opening_hours_missing,21
+phone_missing,21
+facility_data_unknown,11
+address_missing,2
+metadata_unmapped,2
+unknown_operational_status,2

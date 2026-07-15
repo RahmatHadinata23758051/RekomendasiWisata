@@ -1,0 +1,62 @@
+{
+  "matching": true,
+  "unexpected_differences": [],
+  "hashes": {
+    "place_metadata_full.csv": {
+      "det1_hash": "022f467955adfe6e5b0ae716786493b22ab51bf8fde9698a3d853a16cf1f17bb",
+      "det2_hash": "022f467955adfe6e5b0ae716786493b22ab51bf8fde9698a3d853a16cf1f17bb"
+    },
+    "place_metadata_full.parquet": {
+      "det1_hash": "19dec7987b8d5cd6298918dafc711873b9b2c64e48b7eac4c3890faa9f076e83",
+      "det2_hash": "19dec7987b8d5cd6298918dafc711873b9b2c64e48b7eac4c3890faa9f076e83"
+    },
+    "place_metadata_full.jsonl": {
+      "det1_hash": "7e51fe140e5938afd5c0e18293d998098b5006b06d4c77c1de2220fd41677bfa",
+      "det2_hash": "7e51fe140e5938afd5c0e18293d998098b5006b06d4c77c1de2220fd41677bfa"
+    },
+    "../relations/website_sources_full.csv": {
+      "det1_hash": "d0c42530af42d0be6e66bfc6a865494020133b6d4f6e0ade811713c864b58549",
+      "det2_hash": "d0c42530af42d0be6e66bfc6a865494020133b6d4f6e0ade811713c864b58549"
+    },
+    "../relations/website_sources_full.parquet": {
+      "det1_hash": "d0c42530af42d0be6e66bfc6a865494020133b6d4f6e0ade811713c864b58549",
+      "det2_hash": "d0c42530af42d0be6e66bfc6a865494020133b6d4f6e0ade811713c864b58549"
+    },
+    "../relations/addresses_full.csv": {
+      "det1_hash": "308e0807f943d1da21e54e22654062ce234c4180060f958ae8b28c1ab2becece",
+      "det2_hash": "308e0807f943d1da21e54e22654062ce234c4180060f958ae8b28c1ab2becece"
+    },
+    "../relations/addresses_full.parquet": {
+      "det1_hash": "308e0807f943d1da21e54e22654062ce234c4180060f958ae8b28c1ab2becece",
+      "det2_hash": "308e0807f943d1da21e54e22654062ce234c4180060f958ae8b28c1ab2becece"
+    },
+    "../relations/phones_full.csv": {
+      "det1_hash": "2874e712a4d2a4027c70f65a69179bc5340ea31af4b9156951fdbbc4bdf4aebc",
+      "det2_hash": "2874e712a4d2a4027c70f65a69179bc5340ea31af4b9156951fdbbc4bdf4aebc"
+    },
+    "../relations/phones_full.parquet": {
+      "det1_hash": "890b32d3c8d843df60ffb0959d9331a5eab918080f5b6fe2b82aa73657b9e056",
+      "det2_hash": "890b32d3c8d843df60ffb0959d9331a5eab918080f5b6fe2b82aa73657b9e056"
+    },
+    "../relations/opening_hours_full.csv": {
+      "det1_hash": "29b3b380bca70b3463e9b507c61363638ad7a2e5e4cc17ef3f9a3baf47f1485a",
+      "det2_hash": "29b3b380bca70b3463e9b507c61363638ad7a2e5e4cc17ef3f9a3baf47f1485a"
+    },
+    "../relations/opening_hours_full.parquet": {
+      "det1_hash": "fa4d67e8219e6fa991b38ec850d593fd2cdcfac480be8277a8d7322513787b01",
+      "det2_hash": "fa4d67e8219e6fa991b38ec850d593fd2cdcfac480be8277a8d7322513787b01"
+    },
+    "../relations/facilities_full.csv": {
+      "det1_hash": "86af9a7addb03322e4aaf275429c5c520638a1a0c96ebb8a37a329bd1ee1d83e",
+      "det2_hash": "86af9a7addb03322e4aaf275429c5c520638a1a0c96ebb8a37a329bd1ee1d83e"
+    },
+    "../relations/facilities_full.parquet": {
+      "det1_hash": "86af9a7addb03322e4aaf275429c5c520638a1a0c96ebb8a37a329bd1ee1d83e",
+      "det2_hash": "86af9a7addb03322e4aaf275429c5c520638a1a0c96ebb8a37a329bd1ee1d83e"
+    },
+    "metadata_full_manifest.json": {
+      "det1_hash": "a415c65a30a9ba4580beb73423a8d81da7c77c984ee9ea1ce61358a6dbe2804d",
+      "det2_hash": "a415c65a30a9ba4580beb73423a8d81da7c77c984ee9ea1ce61358a6dbe2804d"
+    }
+  }
+}

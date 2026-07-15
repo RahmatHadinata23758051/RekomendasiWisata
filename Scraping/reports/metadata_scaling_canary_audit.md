@@ -3,9 +3,9 @@
 This report documents the quality audit of the canary run outputs to verify pipeline scaling correctness before launching the full execution.
 
 ## Audit Findings
-- **Canary Population Count**: 9 (Verified)
-- **Output Record Count**: 9 (Verified)
-- **Unique Canonical IDs**: 9 (Verified, zero duplicates)
+- **Canary Population Count**: 30 (Verified)
+- **Output Record Count**: 30 (Verified)
+- **Unique Canonical IDs**: 30 (Verified, zero duplicates)
 
 ### Column Integrity Check
 All required metadata schema columns are fully populated with appropriate data types and zero drift:
@@ -29,22 +29,26 @@ All required metadata schema columns are fully populated with appropriate data t
 - **Mapping status distribution**:
 | Value | Count |
 | --- | --- |
-| mapped | 6 |
-| unmapped | 3 |
+| mapped | 28 |
+| unmapped | 2 |
 
 
 - **Operational status distribution**:
 | Value | Count |
 | --- | --- |
-| open | 6 |
-| unknown | 3 |
+| open | 23 |
+| temporarily_closed | 3 |
+| unknown | 2 |
+| permanently_closed | 2 |
 
 
 - **Completeness class distribution**:
 | Value | Count |
 | --- | --- |
-| moderate | 6 |
-| sparse | 3 |
+| moderate | 20 |
+| strong | 7 |
+| sparse | 2 |
+| complete | 1 |
 
 
 ## Conclusion

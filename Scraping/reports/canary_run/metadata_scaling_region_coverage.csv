@@ -1,2 +1,16 @@
 region,total_attractions,mapped_attractions,mapping_rate,address_coverage,phone_coverage,website_coverage,opening_hours_coverage,facilities_coverage
-Kabupaten Lampung Barat,9,6,0.6666666666666666,0.6666666666666666,0.2222222222222222,0.0,0.1111111111111111,0.5555555555555556
+Kabupaten Lampung Barat,2,2,1.0,1.0,0.5,0.5,0.0,0.5
+Kabupaten Lampung Selatan,1,1,1.0,1.0,0.0,1.0,0.0,0.0
+Kabupaten Lampung Tengah,1,1,1.0,1.0,0.0,0.0,0.0,1.0
+Kabupaten Lampung Timur,1,1,1.0,1.0,0.0,0.0,0.0,0.0
+Kabupaten Lampung Utara,1,1,1.0,1.0,0.0,0.0,0.0,1.0
+Kabupaten Mesuji,1,1,1.0,1.0,1.0,0.0,1.0,1.0
+Kabupaten Pesawaran,7,7,1.0,1.0,0.42857142857142855,0.2857142857142857,0.5714285714285714,0.8571428571428571
+Kabupaten Pesisir Barat,1,1,1.0,1.0,0.0,0.0,0.0,1.0
+Kabupaten Pringsewu,1,1,1.0,1.0,1.0,0.0,1.0,1.0
+Kabupaten Tanggamus,5,5,1.0,1.0,0.2,0.2,0.2,0.4
+Kabupaten Tulang Bawang,1,1,1.0,1.0,0.0,0.0,0.0,1.0
+Kabupaten Tulang Bawang Barat,1,1,1.0,1.0,0.0,0.0,0.0,0.0
+Kabupaten Way Kanan,1,1,1.0,1.0,1.0,0.0,1.0,1.0
+Kota Bandar Lampung,5,3,0.6,0.6,0.2,0.2,0.2,0.4
+Kota Metro,1,1,1.0,1.0,0.0,0.0,0.0,1.0
