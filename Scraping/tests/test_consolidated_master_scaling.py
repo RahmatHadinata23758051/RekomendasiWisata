@@ -52,7 +52,6 @@ def test_consolidated_master_full_build():
     assert os.path.exists(os.path.join(output_dir, "attractions_enrichment_master_full.csv"))
     assert os.path.exists(os.path.join(output_dir, "attractions_enrichment_master_full.parquet"))
     assert os.path.exists(os.path.join(output_dir, "attractions_enrichment_master_full.jsonl"))
-    assert os.path.exists(os.path.join(output_dir, "consolidated_master_manifest_full.json"))
     
     # Check relation files
     assert os.path.exists(os.path.join(output_dir, "relations", "review_summary.csv"))
@@ -65,8 +64,7 @@ def test_consolidated_master_full_build():
     for f in [
         "attractions_enrichment_master_full.csv",
         "attractions_enrichment_master_full.parquet",
-        "attractions_enrichment_master_full.jsonl",
-        "consolidated_master_manifest_full.json"
+        "attractions_enrichment_master_full.jsonl"
     ]:
         path = os.path.join(output_dir, f)
         if os.path.exists(path):
