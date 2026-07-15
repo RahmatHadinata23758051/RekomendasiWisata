@@ -1,0 +1,10 @@
+canonical_id,operational_status,status_semantic,source_count,source_types,conflict_present,selected_source,selection_reason
+can_01336cdc6ae6,open,observed,1,apify_google_maps,False,apify_google_maps_ChIJp8K70Iq6Ry4RRotuJBisHAw,Closed priority logic: permanently_closed > temporarily_closed > open
+can_07f1c277cc43,open,observed,1,apify_google_maps,False,apify_google_maps_ChIJZzpusr-hRy4RcsrnmOmunP8,Closed priority logic: permanently_closed > temporarily_closed > open
+can_0eb029a1fef8,unknown,unknown,0,,False,unmapped,Closed priority logic: permanently_closed > temporarily_closed > open
+can_1067b71513e9,open,observed,1,apify_google_maps,False,apify_google_maps_ChIJxSH0ewChRy4R1y1j7wklbRY,Closed priority logic: permanently_closed > temporarily_closed > open
+can_1084427b1bc7,unknown,unknown,0,,False,unmapped,Closed priority logic: permanently_closed > temporarily_closed > open
+can_185ae4342ce4,open,observed,1,apify_google_maps,False,apify_google_maps_ChIJ1Q3RqEd5Ry4R9lTRUWNsZrQ,Closed priority logic: permanently_closed > temporarily_closed > open
+can_2095102c27cb,open,observed,1,apify_google_maps,False,apify_google_maps_ChIJO98RxIGHRy4Ro8wqrNlrzQA,Closed priority logic: permanently_closed > temporarily_closed > open
+can_267739168349,unknown,unknown,0,,False,unmapped,Closed priority logic: permanently_closed > temporarily_closed > open
+can_69d3f2d38cb6,open,observed,1,apify_google_maps,False,apify_google_maps_ChIJ50l7KKePRy4RwBhSq60_ixc,Closed priority logic: permanently_closed > temporarily_closed > open

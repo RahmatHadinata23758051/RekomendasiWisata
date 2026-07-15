@@ -1061,6 +1061,57 @@ def backfill_pilot_metadata(
         console.print(f"[red]Error during metadata backfill: {e}[/red]")
         raise e
 
+@app.command(name="scale-metadata-backfill")
+def scale_metadata_backfill_cmd(
+    population: str = typer.Option("data/canonical/attractions_master_verified.jsonl", help="Path to verified canonical attractions population"),
+    queue: str = typer.Option("data/enrichment/metadata/scaling/metadata_scaling_queue.csv", help="Path to scaling queue CSV"),
+    batch_size: int = typer.Option(100, help="Number of records to process per batch"),
+    batch_id: Optional[str] = typer.Option(None, help="Process single batch ID"),
+    start_batch: Optional[int] = typer.Option(None, help="Start batch number (1-based)"),
+    end_batch: Optional[int] = typer.Option(None, help="End batch number (1-based)"),
+    resume: bool = typer.Option(False, "--resume", help="Resume execution from manifest state"),
+    fresh_run: bool = typer.Option(False, "--fresh-run", help="Clean run starting from an empty state"),
+    strict: bool = typer.Option(False, "--strict", help="Enable strict mode (fails on any error)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Dry run only"),
+    force: bool = typer.Option(False, "--force", help="Force complete execution"),
+    output_dir: str = typer.Option("data/enrichment/metadata/full", help="Output directory for metadata"),
+    reports_dir: str = typer.Option("reports", help="Reports directory"),
+    max_retries: int = typer.Option(3, help="Maximum attempts for retryable failures"),
+    request_timeout: float = typer.Option(10.0, help="Request timeout"),
+    master_version: str = typer.Option("metadata-backfill-full-v1", help="Version tag of full dataset")
+):
+    """
+    Scale metadata backfill and enrichment to all 3,130 verified attractions in Lampung.
+    """
+    console.print("[bold blue]Starting Metadata Backfill Scaling...[/bold blue]")
+    from src.enrichment.metadata_backfill import run_metadata_scaling
+    try:
+        run_metadata_scaling(
+            population_path=population,
+            queue_path=queue,
+            batch_size=batch_size,
+            batch_id=batch_id,
+            start_batch=start_batch,
+            end_batch=end_batch,
+            resume=resume,
+            fresh_run=fresh_run,
+            strict=strict,
+            dry_run=dry_run,
+            force=force,
+            output_dir=output_dir,
+            reports_dir=reports_dir,
+            max_retries=max_retries,
+            request_timeout=request_timeout,
+            master_version=master_version
+        )
+        if not dry_run:
+            console.print("[green]Metadata scaling completed successfully.[/green]")
+        else:
+            console.print("[yellow]Dry run completed successfully.[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error during metadata scaling: {e}[/red]")
+        raise e
+
 @app.command(name="validate-price-candidates")
 def validate_price_candidates(
     input: str = typer.Option("data/enrichment/price/pilot_price_candidates.csv", help="Path to input candidates CSV"),

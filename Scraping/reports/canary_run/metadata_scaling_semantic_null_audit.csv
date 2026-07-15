@@ -1,0 +1,8 @@
+field_name,observed_count,inferred_count,unknown_count,missing_count,not_applicable_count,conflicted_count,invalid_count,audit_status,notes
+website,0,0,0,9,0,0,0,passed,Semantic values align with schema constraints
+operational_status,6,0,3,0,0,0,0,passed,Semantic values align with schema constraints
+address,6,0,0,3,0,0,0,passed,Semantic values align with schema constraints
+phone,2,0,0,7,0,0,0,passed,Semantic values align with schema constraints
+opening_hours,1,0,0,8,0,0,0,passed,Semantic values align with schema constraints
+facility_data,5,0,0,4,0,0,0,passed,Semantic values align with schema constraints
+accessibility,0,0,0,9,0,0,0,passed,Semantic values align with schema constraints

@@ -1,0 +1,33 @@
+batch_id,region,priority,planned_places,mapped_candidates,unmapped_candidates,estimated_requests,estimated_runtime_minutes,estimated_cost,execution_order,status
+batch_001,Kabupaten Lampung Barat,high/medium,100,7,93,0,0.0333,0.0,1,planned
+batch_002,Kabupaten Lampung Barat,high/medium,100,5,95,0,0.0333,0.0,2,planned
+batch_003,"Kabupaten Lampung Barat, Kabupaten Lampung Selatan",high/medium,100,12,88,0,0.0333,0.0,3,planned
+batch_004,Kabupaten Lampung Selatan,high/medium,100,5,95,0,0.0333,0.0,4,planned
+batch_005,Kabupaten Lampung Selatan,high/medium,100,6,94,0,0.0333,0.0,5,planned
+batch_006,Kabupaten Lampung Selatan,high/medium,100,2,98,0,0.0333,0.0,6,planned
+batch_007,"Kabupaten Lampung Selatan, Kabupaten Lampung Tengah",high/medium,100,6,94,0,0.0333,0.0,7,planned
+batch_008,Kabupaten Lampung Tengah,high/medium,100,6,94,0,0.0333,0.0,8,planned
+batch_009,"Kabupaten Lampung Tengah, Kabupaten Lampung Timur",high/medium,100,11,89,0,0.0333,0.0,9,planned
+batch_010,Kabupaten Lampung Timur,high/medium,100,8,92,0,0.0333,0.0,10,planned
+batch_011,"Kabupaten Lampung Timur, Kabupaten Lampung Utara",high/medium,100,10,90,0,0.0333,0.0,11,planned
+batch_012,Kabupaten Lampung Utara,high/medium,100,9,91,0,0.0333,0.0,12,planned
+batch_013,"Kabupaten Lampung Utara, Kabupaten Mesuji...",high/medium,100,16,84,0,0.0333,0.0,13,planned
+batch_014,Kabupaten Pesawaran,high/medium,100,10,90,0,0.0333,0.0,14,planned
+batch_015,Kabupaten Pesawaran,high/medium,100,6,94,0,0.0333,0.0,15,planned
+batch_016,"Kabupaten Pesawaran, Kabupaten Pesisir Barat",high/medium,100,11,89,0,0.0333,0.0,16,planned
+batch_017,"Kabupaten Pesisir Barat, Kabupaten Pringsewu",high/medium,100,14,86,0,0.0333,0.0,17,planned
+batch_018,Kabupaten Pringsewu,high/medium,100,10,90,0,0.0333,0.0,18,planned
+batch_019,"Kabupaten Pringsewu, Kabupaten Tanggamus",high,100,4,96,0,0.0333,0.0,19,planned
+batch_020,Kabupaten Tanggamus,high/medium,100,10,90,0,0.0333,0.0,20,planned
+batch_021,Kabupaten Tanggamus,high/medium,100,7,93,0,0.0333,0.0,21,planned
+batch_022,"Kabupaten Tanggamus, Kabupaten Tulang Bawang",medium/high,100,10,90,0,0.0333,0.0,22,planned
+batch_023,Kabupaten Tulang Bawang,medium/high,100,12,88,0,0.0333,0.0,23,planned
+batch_024,"Kabupaten Tulang Bawang, Kabupaten Tulang Bawang Barat",high/medium,100,15,85,0,0.0333,0.0,24,planned
+batch_025,"Kabupaten Tulang Bawang Barat, Kabupaten Way Kanan",high/medium,100,13,87,0,0.0333,0.0,25,planned
+batch_026,"Kabupaten Way Kanan, Kota Bandar Lampung",high/medium,100,7,93,0,0.0333,0.0,26,planned
+batch_027,Kota Bandar Lampung,high/medium,100,9,91,0,0.0333,0.0,27,planned
+batch_028,Kota Bandar Lampung,high/medium,100,3,97,0,0.0333,0.0,28,planned
+batch_029,Kota Bandar Lampung,high/medium,100,10,90,0,0.0333,0.0,29,planned
+batch_030,Kota Bandar Lampung,medium/high,100,0,100,0,0.0333,0.0,30,planned
+batch_031,"Kota Bandar Lampung, Kota Metro",high/medium,100,12,88,0,0.0333,0.0,31,planned
+batch_032,Kota Metro,high/medium,30,5,25,0,0.01,0.0,32,planned

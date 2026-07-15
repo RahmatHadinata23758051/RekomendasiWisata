@@ -1,0 +1,58 @@
+[
+  {
+    "file_path": "data/canonical/attractions_master_verified.jsonl",
+    "exists": true,
+    "row_count": 3130,
+    "sha256": "f2b204c78e6c3626e706f6905339a84725189336af12aaea6589c2ea4337d607",
+    "frozen": true,
+    "baseline_status": "verified"
+  },
+  {
+    "file_path": "data/canonical/attractions_master_verified.parquet",
+    "exists": true,
+    "row_count": 3130,
+    "sha256": "d9dd9500c0ab50cf3d0a6735c469ce95f75e2227782dce7072b010f282b9bde0",
+    "frozen": true,
+    "baseline_status": "verified"
+  },
+  {
+    "file_path": "data/enrichment/metadata/place_metadata.parquet",
+    "exists": true,
+    "row_count": 300,
+    "sha256": "f27d66b7f40850ed1f8e4903cad94a018b9724304eb29f8cbacd76fea82de4c0",
+    "frozen": true,
+    "baseline_status": "verified"
+  },
+  {
+    "file_path": "data/enrichment/consolidated/pilot_population.csv",
+    "exists": true,
+    "row_count": 300,
+    "sha256": "6c5080dc0df2c9f314153e521bfc635dad3c731f5167724ad87370fb6c42b612",
+    "frozen": true,
+    "baseline_status": "verified"
+  },
+  {
+    "file_path": "data/enrichment/consolidated/attractions_enrichment_master_pilot.parquet",
+    "exists": true,
+    "row_count": 300,
+    "sha256": "9847866a2b6da611c2a2ecec9da347984ab38778cf891d3a7c93802205712f07",
+    "frozen": true,
+    "baseline_status": "verified"
+  },
+  {
+    "file_path": "data/enrichment/consolidated/consolidated_master_manifest.json",
+    "exists": true,
+    "row_count": 17,
+    "sha256": "b284ca685e5a37e41ce7c7a5e853e84f0ef02eb6616358cef3c5ac081ebccea3",
+    "frozen": true,
+    "baseline_status": "verified"
+  },
+  {
+    "file_path": "data/canonical/attraction_sources.parquet",
+    "exists": true,
+    "row_count": 4207,
+    "sha256": "b12962e642d33e525d7dc5b8799e6677081d3700bb15a2237741a543076dd621",
+    "frozen": true,
+    "baseline_status": "verified"
+  }
+]

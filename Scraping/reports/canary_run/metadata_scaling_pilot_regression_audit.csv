@@ -1,0 +1,25 @@
+canonical_id,field_name,pilot_value,full_value,matching,change_reason,allowed_change,audit_status
+can_07f1c277cc43,address,"P7RH+H65, Ringin sari, Kec. Suoh, Kabupaten Lampung Barat, Lampung 34882, Indonesia","P7RH+H65, Ringin sari, Kec. Suoh, Kabupaten Lampung Barat, Lampung 34882, Indonesia",True,Value matches,True,passed
+can_07f1c277cc43,phone,,,True,Value matches,True,passed
+can_07f1c277cc43,official_website,,,True,Value matches,True,passed
+can_07f1c277cc43,operational_status,,open,False,Expected pipeline scaling enrichment,True,passed
+can_69d3f2d38cb6,address,"Way Mengaku, Kec. Balik Bukit, Kabupaten Lampung Barat, Lampung 34813, Indonesia","Way Mengaku, Kec. Balik Bukit, Kabupaten Lampung Barat, Lampung 34813, Indonesia",True,Value matches,True,passed
+can_69d3f2d38cb6,phone,,,True,Value matches,True,passed
+can_69d3f2d38cb6,official_website,,,True,Value matches,True,passed
+can_69d3f2d38cb6,operational_status,,open,False,Expected pipeline scaling enrichment,True,passed
+can_01336cdc6ae6,address,"Marang, Kec. Pesisir Sel., Kabupaten Lampung Barat, Lampung 34875, Indonesia","Marang, Kec. Pesisir Sel., Kabupaten Lampung Barat, Lampung 34875, Indonesia",True,Value matches,True,passed
+can_01336cdc6ae6,phone,,,True,Value matches,True,passed
+can_01336cdc6ae6,official_website,,,True,Value matches,True,passed
+can_01336cdc6ae6,operational_status,,open,False,Expected pipeline scaling enrichment,True,passed
+can_1084427b1bc7,address,,,True,Value matches,True,passed
+can_1084427b1bc7,phone,,,True,Value matches,True,passed
+can_1084427b1bc7,official_website,,,True,Value matches,True,passed
+can_1084427b1bc7,operational_status,,unknown,False,Expected pipeline scaling enrichment,True,passed
+can_267739168349,address,,,True,Value matches,True,passed
+can_267739168349,phone,,,True,Value matches,True,passed
+can_267739168349,official_website,,,True,Value matches,True,passed
+can_267739168349,operational_status,,unknown,False,Expected pipeline scaling enrichment,True,passed
+can_0eb029a1fef8,address,,,True,Value matches,True,passed
+can_0eb029a1fef8,phone,,,True,Value matches,True,passed
+can_0eb029a1fef8,official_website,,,True,Value matches,True,passed
+can_0eb029a1fef8,operational_status,,unknown,False,Expected pipeline scaling enrichment,True,passed
