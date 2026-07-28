@@ -1,4 +1,7 @@
-# Environment variables (SECURITY: Never commit secrets to Git/GitHub)
+# Agent Local Documentation & System Context (NEVER PUSH TO GITHUB)
+.agents/
+
+# Environment Variables & Credentials (SECURITY: Never commit secrets)
 .env
 .env.local
 .env.*.local
