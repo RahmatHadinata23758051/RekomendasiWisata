@@ -1,0 +1,12 @@
+# Environment variables (SECURITY: Never commit secrets to Git/GitHub)
+.env
+.env.local
+.env.*.local
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.vscode/
+.idea/
