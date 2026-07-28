@@ -209,12 +209,3 @@ Pengujian performa algoritma rekomendasi dilakukan menggunakan skenario pengujia
 1. **Accuracy**: Persentase total prediksi sentimen yang benar.
 2. **Macro F1-Score**: Rata-rata F1-score lintas 3 kelas (Positif, Netral, Negatif) untuk menangani ketidakseimbangan kelas (*imbalanced data*).
 3. **Confusion Matrix**: Matriks visualisasi *True Positive*, *False Positive*, *True Negative*, dan *False Negative*.
-
----
-
-## 8. Rencana Langkah Selanjutnya (Next Execution Steps)
-
-Setelah dokumen arsitektur dan cetak biru pengujian ini disetujui:
-1. **Langkah 1**: Pembuatan modul `Model/feature_engineering/builder.py` untuk menghasilkan file `Data/consolidated/recommender_ready_features.parquet`.
-2. **Langkah 2**: Pembuatan skrip eksperimen pembanding algoritma rekomendasi di `Model/recommender/` (Baseline 1, Baseline 2, Candidate 3, Candidate 4).
-3. **Langkah 3**: Eksekusi pengujian performa (*benchmark execution*) dan penyusunan laporan perbandingan skor metrik (*Precision@K, nDCG@K, Latency*).
