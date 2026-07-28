@@ -1,15 +1,16 @@
 {
   "dataset_name": "recommender_ready_features",
-  "dataset_version": "v1.0",
+  "dataset_version": "v1.1",
   "source_master_version": "consolidated-enrichment-master-full-v1",
   "total_rows": 3130,
   "unique_canonical_ids": 3130,
   "eligible_recommend_count": 3126,
   "ineligible_recommend_count": 4,
+  "sentiment_integrated_attractions_count": 172,
   "category_vocab_size": 21,
   "region_vocab_size": 15,
   "facility_vocab_size": 10,
   "total_feature_columns": 67,
-  "sha256_parquet": "7c821778d4eab65cfe628c2f21ab3cba54071b214d31a3fb99ce43c483036a4d",
-  "generated_at": "2026-07-29T06:42:15.006922"
+  "sha256_parquet": "d624f32c5ee3a3b3b36358a061bd7fc4e2791a48a10f48996324365078505165",
+  "generated_at": "2026-07-29T06:54:02.315978"
 }

@@ -1,5 +1,5 @@
 algorithm,precision_at_10,ndcg_at_10,catalog_coverage_pct,latency_ms,unique_recommended_count
-Baseline 1: Simple Cosine,0.5733,0.8139,4.19,0.92,131
-Baseline 2: Weighted Multi-Metric,0.96,1.0,4.79,0.75,150
-Candidate 3: TF-IDF + Quality Penalty,0.6267,0.8043,4.19,1.05,131
-Candidate 4: Hybrid Multi-Objective,0.96,1.0,4.76,0.67,149
+Baseline 1: Simple Cosine,0.5733,0.8139,4.19,1.22,131
+Baseline 2: Weighted Multi-Metric,0.96,1.0,4.79,0.66,150
+Candidate 3: TF-IDF + Quality Penalty,0.6267,0.8043,4.19,1.0,131
+Candidate 4: Hybrid Multi-Objective,0.96,1.0,4.76,0.64,149

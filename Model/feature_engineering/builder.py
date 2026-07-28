@@ -46,6 +46,16 @@ def resolve_facilities_path():
             return p
     return None
 
+def resolve_sentiment_summary_path():
+    candidate_paths = [
+        "Data/consolidated/attraction_sentiment_summary.parquet",
+        "Scraping/data/enrichment/consolidated/attraction_sentiment_summary.parquet"
+    ]
+    for p in candidate_paths:
+        if os.path.exists(p):
+            return p
+    return None
+
 def build_recommender_dataset(
     master_parquet_path=None,
     facilities_parquet_path=None,
@@ -55,6 +65,7 @@ def build_recommender_dataset(
     """
     Transforms Consolidated Master (3.130 rows x 99 cols) into Recommender-Ready Dataset.
     Enforces Option 1: Hybrid (Structured Lists + Flattened Columns).
+    Integrates empirical NLP Sentiment Analysis Scores.
     """
     if master_parquet_path is None:
         master_parquet_path = resolve_master_path()
@@ -76,6 +87,17 @@ def build_recommender_dataset(
         for cid, group in df_fac.groupby("canonical_id"):
             raw_labels = " ".join(group["raw_label"].dropna().astype(str).str.lower())
             facility_extra_set[cid] = raw_labels
+
+    # Load NLP sentiment summary if available
+    sentiment_dict = {}
+    sentiment_path = resolve_sentiment_summary_path()
+    if sentiment_path and os.path.exists(sentiment_path):
+        df_sent = pd.read_parquet(sentiment_path)
+        for _, s_row in df_sent.iterrows():
+            sentiment_dict[s_row["canonical_id"]] = (
+                float(s_row["sentiment_score_mean"]),
+                float(s_row["sentiment_confidence_mean"])
+            )
 
     # Prepare arrays
     cat_vectors = []
@@ -154,9 +176,14 @@ def build_recommender_dataset(
         else:
             rating_norms.append(np.nan)
 
-        # 6. Sentiment Values (Placeholder / Integration Layer)
-        sentiment_means.append(np.nan)
-        sentiment_confs.append(0.0)
+        # 6. Sentiment Values (Integrated from Empirical NLP Pipeline)
+        if cid in sentiment_dict:
+            s_mean, s_conf = sentiment_dict[cid]
+            sentiment_means.append(s_mean)
+            sentiment_confs.append(s_conf)
+        else:
+            sentiment_means.append(np.nan)
+            sentiment_confs.append(0.0)
 
         # 7. Price Status Resolution
         p_status = str(row.get("external_verification_status", "unavailable"))
@@ -239,12 +266,13 @@ def build_recommender_dataset(
 
     manifest = {
         "dataset_name": "recommender_ready_features",
-        "dataset_version": "v1.0",
+        "dataset_version": "v1.1",
         "source_master_version": "consolidated-enrichment-master-full-v1",
         "total_rows": n_rows,
         "unique_canonical_ids": int(df_features["canonical_id"].nunique()),
         "eligible_recommend_count": int(df_features["is_eligible_recommend"].sum()),
         "ineligible_recommend_count": int((~df_features["is_eligible_recommend"]).sum()),
+        "sentiment_integrated_attractions_count": int(df_features["sentiment_score_mean"].notna().sum()),
         "category_vocab_size": len(CATEGORIES_VOCAB),
         "region_vocab_size": len(REGIONS_VOCAB),
         "facility_vocab_size": len(FACILITIES_VOCAB),
@@ -268,6 +296,7 @@ def build_recommender_dataset(
 | **Unique Canonical IDs** | {manifest['unique_canonical_ids']} |
 | **Eligible Attractions Count** | {manifest['eligible_recommend_count']} |
 | **Ineligible (Permanently Closed/No Coord)** | {manifest['ineligible_recommend_count']} |
+| **Attractions with NLP Sentiment Scores** | {manifest['sentiment_integrated_attractions_count']} |
 | **Category Vocab Size** | {manifest['category_vocab_size']} categories |
 | **Region Vocab Size** | {manifest['region_vocab_size']} regions |
 | **Facility Vocab Size** | {manifest['facility_vocab_size']} facilities |
