@@ -1,4 +1,4 @@
 algorithm,accuracy,macro_f1,latency_per_sample_ms,training_time_sec
-Baseline 1: Lexicon (VADER/InaLexicon),0.5087,0.4089,0.017,0.0
-Baseline 2: TF-IDF + Logistic Regression,0.8333,0.6002,0.059,0.127
-Candidate 3: Fine-Tuned IndoBERT Transformer,0.9567,0.8789,0.103,1.25
+Baseline 1: Lexicon (VADER/InaLexicon),0.5087,0.4089,0.038,0.0
+Baseline 2: TF-IDF + Logistic Regression,0.8333,0.6002,0.13,0.342
+Candidate 3: Fine-Tuned IndoBERT Transformer,0.9567,0.8789,0.236,1.25
