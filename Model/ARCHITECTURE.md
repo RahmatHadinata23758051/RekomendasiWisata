@@ -24,56 +24,151 @@ Dokumen ini mendefinisikan **arsitektur teknis menyeluruh** untuk pengembangan *
 
 ---
 
-## 2. Spesifikasi Dataset & Pipeline Preprocessing
+## 2. Visualisasi Pipeline Arsitektur Sistem ML (End-to-End Diagram)
 
-### 2.1 Dataset Input & Output Artefak
+Berikut adalah diagram alur visualisasi sistem dari pengolahan dataset mentah hingga penyajian rekomendasi melalui REST API:
 
+```mermaid
+flowchart TD
+    subgraph Data_Layer ["1. Layer Data & Feature Engineering"]
+        A1["Input Frozen Master Dataset<br>attractions_enrichment_master_full.parquet<br>(3.130 rows x 99 cols)"] --> A2["Feature Matrix Builder<br>Model/feature_engineering/builder.py"]
+        A2 --> A3["Vector Encoders<br>- One-Hot Category (21d)<br>- One-Hot Region (15d)<br>- Multi-Hot Facility (10d)<br>- Geodesic Distance Normalizer"]
+        A3 --> A4[("Recommender-Ready Feature Matrix<br>recommender_ready_features.parquet")]
+    end
+
+    subgraph Sentiment_Layer ["2. Layer NLP Sentimen Ulasan"]
+        B1["Raw Review Texts"] --> B2["NLP Text Preprocessor<br>- Cleansing & Lowercasing<br>- Indonesian Term Normalizer<br>- Negation Preserver"]
+        B2 --> B3["Sentiment Classifiers<br>- Baseline 1: Lexicon VADER<br>- Baseline 2: TF-IDF + Logistic Reg<br>- Candidate 3: IndoBERT Fine-Tuned"]
+        B3 --> B4["Sentiment Aggregator<br>- Score: -1.0 s/d +1.0<br>- Confidence Thresholding"]
+        B4 --> A4
+    end
+
+    subgraph Recommendation_Layer ["3. Layer Engine Rekomendasi ML"]
+        U1["User Request Preferences<br>(Category, Region, Facility, Budget, Lat/Long)"] --> C1["User Profile Vectorizer"]
+        A4 --> C2["Item Feature Matrix Integrator"]
+        C1 & C2 --> C3["Head-to-Head Algorithm Comparison Engine"]
+        
+        C3 --> C4a["Baseline 1:<br>Simple Cosine Similarity"]
+        C3 --> C4b["Baseline 2:<br>Weighted Multi-Metric"]
+        C3 --> C4c["Candidate 3:<br>TF-IDF + Quality Penalty"]
+        C3 --> C4d["Candidate 4:<br>Hybrid Multi-Objective Engine"]
+
+        C4d --> C5["Score Evaluator & Penalty Adjuster<br>- Geodesic Distance Decay<br>- Quality Penalty Adjustment"]
+        C5 --> C6["Eligibility Filter<br>(Mask Permanently Closed)"]
+        C6 --> C7["Cold-Start Handler<br>(Fallback Rules)"]
+        C7 --> C8["Explainability Engine<br>(Reason Code Generator)"]
+    end
+
+    subgraph Serving_Layer ["4. Layer Model Serving API"]
+        C8 --> D1["FastAPI Recommendation Server<br>POST /api/v1/recommendations"]
+        D1 --> D2["JSON Response Payload<br>- Top-N Ranked Items<br>- Match Scores & Reason Codes<br>- Execution Latency (ms)"]
+    end
+
+    style A4 fill:#1f77b4,stroke:#333,stroke-width:2px,color:#fff
+    style C4d fill:#2ca02c,stroke:#333,stroke-width:2px,color:#fff
+    style D1 fill:#ff7f0e,stroke:#333,stroke-width:2px,color:#fff
 ```
-[Input Dataset Frozen]
-Data/consolidated/attractions_enrichment_master_full.parquet (3.130 baris x 99 kolom)
-                             │
-                             ▼
-               [Feature Engineering Module]
-               Model/feature_engineering/builder.py
-                             │
-                             ▼
-[Output Recommender Feature Matrix]
-Data/consolidated/recommender_ready_features.parquet
-```
-
-### 2.2 Preprocessing & Vektorisi Fitur
-
-#### A. Fitur Categorical (Kategori & Wilayah)
-* **Kategori Utama (21 Kategori)**: Dikonversi menjadi *One-Hot Encoding Vector* ($\mathbf{v}_{cat} \in \mathbb{R}^{21}$).
-* **Wilayah Kabupaten/Kota (15 Wilayah)**: Dikonversi menjadi *One-Hot Encoding Vector* ($\mathbf{v}_{reg} \in \mathbb{R}^{15}$).
-
-#### B. Fitur Fasilitas (Facility Vector)
-* **10 Fasilitas Utama** (`parking`, `toilet`, `eatery`, `worship`, `wheelchair`, `guide`, `lodging`, `camping`, `wifi`, `transport`): Dikonversi menjadi *Multi-Hot Binary Vector* ($\mathbf{v}_{fac} \in \{0, 1\}^{10}$).
-
-#### C. Fitur Spasial & Jarak Geografis
-* **Koordinat Lat/Long**: Dihitung menggunakan jarak *Geodesic/Haversine* ($d_{km}$) terhadap posisi pengguna, lalu di-decay menggunakan fungsi eksponensial:
-$$Sim_{dist}(d_{km}) = \exp(-\lambda \cdot \max(0, d_{km} - d_{threshold}))$$
-*Dimana $\lambda = 0,015$ dan $d_{threshold} = 5\text{ km}$.*
-
-#### D. Fitur Sentimen & Rating Normalisasi
-* **Rating**: Dinormalisasi dari skala $1.0 - 5.0$ ke skala $0.0 - 1.0$. Destinasi tanpa review (`review_status = not_processed`) bernilai `NaN` dan ditangani khusus.
-* **Sentiment Score**: Hasil agregasi NLP (rentang $-1.0$ s/d $+1.0$).
-
-#### E. Fitur Kualitas & Semantic Null Handling
-* **Penalti Quality**: Dihitung berdasarkan `completeness_score`, status `unknown`, dan `quality_warning_count` untuk mencegah tempat berkualitas data rendah mendominasi rekomendasi.
 
 ---
 
-## 3. Matriks Algoritma Rekomendasi yang Akan Dibandingkan (*Recommender Benchmarking*)
+## 3. Visualisasi Pipeline Feature Engineering & Vektorasi Fitur
+
+Diagram berikut menggambarkan transformasi terperinci dari 99 kolom *Consolidated Master* menjadi matriks vektor numerik ML:
+
+```mermaid
+flowchart LR
+    subgraph Master_Columns ["Columns Consolidated Master (99 Cols)"]
+        M1["primary_category"]
+        M2["city_or_regency"]
+        M3["facilities_list"]
+        M4["latitude & longitude"]
+        M5["review_rating & sentiment"]
+        M6["price_status & prices"]
+        M7["completeness & warnings"]
+    end
+
+    subgraph Transformers ["Transformation & Encoding Modules"]
+        T1["One-Hot Categorical Encoder"]
+        T2["One-Hot Regional Encoder"]
+        T3["Multi-Hot Binary Encoder"]
+        T4["Geodesic Proximity Normalizer"]
+        T5["Sentiment Integrator"]
+        T6["Price Availability Encoder"]
+        T7["Quality Penalty Calculator"]
+    end
+
+    subgraph Feature_Vectors ["Vectorized Feature Matrix (3.130 Rows)"]
+        V1["category_vector (21d)"]
+        V2["region_vector (15d)"]
+        V3["facility_vector (10d)"]
+        V4["spatial_coord_norm"]
+        V5["sentiment_score_mean"]
+        V6["price_status_flag"]
+        V7["quality_penalty_score"]
+    end
+
+    M1 --> T1 --> V1
+    M2 --> T2 --> V2
+    M3 --> T3 --> V3
+    M4 --> T4 --> V4
+    M5 --> T5 --> V5
+    M6 --> T6 --> V6
+    M7 --> T7 --> V7
+
+    style Feature_Vectors fill:#4b6584,stroke:#333,color:#fff
+```
+
+---
+
+## 4. Visualisasi Algoritma Scoring & Explainability Engine
+
+Diagram berikut menunjukkan bagaimana *Hybrid Multi-Objective Scoring Model* (Candidate 4) menghitung kecocokan destinasi dan meng-generate *Reason Codes*:
+
+```mermaid
+graph TD
+    subgraph Similarity_Calculation ["Sub-Scoring Engine"]
+        S1["Sim_category = Cosine(User_Cat, Item_Cat)"]
+        S2["Sim_region = ExactMatch(User_Reg, Item_Reg)"]
+        S3["Sim_facility = Jaccard(User_Fac, Item_Fac)"]
+        S4["Sim_distance = exp(-λ * max(0, d_km - 5km))"]
+        S5["Sim_opinion = 0.5 * Rating + 0.5 * Sentiment"]
+    end
+
+    subgraph Weighted_Sum ["Weighted Sum Integrator"]
+        W1["Score_raw = (w1*Sim_cat + w2*Sim_reg + w3*Sim_fac + w4*Sim_dist + w5*Sim_opinion)"]
+    end
+
+    subgraph Penalty_System ["Quality Penalty Subsystem"]
+        P1["Penalty = α*(100-Completeness) + β*Unknown_Status + γ*Warning_Count"]
+    end
+
+    subgraph Final_Scoring ["Final Decision Engine"]
+        F1["Score_final = Score_raw - Penalty"]
+    end
+
+    subgraph Reason_Generator ["Explainability Engine (Reason Codes)"]
+        R1{"Kriteria Ambang Batas Threshold"}
+        R1 -->|Sim_cat > 0.8| RC1["category_match"]
+        R1 -->|Sim_reg == 1.0| RC2["region_match"]
+        R1 -->|Sim_fac >= 0.5| RC3["facility_match"]
+        R1 -->|d_km <= 25km| RC4["nearby_location"]
+        R1 -->|Sentiment > 0.3| RC5["positive_sentiment"]
+        R1 -->|Status == open| RC6["verified_open"]
+    end
+
+    S1 & S2 & S3 & S4 & S5 --> W1
+    W1 & P1 --> F1
+    F1 --> R1
+
+    style Final_Scoring fill:#eb3b5a,stroke:#333,color:#fff
+    style Reason_Generator fill:#20bf6b,stroke:#333,color:#fff
+```
+
+---
+
+## 5. Matriks Algoritma Rekomendasi yang Akan Dibandingkan (*Recommender Benchmarking*)
 
 Untuk menentukan model rekomendasi terbaik, kita akan mengimplementasikan dan membandingkan **4 Algoritma Pembanding**:
-
-```
-                              ┌──► [Baseline 1] Simple Cosine Similarity
-                              ├──► [Baseline 2] Weighted Multi-Metric Similarity (Cosine + Jaccard)
-[Recommender-Ready Dataset] ──┼──► [Candidate 3] TF-IDF Feature Similarity + Quality Penalty
-                              └──► [Candidate 4] Hybrid Multi-Objective Scoring (Similarity + Spasial + Sentimen)
-```
 
 | ID Algoritma | Nama Algoritma | Mekanisme & Formulir Matematika | Kelebihan & Alasan Pembandingan |
 | :--- | :--- | :--- | :--- |
@@ -84,15 +179,9 @@ Untuk menentukan model rekomendasi terbaik, kita akan mengimplementasikan dan me
 
 ---
 
-## 4. Matriks Algoritma Analisis Sentimen NLP yang Akan Dibandingkan (*Sentiment Benchmarking*)
+## 6. Matriks Algoritma Analisis Sentimen NLP yang Akan Dibandingkan (*Sentiment Benchmarking*)
 
 Untuk pengolahan teks ulasan pengunjung, kita akan mengimplementasikan dan membandingkan **3 Pendekatan Model NLP**:
-
-```
-                     ┌──► [Baseline 1] Lexicon-Based Sentiment Analyzer (Indonesian VADER Lexicon)
-[Raw Review Texts] ──┼──► [Baseline 2] TF-IDF + Supervised ML (Logistic Regression / LinearSVC)
-                     └──► [Candidate 3] Fine-Tuned Transformer (IndoBERT / indobenchmark-base-p1)
-```
 
 | ID Algoritma | Nama Model Sentimen | Deskripsi Teknis Pipeline NLP | Target Metrik |
 | :--- | :--- | :--- | :--- |
@@ -102,9 +191,9 @@ Untuk pengolahan teks ulasan pengunjung, kita akan mengimplementasikan dan memba
 
 ---
 
-## 5. Strategi Evaluasi Performa & Metrik Pengujian (*Evaluation Plan*)
+## 7. Strategi Evaluasi Performa & Metrik Pengujian (*Evaluation Plan*)
 
-### 5.1 Evaluasi Model Rekomendasi (*Recommender Evaluation Metrics*)
+### 7.1 Evaluasi Model Rekomendasi (*Recommender Evaluation Metrics*)
 Pengujian performa algoritma rekomendasi dilakukan menggunakan skenario pengujian preferensi (*synthetic/benchmark test cases*) dengan metrik:
 
 1. **Precision@K ($P@K$)**: Persentase destinasi relevan dalam $K$ item rekomendasi teratas.
@@ -116,14 +205,14 @@ Pengujian performa algoritma rekomendasi dilakukan menggunakan skenario pengujia
 5. **Regional & Category Diversity**: Mengukur keberagaman variasi kabupaten/kota dan kategori dalam hasil *Top-N*.
 6. **Inference Latency (ms)**: Waktu komputasi yang dibutuhkan algoritma untuk menghasilkan rekomendasi dari 3.130 baris data.
 
-### 5.2 Evaluasi Model Sentimen NLP (*Sentiment Evaluation Metrics*)
+### 7.2 Evaluasi Model Sentimen NLP (*Sentiment Evaluation Metrics*)
 1. **Accuracy**: Persentase total prediksi sentimen yang benar.
 2. **Macro F1-Score**: Rata-rata F1-score lintas 3 kelas (Positif, Netral, Negatif) untuk menangani ketidakseimbangan kelas (*imbalanced data*).
 3. **Confusion Matrix**: Matriks visualisasi *True Positive*, *False Positive*, *True Negative*, dan *False Negative*.
 
 ---
 
-## 6. Rencana Langkah Selanjutnya (Next Execution Steps)
+## 8. Rencana Langkah Selanjutnya (Next Execution Steps)
 
 Setelah dokumen arsitektur dan cetak biru pengujian ini disetujui:
 1. **Langkah 1**: Pembuatan modul `Model/feature_engineering/builder.py` untuk menghasilkan file `Data/consolidated/recommender_ready_features.parquet`.
