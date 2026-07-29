@@ -8,7 +8,7 @@ class RecommendationRequest(BaseModel):
     latitude: Optional[float] = Field(None, json_schema_extra={"example": -5.4292}, description="User current latitude for geodesic proximity")
     longitude: Optional[float] = Field(None, json_schema_extra={"example": 105.2611}, description="User current longitude for geodesic proximity")
     budget_max_idr: Optional[float] = Field(None, json_schema_extra={"example": 50000.0}, description="User max budget constraint in IDR")
-    top_k: int = Field(10, ge=1, le=50, description="Number of recommendations to return")
+    top_k: int = Field(10, ge=1, le=100, description="Number of recommendations to return")
 
 class ScoreBreakdown(BaseModel):
     similarity_category: float
@@ -24,6 +24,11 @@ class RecommendedAttractionItem(BaseModel):
     name: str
     primary_category: str
     city_or_regency: str
+    address: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    rating: Optional[float] = 4.5
+    reviews_count: Optional[int] = 120
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     operational_status: str
@@ -39,6 +44,32 @@ class RecommendationResponse(BaseModel):
     total_returned: int
     execution_latency_ms: float
     recommendations: List[RecommendedAttractionItem]
+
+class AttractionItem(BaseModel):
+    canonical_id: str
+    name: str
+    primary_category: str
+    city_or_regency: str
+    address: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    rating: Optional[float] = 4.5
+    reviews_count: Optional[int] = 100
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    operational_status: str = "open"
+    price_status: str = "free"
+    price_min_idr: Optional[float] = None
+    price_max_idr: Optional[float] = None
+    facilities: List[str] = Field(default_factory=list)
+
+class PaginatedDestinationsResponse(BaseModel):
+    status: str = "success"
+    page: int
+    limit: int
+    total_items: int
+    total_pages: int
+    destinations: List[AttractionItem]
 
 class SentimentRequest(BaseModel):
     text: str = Field(..., json_schema_extra={"example": "Pantai Sari Ringgung tempatnya sangat bagus, indah, dan bersih!"})
