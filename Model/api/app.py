@@ -102,6 +102,12 @@ def resolve_image_url(row):
 
 df_features['image_url'] = df_features.apply(resolve_image_url, axis=1)
 
+# Helper to normalize regency search string
+def clean_regency_name(val: str) -> str:
+    if not val:
+        return ""
+    return str(val).lower().replace("kabupaten ", "").replace("kota ", "").replace("kab. ", "").strip()
+
 # Initialize ML Models
 recommender_engine = RecommenderAlgorithms(df_features)
 sentiment_suite = SentimentAnalyzerSuite()
@@ -154,8 +160,12 @@ def get_destinations(
         filtered = filtered[filtered['primary_category'].str.lower().str.contains(cat_str, na=False)]
 
     if city_or_regency and city_or_regency.lower() != 'semua':
-        reg_str = city_or_regency.lower().strip()
-        filtered = filtered[filtered['city_or_regency'].str.lower().str.contains(reg_str, na=False)]
+        clean_reg = clean_regency_name(city_or_regency)
+        if clean_reg:
+            filtered = filtered[
+                filtered['city_or_regency'].apply(clean_regency_name).str.contains(clean_reg, na=False) |
+                filtered['address'].astype(str).lower().str.contains(clean_reg, na=False)
+            ]
 
     if search:
         kw = search.lower().strip()
@@ -324,10 +334,14 @@ def analyze_sentiment(req: SentimentRequest):
 @app.post("/api/v1/planner/generate", response_model=PlannerGenerateResponse, tags=["AI Itinerary Planner"])
 def generate_planner_itinerary(req: PlannerRequest):
     t0 = time.perf_counter()
-    regency_query = req.city_or_regency.strip().lower()
+    clean_reg = clean_regency_name(req.city_or_regency)
 
-    # Filter dataframe by regency match
-    matched_df = df_features[df_features['city_or_regency'].str.lower().str.contains(regency_query, na=False)].copy()
+    # Robust Regency Match
+    matched_df = df_features[
+        df_features['city_or_regency'].apply(clean_regency_name).str.contains(clean_reg, na=False) |
+        df_features['address'].astype(str).str.lower().str.contains(clean_reg, na=False)
+    ].copy()
+
     if matched_df.empty:
         matched_df = df_features.copy()
 
@@ -339,13 +353,24 @@ def generate_planner_itinerary(req: PlannerRequest):
     if attractions_df.empty:
         attractions_df = matched_df.copy()
 
-    # Apply category preference if requested (e.g. Pantai / Alam)
+    # Multi-category preference extraction
+    requested_cats = set()
+    if req.categories:
+        for c in req.categories:
+            if c and c.lower() != 'semua':
+                requested_cats.add(c.lower().strip())
     if req.primary_category and req.primary_category.lower() != 'semua':
-        cat_match = req.primary_category.lower().strip()
-        preferred_df = attractions_df[attractions_df['primary_category'].str.lower().str.contains(cat_match, na=False)]
-        if not preferred_df.empty:
-            other_df = attractions_df[~attractions_df['primary_category'].str.lower().str.contains(cat_match, na=False)]
-            attractions_df = pd.concat([preferred_df, other_df])
+        for c in req.primary_category.split(','):
+            if c and c.lower().strip() != 'semua':
+                requested_cats.add(c.lower().strip())
+
+    if requested_cats:
+        def cat_match_score(row):
+            cat = str(row['primary_category']).lower()
+            return 1 if any(rc in cat for rc in requested_cats) else 0
+
+        attractions_df['cat_match'] = attractions_df.apply(cat_match_score, axis=1)
+        attractions_df = attractions_df.sort_values(by=['cat_match', 'review_rating_mean'], ascending=[False, False])
 
     # Apply Budget filtering if Ekonomis
     if req.budget_level == "Ekonomis":
@@ -467,8 +492,11 @@ def generate_planner_itinerary(req: PlannerRequest):
 
 @app.post("/api/v1/planner/swap-slot", response_model=PlannerSwapResponse, tags=["AI Itinerary Planner"])
 def swap_planner_slot(req: PlannerSwapRequest):
-    regency_query = req.city_or_regency.strip().lower()
-    matched_df = df_features[df_features['city_or_regency'].str.lower().str.contains(regency_query, na=False)].copy()
+    clean_reg = clean_regency_name(req.city_or_regency)
+    matched_df = df_features[
+        df_features['city_or_regency'].apply(clean_regency_name).str.contains(clean_reg, na=False) |
+        df_features['address'].astype(str).str.lower().str.contains(clean_reg, na=False)
+    ].copy()
 
     if matched_df.empty:
         matched_df = df_features.copy()

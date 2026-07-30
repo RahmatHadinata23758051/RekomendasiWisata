@@ -93,7 +93,8 @@ class HealthCheckResponse(BaseModel):
 
 class PlannerRequest(BaseModel):
     city_or_regency: str = Field(..., json_schema_extra={"example": "Kabupaten Pesawaran"}, description="Target regency or city in Lampung")
-    primary_category: Optional[str] = Field("Semua", json_schema_extra={"example": "Pantai"}, description="Primary preferred category")
+    categories: Optional[List[str]] = Field(default_factory=list, description="Multiple preferred categories")
+    primary_category: Optional[str] = Field("Semua", json_schema_extra={"example": "Pantai"}, description="Primary preferred category or comma-separated categories")
     budget_level: Optional[str] = Field("Standar", json_schema_extra={"example": "Ekonomis"}, description="Budget constraint: Ekonomis, Standar, Mewah")
     pace_style: Optional[str] = Field("Santai", json_schema_extra={"example": "Santai"}, description="Pace style: Santai (3 slots/day) or Padat (4-5 slots/day)")
     duration_days: int = Field(1, ge=1, le=7, description="Number of itinerary days")
