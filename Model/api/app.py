@@ -13,7 +13,8 @@ from Model.recommender.algorithms import RecommenderAlgorithms
 from Model.sentiment.analyzer import SentimentAnalyzerSuite
 from Model.api.schemas import (
     RecommendationRequest, RecommendationResponse, RecommendedAttractionItem, ScoreBreakdown,
-    SentimentRequest, SentimentResponse, HealthCheckResponse, AttractionItem, PaginatedDestinationsResponse
+    SentimentRequest, SentimentResponse, HealthCheckResponse, AttractionItem, PaginatedDestinationsResponse,
+    PlannerRequest, PlannerSlotItem, PlannerDayItem, PlannerGenerateResponse, PlannerSwapRequest, PlannerSwapResponse
 )
 
 app = FastAPI(
@@ -104,6 +105,12 @@ df_features['image_url'] = df_features.apply(resolve_image_url, axis=1)
 # Initialize ML Models
 recommender_engine = RecommenderAlgorithms(df_features)
 sentiment_suite = SentimentAnalyzerSuite()
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    d_lat = np.radians(lat2 - lat1)
+    d_lon = np.radians(lon2 - lon1)
+    a = np.sin(d_lat / 2.0)**2 + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(d_lon / 2.0)**2
+    return 2.0 * 6371.0 * np.arcsin(np.sqrt(a))
 
 def generate_reason_codes(row, sim_cat, sim_reg, sim_fac, sim_dist, sentiment_score):
     reasons = []
@@ -308,4 +315,197 @@ def analyze_sentiment(req: SentimentRequest):
         sentiment_score=float(score),
         confidence=0.88,
         execution_latency_ms=round(latency_ms, 2)
+    )
+
+# ==========================================
+# AI PLANNER ENDPOINTS (FASE 11)
+# ==========================================
+
+@app.post("/api/v1/planner/generate", response_model=PlannerGenerateResponse, tags=["AI Itinerary Planner"])
+def generate_planner_itinerary(req: PlannerRequest):
+    t0 = time.perf_counter()
+    regency_query = req.city_or_regency.strip().lower()
+
+    # Filter dataframe by regency match
+    matched_df = df_features[df_features['city_or_regency'].str.lower().str.contains(regency_query, na=False)].copy()
+    if matched_df.empty:
+        matched_df = df_features.copy()
+
+    # Separate culinary/resto spots from general attractions
+    is_culinary = matched_df['primary_category'].str.lower().str.contains('kuliner|culinary|resto|makanan', na=False)
+    culinary_df = matched_df[is_culinary].copy()
+    attractions_df = matched_df[~is_culinary].copy()
+
+    if attractions_df.empty:
+        attractions_df = matched_df.copy()
+
+    # Apply category preference if requested (e.g. Pantai / Alam)
+    if req.primary_category and req.primary_category.lower() != 'semua':
+        cat_match = req.primary_category.lower().strip()
+        preferred_df = attractions_df[attractions_df['primary_category'].str.lower().str.contains(cat_match, na=False)]
+        if not preferred_df.empty:
+            other_df = attractions_df[~attractions_df['primary_category'].str.lower().str.contains(cat_match, na=False)]
+            attractions_df = pd.concat([preferred_df, other_df])
+
+    # Apply Budget filtering if Ekonomis
+    if req.budget_level == "Ekonomis":
+        attractions_df = attractions_df.sort_values(by=['price_min_idr', 'review_rating_mean'], ascending=[True, False])
+    else:
+        attractions_df = attractions_df.sort_values(by=['review_rating_mean', 'review_count'], ascending=[False, False])
+
+    # Convert attractions to dict lists
+    attraction_pool = attractions_df.to_dict('records')
+    culinary_pool = culinary_df.to_dict('records') if not culinary_df.empty else attraction_pool
+
+    used_ids = set()
+    days_result = []
+
+    # Distribute per day with Spatial Clustering / Sorting
+    num_days = min(req.duration_days, 5)
+    
+    # Time slots template based on pace
+    if req.pace_style == "Padat":
+        slot_templates = [
+            {"time": "07:00 - 08:30 WIB", "is_food": True},
+            {"time": "09:00 - 11:30 WIB", "is_food": False},
+            {"time": "12:00 - 13:30 WIB", "is_food": True},
+            {"time": "14:00 - 17:30 WIB", "is_food": False},
+            {"time": "18:30 - 21:00 WIB", "is_food": True},
+        ]
+    else: # Santai
+        slot_templates = [
+            {"time": "08:30 - 11:30 WIB", "is_food": False},
+            {"time": "12:00 - 14:00 WIB", "is_food": True},
+            {"time": "15:30 - 18:30 WIB", "is_food": False},
+        ]
+
+    total_cost_accum = 0.0
+
+    for day_num in range(1, num_days + 1):
+        day_slots = []
+        last_coords = None
+
+        for t_idx, stpl in enumerate(slot_templates):
+            pool = culinary_pool if stpl["is_food"] else attraction_pool
+            chosen_row = None
+
+            best_dist = float('inf')
+            for row in pool:
+                cid = str(row.get('canonical_id'))
+                if cid in used_ids:
+                    continue
+
+                c_lat = float(row['latitude']) if pd.notna(row['latitude']) else -5.4
+                c_lng = float(row['longitude']) if pd.notna(row['longitude']) else 105.2
+
+                if last_coords is not None:
+                    dist = haversine_km(last_coords[0], last_coords[1], c_lat, c_lng)
+                else:
+                    dist = 0.0
+
+                if dist < best_dist:
+                    best_dist = dist
+                    chosen_row = row
+                    if last_coords is None:
+                        break
+
+            if chosen_row is None:
+                for row in pool:
+                    cid = str(row.get('canonical_id'))
+                    if cid not in used_ids:
+                        chosen_row = row
+                        break
+                if chosen_row is None and pool:
+                    chosen_row = pool[0]
+
+            if chosen_row:
+                cid = str(chosen_row.get('canonical_id'))
+                used_ids.add(cid)
+                c_lat = float(chosen_row['latitude']) if pd.notna(chosen_row['latitude']) else -5.4292
+                c_lng = float(chosen_row['longitude']) if pd.notna(chosen_row['longitude']) else 105.2611
+                
+                price_val = float(chosen_row['price_min_idr']) if pd.notna(chosen_row['price_min_idr']) and chosen_row['price_min_idr'] > 0 else (35000.0 if stpl["is_food"] else 20000.0)
+                total_cost_accum += price_val
+
+                travel_txt = f"{round(best_dist * 3.2, 0):.0f} menit perjalanan" if (last_coords and best_dist > 0) else "Spot awal rute"
+                last_coords = (c_lat, c_lng)
+
+                ai_tip = f"Spot rekomendasi di {req.city_or_regency}. Rating ulasan {chosen_row.get('review_rating_mean', 4.5):.1f}/5.0 dari pengunjung."
+
+                day_slots.append(PlannerSlotItem(
+                    canonical_id=cid,
+                    time=stpl["time"],
+                    activityTitle=str(chosen_row["name"]),
+                    category=str(chosen_row["primary_category"]).capitalize(),
+                    location=str(chosen_row["address"]) if pd.notna(chosen_row["address"]) else f"Kawasan {req.city_or_regency}",
+                    estimatedCost=f"Rp {int(price_val):,} / orang".replace(',', '.'),
+                    numericCost=price_val,
+                    coords=[c_lat, c_lng],
+                    image=str(chosen_row["image_url"]),
+                    aiTip=ai_tip,
+                    travelTime=travel_txt
+                ))
+
+        day_title_prefix = "Eksplorasi Perdana" if day_num == 1 else ("Jelajah Pesisir & Kuliner" if day_num == 2 else f"Petualangan Hari ke-{day_num}")
+        days_result.append(PlannerDayItem(
+            dayNumber=day_num,
+            title=f"Hari {day_num}: {day_title_prefix} {req.city_or_regency}",
+            slots=day_slots
+        ))
+
+    t1 = time.perf_counter()
+    latency_ms = (t1 - t0) * 1000.0
+
+    return PlannerGenerateResponse(
+        status="success",
+        regency=req.city_or_regency,
+        duration_days=num_days,
+        total_cost_estimate_idr=round(total_cost_accum, 0),
+        execution_latency_ms=round(latency_ms, 2),
+        itinerary=days_result
+    )
+
+@app.post("/api/v1/planner/swap-slot", response_model=PlannerSwapResponse, tags=["AI Itinerary Planner"])
+def swap_planner_slot(req: PlannerSwapRequest):
+    regency_query = req.city_or_regency.strip().lower()
+    matched_df = df_features[df_features['city_or_regency'].str.lower().str.contains(regency_query, na=False)].copy()
+
+    if matched_df.empty:
+        matched_df = df_features.copy()
+
+    if req.exclude_ids:
+        matched_df = matched_df[~matched_df['canonical_id'].astype(str).isin(req.exclude_ids)]
+
+    if req.category:
+        cat_match = req.category.lower().strip()
+        cat_df = matched_df[matched_df['primary_category'].str.lower().str.contains(cat_match, na=False)]
+        if not cat_df.empty:
+            matched_df = cat_df
+
+    matched_df = matched_df.sort_values(by=['review_rating_mean', 'review_count'], ascending=[False, False])
+    top_candidates = matched_df.head(3)
+
+    alternatives = []
+    for _, row in top_candidates.iterrows():
+        c_lat = float(row['latitude']) if pd.notna(row['latitude']) else -5.4292
+        c_lng = float(row['longitude']) if pd.notna(row['longitude']) else 105.2611
+        price_val = float(row['price_min_idr']) if pd.notna(row['price_min_idr']) and row['price_min_idr'] > 0 else 25000.0
+
+        alternatives.append(PlannerSlotItem(
+            canonical_id=str(row["canonical_id"]),
+            time="Rekomendasi Alternatif",
+            activityTitle=str(row["name"]),
+            category=str(row["primary_category"]).capitalize(),
+            location=str(row["address"]) if pd.notna(row["address"]) else f"Kawasan {req.city_or_regency}",
+            estimatedCost=f"Rp {int(price_val):,} / orang".replace(',', '.'),
+            numericCost=price_val,
+            coords=[c_lat, c_lng],
+            image=str(row["image_url"]),
+            aiTip=f"Alternatif terbaik di {req.city_or_regency} dengan ulasan rating {row.get('review_rating_mean', 4.5):.1f}/5.0."
+        ))
+
+    return PlannerSwapResponse(
+        status="success",
+        total_returned=len(alternatives),
+        alternatives=alternatives
     )

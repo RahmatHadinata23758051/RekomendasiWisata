@@ -86,3 +86,50 @@ class HealthCheckResponse(BaseModel):
     model_version: str = "v1.0"
     total_attractions_loaded: int
     service_uptime: str = "operational"
+
+# ==========================================
+# AI PLANNER SCHEMAS (FASE 11)
+# ==========================================
+
+class PlannerRequest(BaseModel):
+    city_or_regency: str = Field(..., json_schema_extra={"example": "Kabupaten Pesawaran"}, description="Target regency or city in Lampung")
+    primary_category: Optional[str] = Field("Semua", json_schema_extra={"example": "Pantai"}, description="Primary preferred category")
+    budget_level: Optional[str] = Field("Standar", json_schema_extra={"example": "Ekonomis"}, description="Budget constraint: Ekonomis, Standar, Mewah")
+    pace_style: Optional[str] = Field("Santai", json_schema_extra={"example": "Santai"}, description="Pace style: Santai (3 slots/day) or Padat (4-5 slots/day)")
+    duration_days: int = Field(1, ge=1, le=7, description="Number of itinerary days")
+
+class PlannerSlotItem(BaseModel):
+    canonical_id: Optional[str] = None
+    time: str
+    activityTitle: str
+    category: str
+    location: str
+    estimatedCost: str
+    numericCost: float
+    coords: List[float]
+    image: str
+    aiTip: Optional[str] = None
+    travelTime: Optional[str] = None
+
+class PlannerDayItem(BaseModel):
+    dayNumber: int
+    title: str
+    slots: List[PlannerSlotItem]
+
+class PlannerGenerateResponse(BaseModel):
+    status: str = "success"
+    regency: str
+    duration_days: int
+    total_cost_estimate_idr: float
+    execution_latency_ms: float
+    itinerary: List[PlannerDayItem]
+
+class PlannerSwapRequest(BaseModel):
+    city_or_regency: str = Field(..., json_schema_extra={"example": "Kabupaten Pesawaran"})
+    category: Optional[str] = Field(None, json_schema_extra={"example": "Pantai"})
+    exclude_ids: List[str] = Field(default_factory=list, description="IDs already included in itinerary")
+
+class PlannerSwapResponse(BaseModel):
+    status: str = "success"
+    total_returned: int
+    alternatives: List[PlannerSlotItem]
