@@ -432,6 +432,7 @@ def generate_planner_itinerary(req: PlannerRequest):
                     best_dist = dist
                     chosen_row = row
                     if last_coords is None:
+                        best_dist = 0.0
                         break
 
             if chosen_row is None:
