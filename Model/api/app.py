@@ -164,7 +164,7 @@ def get_destinations(
         if clean_reg:
             filtered = filtered[
                 filtered['city_or_regency'].apply(clean_regency_name).str.contains(clean_reg, na=False) |
-                filtered['address'].astype(str).lower().str.contains(clean_reg, na=False)
+                filtered['address'].astype(str).str.lower().str.contains(clean_reg, na=False)
             ]
 
     if search:
