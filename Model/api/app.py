@@ -364,19 +364,54 @@ def generate_planner_itinerary(req: PlannerRequest):
             if c and c.lower().strip() != 'semua':
                 requested_cats.add(c.lower().strip())
 
-    if requested_cats:
-        def cat_match_score(row):
-            cat = str(row['primary_category']).lower()
-            return 1 if any(rc in cat for rc in requested_cats) else 0
+    budget_tier = req.budget_level or 'Standar'
 
-        attractions_df['cat_match'] = attractions_df.apply(cat_match_score, axis=1)
-        attractions_df = attractions_df.sort_values(by=['cat_match', 'review_rating_mean'], ascending=[False, False])
+    # Multi-Factor Weighted Relevance Scoring Function:
+    # Relevance Score = (CategoryMatch * 0.40) + (BudgetMatch * 0.40) + (Rating/5 * 0.20)
+    def calculate_relevance_score(row, is_food_slot):
+        cat = str(row.get('primary_category', '')).lower()
+        price = float(row['price_min_idr']) if pd.notna(row.get('price_min_idr')) and float(row.get('price_min_idr', 0)) > 0 else (25000.0 if is_food_slot else 15000.0)
+        rating = float(row['review_rating_mean']) if pd.notna(row.get('review_rating_mean')) else 4.5
 
-    # Apply Budget filtering if Ekonomis
-    if req.budget_level == "Ekonomis":
-        attractions_df = attractions_df.sort_values(by=['price_min_idr', 'review_rating_mean'], ascending=[True, False])
-    else:
-        attractions_df = attractions_df.sort_values(by=['review_rating_mean', 'review_count'], ascending=[False, False])
+        # 1. Category Score (0.0 to 1.0)
+        category_score = 0.5
+        if is_food_slot:
+            category_score = 1.0 if any(k in cat for k in ['kuliner', 'culinary', 'resto', 'makanan', 'café', 'cafe']) else 0.3
+        elif requested_cats:
+            category_score = 1.0 if any(rc in cat for rc in requested_cats) else 0.3
+        else:
+            category_score = 0.8
+
+        # 2. Budget Match Score (0.0 to 1.0)
+        budget_score = 0.5
+        if budget_tier in ['Ekonomis', 'Backpacker']:
+            if price <= 20000:
+                budget_score = 1.0
+            elif price <= 35000:
+                budget_score = 0.75
+            elif price <= 50000:
+                budget_score = 0.4
+            else:
+                budget_score = 0.1
+        elif budget_tier == 'Standar':
+            if 15000 <= price <= 75000:
+                budget_score = 1.0
+            elif price <= 120000:
+                budget_score = 0.7
+            else:
+                budget_score = 0.3
+        else: # Mewah / Sultan
+            if price >= 50000:
+                budget_score = 1.0
+            elif price >= 25000:
+                budget_score = 0.6
+            else:
+                budget_score = 0.3
+
+        # 3. Rating Score (0.0 to 1.0)
+        rating_score = min(1.0, rating / 5.0)
+
+        return (category_score * 0.40) + (budget_score * 0.40) + (rating_score * 0.20)
 
     # Convert attractions to dict lists
     attraction_pool = attractions_df.to_dict('records')
@@ -412,37 +447,22 @@ def generate_planner_itinerary(req: PlannerRequest):
 
         for t_idx, stpl in enumerate(slot_templates):
             pool = culinary_pool if stpl["is_food"] else attraction_pool
-            chosen_row = None
-
-            best_dist = float('inf')
+            
+            # Rank candidates by relevance score
+            candidates = []
             for row in pool:
                 cid = str(row.get('canonical_id'))
                 if cid in used_ids:
                     continue
+                score = calculate_relevance_score(row, stpl["is_food"])
+                candidates.append((score, row))
 
-                c_lat = float(row['latitude']) if pd.notna(row['latitude']) else -5.4
-                c_lng = float(row['longitude']) if pd.notna(row['longitude']) else 105.2
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            chosen_row = candidates[0][1] if candidates else None
 
-                if last_coords is not None:
-                    dist = haversine_km(last_coords[0], last_coords[1], c_lat, c_lng)
-                else:
-                    dist = 0.0
-
-                if dist < best_dist:
-                    best_dist = dist
-                    chosen_row = row
-                    if last_coords is None:
-                        best_dist = 0.0
-                        break
-
-            if chosen_row is None:
-                for row in pool:
-                    cid = str(row.get('canonical_id'))
-                    if cid not in used_ids:
-                        chosen_row = row
-                        break
-                if chosen_row is None and pool:
-                    chosen_row = pool[0]
+            # Hierarchical Fallback if pool exhausted
+            if chosen_row is None and pool:
+                chosen_row = pool[t_idx % len(pool)]
 
             if chosen_row:
                 cid = str(chosen_row.get('canonical_id'))
@@ -450,13 +470,21 @@ def generate_planner_itinerary(req: PlannerRequest):
                 c_lat = float(chosen_row['latitude']) if pd.notna(chosen_row['latitude']) else -5.4292
                 c_lng = float(chosen_row['longitude']) if pd.notna(chosen_row['longitude']) else 105.2611
                 
-                price_val = float(chosen_row['price_min_idr']) if pd.notna(chosen_row['price_min_idr']) and chosen_row['price_min_idr'] > 0 else (35000.0 if stpl["is_food"] else 20000.0)
+                default_base = 25000.0 if stpl["is_food"] else 15000.0
+                if budget_tier == 'Standar':
+                    default_base = 45000.0 if stpl["is_food"] else 35000.0
+                elif budget_tier == 'Mewah':
+                    default_base = 120000.0 if stpl["is_food"] else 85000.0
+
+                price_val = float(chosen_row['price_min_idr']) if pd.notna(chosen_row['price_min_idr']) and float(chosen_row['price_min_idr']) > 0 else default_base
                 total_cost_accum += price_val
 
-                travel_txt = f"{round(best_dist * 3.2, 0):.0f} menit perjalanan" if (last_coords and best_dist > 0) else "Spot awal rute"
+                dist = haversine_km(last_coords[0], last_coords[1], c_lat, c_lng) if last_coords else 0.0
+                travel_txt = f"{round(dist * 3.2, 0):.0f} menit perjalanan" if (last_coords and dist > 0) else "Spot awal rute"
                 last_coords = (c_lat, c_lng)
 
-                ai_tip = f"Spot rekomendasi di {req.city_or_regency}. Rating ulasan {chosen_row.get('review_rating_mean', 4.5):.1f}/5.0 dari pengunjung."
+                tip_prefix = "Tipe Backpacker (Hemat)" if budget_tier in ["Ekonomis", "Backpacker"] else ("Tipe Mewah (Sultan)" if budget_tier == "Mewah" else "Tipe Standar")
+                ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Rating ulasan {chosen_row.get('review_rating_mean', 4.5):.1f}/5.0 dari pengunjung."
 
                 day_slots.append(PlannerSlotItem(
                     canonical_id=cid,
