@@ -458,7 +458,20 @@ def generate_planner_itinerary(req: PlannerRequest):
                 candidates.append((score, row))
 
             candidates.sort(key=lambda x: x[0], reverse=True)
-            chosen_row = candidates[0][1] if candidates else None
+            chosen_row = None
+            if candidates:
+                top_k = candidates[:min(len(candidates), 5)]
+                total_s = sum(c[0] for c in top_k)
+                if total_s > 0:
+                    r_val = float(np.random.uniform(0, total_s))
+                    accum = 0.0
+                    for score, row in top_k:
+                        accum += score
+                        if accum >= r_val:
+                            chosen_row = row
+                            break
+                if chosen_row is None:
+                    chosen_row = top_k[0][1]
 
             # Hierarchical Fallback if pool exhausted
             if chosen_row is None and pool:
