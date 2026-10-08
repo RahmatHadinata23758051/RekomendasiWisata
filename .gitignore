@@ -5,6 +5,8 @@
 .env
 .env.local
 .env.*.local
+.apify-tokens*
+.mcp.json
 
 # Byte-compiled / cache files
 __pycache__/
