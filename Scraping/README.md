@@ -81,8 +81,35 @@ python -m src.cli discover --source all
 * `--limit <number>`: Cap the number of records collected.
 * `--resume`: Use cached raw responses to skip network calls.
 
-#### 1b. Apify Import (Alternative Stage 1)
-Import a raw Apify Google Maps exported JSON array file:
+#### 1b. Apify Batch Runner & Importer (Stage 1)
+Safely list, verify, dry-run, or execute versioned Apify Google Maps batches from `config/apify_batches/v1.0/`:
+```powershell
+# List all 47 versioned batches and files from the authoritative index
+python run_apify.py --list-batches
+
+# Verify APIFY_TOKEN against Apify REST API
+python run_apify.py --verify-token
+
+# Dry-run validation without spending API credits or making external requests
+python run_apify.py --batch batch-01-canary --dry-run
+python run_apify.py --file v1.0/batch-01-canary/discovery-bandar_lampung-canary.v1.0.json --dry-run
+
+# Secure execution (token via APIFY_TOKEN env var or interactive prompt):
+python run_apify.py --file v1.0/batch-01-canary/discovery-bandar_lampung-canary.v1.0.json
+
+# Using a local ignored token file (one APIFY_TOKEN per line) and picking a specific account (0-based index):
+python run_apify.py --file v1.0/batch-01-canary/discovery-bandar_lampung-canary.v1.0.json --token-file .apify-tokens --token-index 0
+python run_apify.py --verify-token --token-file .apify-tokens --token-index 1
+
+# Or using the Typer CLI:
+python -m src.cli run-apify --list-batches
+python -m src.cli run-apify --dry-run --batch batch-01-canary
+python -m src.cli run-apify --file v1.0/batch-01-canary/discovery-bandar_lampung-canary.v1.0.json --token-file .apify-tokens --token-index 0
+```
+
+When executed, the runner triggers `compass/crawler-google-places`, polls completion, writes raw artifacts to `data/raw/apify/google_maps/<region>/<date>/places.json`, saves `input.json`, `run.json`, and `checksums.sha256`, and automatically invokes `ApifyGoogleMapsImporter`.
+
+Manual import of an existing exported JSON file:
 ```powershell
 python -m src.cli import-apify --input "data/raw/apify/google_maps/bandar_lampung/2026-07-13/places.json"
 ```
