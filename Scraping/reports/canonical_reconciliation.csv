@@ -1,11 +1,11 @@
 Metric,Count,Percentage
-OSM Raw Records,330,6.78
-Apify Raw Records,4539,93.22
-Total Raw Input Records,4869,100.0
-Total Normalized (Accepted + Manual),4207,86.4
-Total Rejected & Discarded,500,10.27
-Duplicate Source Records Removed,162,3.33
-Verified Canonical Attractions,3130,74.92
-Manual Review Candidates,1048,25.08
-Total Canonical Places,4178,100.0
-Deduplicated Duplicate Merges,29,0.69
+OSM Raw Records,330,5.18
+Apify Raw Records,6035,94.82
+Total Raw Input Records,6365,100.0
+Total Normalized (Accepted + Manual),4491,70.56
+Total Rejected & Discarded,580,9.11
+Duplicate Source Records Removed,1294,20.33
+Verified Canonical Attractions,3277,73.44
+Manual Review Candidates,1185,26.56
+Total Canonical Places,4462,100.0
+Deduplicated Duplicate Merges,29,0.65
