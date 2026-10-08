@@ -1,6 +1,6 @@
 # Data Reconciliation & Quality Audit Report
 
-Generated on: 2026-07-13 13:53:53 UTC
+Generated on: 2026-10-08 11:07:22 UTC
 
 ## 1. Executive Summary
 
@@ -8,30 +8,30 @@ This report displays the results of running the multi-dataset importer, normaliz
 
 | Metric | Count | Percentage | Description |
 | :--- | :---: | :---: | :--- |
-| **OSM Raw Records** | 330 | 6.78% | Raw places collected via OSM Overpass API |
-| **Apify Raw Records** | 4539 | 93.22% | Raw places imported from Google Maps Apify export |
-| **Total Input Records** | **4869** | **100.0%** | **Combined Raw inputs** |
+| **OSM Raw Records** | 330 | 5.18% | Raw places collected via OSM Overpass API |
+| **Apify Raw Records** | 6035 | 94.82% | Raw places imported from Google Maps Apify export |
+| **Total Input Records** | **6365** | **100.0%** | **Combined Raw inputs** |
 | | | | |
-| **Total Normalized (Inputs to Dedup)** | **4207** | **86.4%** | **Accepted + Manual Review records** |
-| **Total Discarded/Rejected** | **500** | **10.27%** | **Classified as rejected** |
-| **Duplicate Source Records Removed** | **162** | **3.33%** | **Duplicate source_record_ids removed** |
+| **Total Normalized (Inputs to Dedup)** | **4491** | **70.56%** | **Accepted + Manual Review records** |
+| **Total Discarded/Rejected** | **580** | **9.11%** | **Classified as rejected** |
+| **Duplicate Source Records Removed** | **1294** | **20.33%** | **Duplicate source_record_ids removed** |
 | | | | |
-| **Verified Canonical Attractions** | 3130 | 74.92% | attractions_master_verified |
-| **Manual Review Candidates** | 1048 | 25.08% | attractions_candidates |
-| **Total Canonical Places** | **4178** | **100.0%** | **Deduplicated attraction locations** |
-| **Duplicates Merged** | **29** | **0.69%** | **Merged source records** |
+| **Verified Canonical Attractions** | 3277 | 73.44% | attractions_master_verified |
+| **Manual Review Candidates** | 1185 | 26.56% | attractions_candidates |
+| **Total Canonical Places** | **4462** | **100.0%** | **Deduplicated attraction locations** |
+| **Duplicates Merged** | **29** | **0.65%** | **Merged source records** |
 
 ---
 
 ## 2. Leak-Free Reconciliation Math
 
-* **Total Inputs**: `330 (OSM Raw) + 4539 (Apify Raw) = 4869`
+* **Total Inputs**: `330 (OSM Raw) + 6035 (Apify Raw) = 6365`
 * **Reconciliation Equation**:
-  `Total Raw Inputs (4869) = Total Normalized (4207) + Total Rejected/Discarded (500) + Duplicate Source Records (162)`
-  Verification: `4207 + 500 + 162 = 4869` (Match: YES)
+  `Total Raw Inputs (6365) = Total Normalized (4491) + Total Rejected/Discarded (580) + Duplicate Source Records (1294)`
+  Verification: `4491 + 580 + 1294 = 6365` (Match: YES)
 * **Deduplication Equation**:
-  `Total Normalized (4207) = Total Canonical (4178) + Duplicates Merged (29)`
-  Verification: `4178 + 29 = 4207` (Match: YES)
+  `Total Normalized (4491) = Total Canonical (4462) + Duplicates Merged (29)`
+  Verification: `4462 + 29 = 4491` (Match: YES)
 
 ---
 
@@ -42,19 +42,19 @@ Below are the raw input and classification breakdown counts for each region:
 | Region | Raw Records | Accepted | Manual Review | Rejected |
 | :--- | :---: | :---: | :---: | :---: |
 | **Kabupaten Lampung Barat** | 323 | 233 | 68 | 22 |
-| **Kabupaten Lampung Selatan** | 544 | 377 | 131 | 36 |
-| **Kabupaten Lampung Tengah** | 337 | 205 | 95 | 37 |
-| **Kabupaten Lampung Timur** | 359 | 206 | 105 | 48 |
-| **Kabupaten Lampung Utara** | 242 | 163 | 65 | 14 |
+| **Kabupaten Lampung Selatan** | 545 | 378 | 131 | 36 |
+| **Kabupaten Lampung Tengah** | 590 | 316 | 199 | 75 |
+| **Kabupaten Lampung Timur** | 362 | 206 | 105 | 51 |
+| **Kabupaten Lampung Utara** | 244 | 165 | 65 | 14 |
 | **Kabupaten Mesuji** | 110 | 65 | 36 | 9 |
-| **Kabupaten Pesawaran** | 358 | 280 | 47 | 31 |
+| **Kabupaten Pesawaran** | 360 | 282 | 47 | 31 |
 | **Kabupaten Pesisir Barat** | 137 | 89 | 24 | 24 |
-| **Kabupaten Pringsewu** | 255 | 169 | 65 | 21 |
+| **Kabupaten Pringsewu** | 256 | 169 | 66 | 21 |
 | **Kabupaten Tanggamus** | 435 | 333 | 83 | 19 |
-| **Kabupaten Tulang Bawang** | 184 | 123 | 55 | 6 |
+| **Kabupaten Tulang Bawang** | 185 | 124 | 55 | 6 |
 | **Kabupaten Tulang Bawang Barat** | 141 | 108 | 31 | 2 |
 | **Kabupaten Way Kanan** | 218 | 156 | 56 | 6 |
-| **Kota Bandar Lampung** | 913 | 465 | 239 | 209 |
+| **Kota Bandar Lampung** | 1014 | 495 | 271 | 248 |
 | **Kota Metro** | 151 | 87 | 48 | 16 |
 
 ---
@@ -68,9 +68,11 @@ Below are the metrics showing the source raw file mapping details:
 | `places.json` | Kabupaten Pesawaran | 369 | 287 | 47 | 35 |
 | `places.json` | Kabupaten Tanggamus | 431 | 324 | 88 | 19 |
 | `places.json` | Kota Bandar Lampung | 882 | 451 | 222 | 209 |
+| `places.json` | Kota Bandar Lampung | 103 | 32 | 32 | 39 |
 | `places.json` | Kabupaten Lampung Barat | 255 | 191 | 47 | 17 |
 | `places.json` | Kabupaten Lampung Selatan | 492 | 357 | 102 | 33 |
 | `places.json` | Kabupaten Lampung Tengah | 314 | 195 | 83 | 36 |
+| `places.json` | Kabupaten Lampung Tengah | 261 | 115 | 105 | 41 |
 | `places.json` | Kabupaten Lampung Timur | 364 | 210 | 105 | 49 |
 | `places.json` | Kabupaten Lampung Utara | 241 | 169 | 58 | 14 |
 | `places.json` | Kabupaten Mesuji | 108 | 63 | 36 | 9 |
@@ -98,6 +100,6 @@ Below are the metrics showing the source raw file mapping details:
 
 ## 5. Cross-Source Deduplication & Matches
 - **Matches (Apify & OSM Merged)**: 23
-- **Apify-only Canonical Attractions**: 4017
+- **Apify-only Canonical Attractions**: 4301
 - **OSM-only Canonical Attractions**: 138
-- **Parent-Child candidates linked**: 112
+- **Parent-Child candidates linked**: 118
