@@ -1,0 +1,34 @@
+{
+  "language": "id",
+  "countryCode": "id",
+  "skipClosedPlaces": false,
+  "scrapePlaceDetailPage": true,
+  "scrapeTableReservationProvider": false,
+  "scrapeOrderOnline": false,
+  "includeWebResults": false,
+  "scrapeDirectories": false,
+  "maxQuestions": 0,
+  "scrapeContacts": false,
+  "maximumLeadsEnrichmentRecords": 0,
+  "scrapeSocialMediaProfiles": {
+    "facebooks": false,
+    "instagrams": false,
+    "youtubes": false,
+    "tiktoks": false,
+    "twitters": false
+  },
+  "scrapeReviewsPersonalData": false,
+  "maxImages": 0,
+  "scrapeImageAuthors": false,
+  "enableCompetitorAnalysis": false,
+  "searchStringsArray": [
+    "tempat wisata",
+    "destinasi wisata",
+    "pantai",
+    "taman wisata",
+    "museum"
+  ],
+  "locationQuery": "Kota Bandar Lampung, Lampung, Indonesia",
+  "maxCrawledPlacesPerSearch": 25,
+  "maxReviews": 0
+}
