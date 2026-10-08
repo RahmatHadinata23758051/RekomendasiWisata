@@ -1,0 +1,32 @@
+{
+  "placeIds": [
+    "ChIJL454PgC_QC4R-xACL6iteSA",
+    "ChIJIwqe9Si9QC4Rj3fm9xqfr3Y",
+    "ChIJBfG0gJS7QC4RIqLgUhQe7DE",
+    "ChIJNXi89-u7QC4RmDNtpDBYPYI",
+    "ChIJ71gwOwC7QC4R1_kPsztz-pM",
+    "ChIJw9HPHM--QC4R-RfOcBkeeCs",
+    "ChIJzQVqSAC5QC4RqqsLCKG1A68",
+    "ChIJtTe9OQC_QC4RnO1qgtiG91E",
+    "ChIJfW3wDAC5QC4RYeDaBYDw-rg",
+    "ChIJqdgSCwC5QC4R_lFZYAP_t1s",
+    "ChIJz3KgdwC7QC4R3nPL2ODirPo",
+    "ChIJr_zsh8C7QC4R45G0SORhjf4",
+    "ChIJEX8ILAC7QC4RkdfHMswCvAg",
+    "ChIJJdkG9VO9QC4RRovhMWoYnxY",
+    "ChIJzf8ZXLG-QC4RkduJgnbB7Oc"
+  ],
+  "language": "id",
+  "countryCode": "id",
+  "scrapePlaceDetailPage": true,
+  "maxReviews": 20,
+  "reviewsSort": "newest",
+  "reviewsOrigin": "google",
+  "reviewsFilterString": "",
+  "scrapeReviewsPersonalData": false,
+  "maxImages": 0,
+  "scrapeImageAuthors": false,
+  "scrapeContacts": false,
+  "maximumLeadsEnrichmentRecords": 0,
+  "enableCompetitorAnalysis": false
+}
