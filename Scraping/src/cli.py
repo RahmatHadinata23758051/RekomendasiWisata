@@ -46,9 +46,9 @@ def discover(
     from src.collectors.google_places import GooglePlacesCollector
     from src.collectors.official_sites import OfficialSitesCollector
     from src.storage.writer import save_dataset
-    
+
     loop = get_event_loop()
-    
+
     async def run_discovery():
         collectors = []
         if source in ["osm", "all"]:
@@ -57,9 +57,9 @@ def discover(
             collectors.append(GooglePlacesCollector())
         if source in ["official-sites", "all"]:
             collectors.append(OfficialSitesCollector())
-            
+
         all_raw_records = []
-        
+
         for col in collectors:
             if output_dir:
                 col.raw_dir = output_dir
@@ -68,7 +68,7 @@ def discover(
                 records = await col.discover(region_id=region, keyword=keyword, limit=limit, resume=resume)
                 all_raw_records.extend(records)
                 console.print(f"[green]Discovered {len(records)} raw records for source {col.source_name}[/green]")
-                
+
                 # Save raw records as list of dicts to standard file
                 if records:
                     date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -79,7 +79,7 @@ def discover(
                 logger.error(f"Discovery failed for source {col.source_name}: {e}", exc_info=True)
             finally:
                 await col.close()
-                
+
         return all_raw_records
 
     loop.run_until_complete(run_discovery())
@@ -114,22 +114,22 @@ def import_apify_all(
     Recursively discover and import all places.json files from the root directory.
     """
     from src.collectors.apify_google_maps import ApifyGoogleMapsImporter
-    
+
     console.print(f"[bold blue]Scanning for places.json recursively in {root}...[/bold blue]")
     pattern = os.path.join(root, "**", "places.json")
     pattern = pattern.replace("\\", "/")
     files = glob.glob(pattern, recursive=True)
-    
+
     if not files:
         console.print("[yellow]No places.json files found recursively.[/yellow]")
         return
-        
+
     console.print(f"[green]Found {len(files)} places.json file(s) to import.[/green]")
     importer = ApifyGoogleMapsImporter()
-    
+
     total_valid = 0
     total_failed = 0
-    
+
     for filepath in sorted(files):
         filepath_normalized = filepath.replace("\\", "/")
         console.print(f"\n[bold]Importing: {filepath_normalized}[/bold]")
@@ -145,8 +145,88 @@ def import_apify_all(
                 total_failed += result['failed_count']
         except Exception as e:
             console.print(f"[red]Failed to import {filepath_normalized}: {e}[/red]")
-            
+
     console.print(f"\n[bold green]All imports completed. Total new valid: {total_valid}, new failed: {total_failed}[/bold green]")
+
+@app.command(name="run-apify")
+def run_apify(
+    batch: Optional[str] = typer.Option(None, help="Batch name to execute (e.g. batch-01-canary)"),
+    file: Optional[str] = typer.Option(None, help="Specific batch file path (e.g. v1.0/batch-01-canary/discovery-bandar_lampung-canary.v1.0.json)"),
+    list_batches: bool = typer.Option(False, "--list-batches", help="List all versioned batches from the index"),
+    verify_token: bool = typer.Option(False, "--verify-token", help="Verify APIFY_TOKEN against the Apify REST API"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Validate batch without contacting Apify or spending credits"),
+    no_import: bool = typer.Option(False, "--no-import", help="Skip auto-invoking ApifyGoogleMapsImporter after download"),
+    batches_root: str = typer.Option("config/apify_batches", help="Batches root directory"),
+    output_root: str = typer.Option("data/raw/apify/google_maps", help="Output root directory"),
+    no_prompt: bool = typer.Option(False, "--no-prompt", help="Fail instead of prompting interactively if APIFY_TOKEN is unset"),
+    token_file: Optional[str] = typer.Option(None, "--token-file", help="Path to a file containing one APIFY_TOKEN per line"),
+    token_index: int = typer.Option(0, "--token-index", help="0-based token index within --token-file"),
+):
+    """
+    Execute or dry-run versioned Apify Google Maps batches securely.
+    """
+    from src.apify_runner import ApifyBatchRunner, ApifyRunnerError
+
+    runner = ApifyBatchRunner(batches_root=batches_root, output_root=output_root)
+    try:
+        if list_batches:
+            batches = runner.list_batches()
+            console.print(f"[bold blue]Authoritative index contains {len(batches)} file(s):[/bold blue]")
+            for b in batches:
+                console.print(f"  [[bold]{b.batch}[/bold]] {b.file} -> {b.region_id} ({b.kind})")
+            return
+
+        if verify_token:
+            token = runner.token_from_environment_or_prompt(
+                prompt=not no_prompt,
+                token_file=token_file,
+                token_index=token_index,
+            )
+            console.print("[cyan]Verifying token with Apify REST API...[/cyan]")
+            info = runner.verify_token(token)
+            username = info.get("username") or info.get("id") or "verified"
+            email = info.get("email", "")
+            console.print(f"[green]Token verified successfully. User: {username} {f'({email})' if email else ''}[/green]")
+            return
+
+        if not batch and not file:
+            console.print("[yellow]Please specify either --batch, --file, --list-batches, or --verify-token. Use --help for details.[/yellow]")
+            raise typer.Exit(code=1)
+
+        targets = runner.targets(batch=batch, file=file)
+        if dry_run:
+            planned = runner.dry_run(targets)
+            console.print(f"[bold green][DRY RUN] {len(planned)} target(s) validated successfully (no credits spent):[/bold green]")
+            for p in planned:
+                console.print(f"  - Batch: [cyan]{p['batch']}[/cyan]")
+                console.print(f"    File: {p['file']}")
+                console.print(f"    Region: {p['region']}")
+                console.print(f"    Actor: {p['actor']}")
+                console.print(f"    Keys: {', '.join(p['input_keys'])}")
+            return
+
+        token = runner.token_from_environment_or_prompt(
+            prompt=not no_prompt,
+            token_file=token_file,
+            token_index=token_index,
+        )
+        console.print(f"[bold blue]Executing {len(targets)} target(s)...[/bold blue]")
+
+        for spec, path in targets:
+            console.print(f"\n[bold]--- Running: {spec.file} ({spec.region_id}) ---[/bold]")
+            result = runner.run_file(spec, path, token, import_after=not no_import)
+            console.print(f"[green]Completed run: {result['run_id']}[/green]")
+            console.print(f"Places saved to: {result['places_path']}")
+            if result.get("imported"):
+                imp = result["imported"]
+                console.print(f"Importer status: Valid={imp.get('valid_count')}, Failed={imp.get('failed_count')}, Skipped={imp.get('is_skipped', False)}")
+
+        console.print(f"\n[bold green]All tasks completed successfully.[/bold green]")
+    except ApifyRunnerError as exc:
+        console.print(f"[bold red]Error: {exc}[/bold red]")
+        raise typer.Exit(code=1)
+    finally:
+        runner.close()
 
 @app.command()
 def normalize(
@@ -159,17 +239,17 @@ def normalize(
     from src.models.schemas import RawAttractionRecord, NormalizedAttractionRecord
     from src.pipeline.normalize import normalize_record
     from src.storage.writer import save_dataset
-    
+
     import hashlib
     import re
 
     console.print("[bold blue]Starting Normalization stage...[/bold blue]")
-    
+
     # 1. Load manifest for Apify Google Maps
     manifest_path = os.path.join(input_dir, "apify_google_maps", "manifest.json")
     apify_files = []
     expected_apify_raw = 0
-    
+
     if os.path.exists(manifest_path):
         try:
             with open(manifest_path, "r", encoding="utf-8") as f:
@@ -177,7 +257,7 @@ def normalize(
         except Exception as e:
             console.print(f"[red]Failed to load manifest: {e}[/red]")
             raise typer.Exit(code=1)
-            
+
         for entry in manifest:
             raw_path = entry["filepath"]
             if not os.path.exists(raw_path):
@@ -186,7 +266,7 @@ def normalize(
             if not os.path.exists(raw_path):
                 console.print(f"[red]Reconciliation Error: Raw source file not found: {entry['filepath']}[/red]")
                 raise typer.Exit(code=1)
-                
+
             # Validate checksum
             hasher = hashlib.sha256()
             with open(raw_path, "rb") as bf:
@@ -196,17 +276,20 @@ def normalize(
             if current_checksum != entry["checksum"]:
                 console.print(f"[red]Reconciliation Error: Checksum mismatch for raw file {raw_path}. Expected {entry['checksum']}, got {current_checksum}[/red]")
                 raise typer.Exit(code=1)
-                
-            # Count elements in raw places.json
-            try:
-                with open(raw_path, "r", encoding="utf-8") as rf:
-                    raw_data = json.load(rf)
-                    file_raw_count = len(raw_data)
-                    expected_apify_raw += file_raw_count
-            except Exception as e:
-                console.print(f"[red]Failed to load raw JSON {raw_path}: {e}[/red]")
-                raise typer.Exit(code=1)
-                
+
+            # Use valid_count from manifest (staging JSONL only contains valid records)
+            file_valid_count = entry.get("valid_count")
+            if file_valid_count is None:
+                # Legacy fallback
+                try:
+                    with open(raw_path, "r", encoding="utf-8") as rf:
+                        raw_data = json.load(rf)
+                        file_valid_count = len(raw_data)
+                except Exception as e:
+                    console.print(f"[red]Failed to load raw JSON {raw_path}: {e}[/red]")
+                    raise typer.Exit(code=1)
+            expected_apify_raw += file_valid_count
+
             # Determine date folder from path
             path_parts = os.path.normpath(raw_path).replace("\\", "/").split("/")
             date_str = None
@@ -217,29 +300,29 @@ def normalize(
                     break
             if not date_str:
                 date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-                
+
             staging_jsonl = os.path.join(input_dir, "apify_google_maps", entry["region"], date_str, "places.jsonl")
             if not os.path.exists(staging_jsonl):
                 console.print(f"[red]Reconciliation Error: Staging jsonl file not found: {staging_jsonl}[/red]")
                 raise typer.Exit(code=1)
-                
-            apify_files.append((staging_jsonl, file_raw_count))
-            
+
+            apify_files.append((staging_jsonl, file_valid_count))
+
     # 2. Count OSM raw records
     osm_files = glob.glob(os.path.join(input_dir, "osm", "*.jsonl"))
     osm_raw = 0
     for filepath in osm_files:
         with open(filepath, "r", encoding="utf-8") as f:
             osm_raw += sum(1 for line in f if line.strip())
-            
+
     expected_total_raw = expected_apify_raw + osm_raw
     if expected_total_raw == 0:
         console.print("[yellow]No raw records to process.[/yellow]")
         return
-        
+
     # 3. Load records and verify counts file-by-file
     raw_records = []
-    
+
     def load_jsonl_file(filepath):
         file_records = []
         with open(filepath, "r", encoding="utf-8") as f:
@@ -254,22 +337,22 @@ def normalize(
         with open(filepath, "r", encoding="utf-8") as f:
             count = sum(1 for line in f if line.strip())
         if count != expected_count:
-            console.print(f"[red]Reconciliation Error: Staging file {filepath} has {count} records, but raw file has {expected_count} records.[/red]")
+            console.print(f"[red]Reconciliation Error: Staging file {filepath} has {count} valid records, but manifest expects {expected_count}.[/red]")
             raise typer.Exit(code=1)
-            
+
         file_records = load_jsonl_file(filepath)
         raw_records.extend(file_records)
-        
+
     # Load OSM
     for filepath in osm_files:
         file_records = load_jsonl_file(filepath)
         raw_records.extend(file_records)
-        
+
     actual_total_raw = len(raw_records)
     if actual_total_raw != expected_total_raw:
         console.print(f"[red]Reconciliation Error: Total loaded raw records ({actual_total_raw}) does not match expected raw records ({expected_total_raw}).[/red]")
         raise typer.Exit(code=1)
-        
+
     # Deduplicate source_record_id for pipeline flow
     unique_raw_records = []
     seen_ids = set()
@@ -277,21 +360,21 @@ def normalize(
         if rec.source_record_id not in seen_ids:
             seen_ids.add(rec.source_record_id)
             unique_raw_records.append(rec)
-            
+
     console.print(f"Loaded {len(raw_records)} raw records before source deduplication, {len(unique_raw_records)} after source deduplication.")
     raw_records = unique_raw_records
-    
+
     normalized_records = []
     all_normalized_records = []
     apify_accepted = []
     apify_manual = []
     apify_rejected = []
-    
+
     for raw in raw_records:
         try:
             norm = normalize_record(raw)
             all_normalized_records.append(norm)
-            
+
             # Segregate Apify specific classifications
             if norm.source == "apify_google_maps":
                 if norm.classification == "accepted":
@@ -300,29 +383,29 @@ def normalize(
                     apify_manual.append(norm)
                 elif norm.classification == "rejected":
                     apify_rejected.append(norm)
-            
+
             # Filter out rejected records from going to deduplication
             if norm.classification != "rejected":
                 normalized_records.append(norm)
         except Exception as e:
             logger.warning(f"Failed to normalize record {raw.source_record_id}: {e}")
-            
+
     # Save general normalized records (non-rejected)
     if normalized_records:
         res = save_dataset(normalized_records, output_dir, "normalized_attractions")
         console.print(f"[green]Normalized {len(normalized_records)} records (excluding rejected) and saved: {res}[/green]")
     else:
         console.print("[yellow]No records normalized.[/yellow]")
-        
+
     # Save all normalized records (including rejected)
     if all_normalized_records:
         res_all = save_dataset(all_normalized_records, output_dir, "all_normalized")
         console.print(f"[green]Saved all {len(all_normalized_records)} normalized records (including rejected) to: {res_all}[/green]")
-        
+
     # Save Apify processed outputs
     apify_processed_dir = os.path.join("data", "processed", "apify")
     os.makedirs(apify_processed_dir, exist_ok=True)
-    
+
     if apify_accepted:
         res_accepted = save_dataset(apify_accepted, apify_processed_dir, "attractions_accepted")
         console.print(f"[green]Saved {len(apify_accepted)} accepted Apify records to data/processed/apify/[/green]")
@@ -352,13 +435,13 @@ def deduplicate(
     from src.pipeline.deduplicate import deduplicate_records
     from src.pipeline.enrich import extract_prices_from_text, enrich_canonical_place
     from src.storage.writer import save_dataset
-    
+
     console.print("[bold blue]Starting Deduplication and Enrichment stage...[/bold blue]")
-    
+
     if not os.path.exists(input_file):
         console.print(f"[red]Normalized records file not found at {input_file}. Run normalize first.[/red]")
         return
-        
+
     records = []
     try:
         with open(input_file, "r", encoding="utf-8") as f:
@@ -368,11 +451,11 @@ def deduplicate(
     except Exception as e:
         logger.error(f"Error reading normalized file: {e}")
         return
-        
+
     console.print(f"Loaded {len(records)} normalized records.")
-    
+
     canonical_places, mappings = deduplicate_records(records)
-    
+
     # Enrichment: For each canonical place, look for descriptions/address/names to extract price information
     enriched_places = []
     for place in canonical_places:
@@ -380,7 +463,7 @@ def deduplicate(
         price_records = extract_prices_from_text(text_for_prices, place.website)
         enriched_place = enrich_canonical_place(place, price_records)
         enriched_places.append(enriched_place)
-        
+
     # Re-save the updated normalized records (with dedup_cluster_id and dedup_reason populated)
     save_dataset(records, "data/normalized", "normalized_attractions")
     console.print("[green]Updated normalized_attractions records with cluster and dedup info.[/green]")
@@ -390,28 +473,28 @@ def deduplicate(
     # 2. Candidates: manual review records only
     verified_places = []
     candidate_places = []
-    
+
     for place in enriched_places:
         if place.classification == "accepted" or place.primary_source == "osm":
             verified_places.append(place)
         else:
             candidate_places.append(place)
-            
+
     # Save master verified
     res_verified = save_dataset(verified_places, output_dir, "attractions_master_verified")
     console.print(f"[green]Created {len(verified_places)} attractions_master_verified records and saved: {res_verified}[/green]")
-    
+
     # Save candidates
     res_candidates = save_dataset(candidate_places, output_dir, "attractions_candidates")
     console.print(f"[yellow]Created {len(candidate_places)} attractions_candidates records and saved: {res_candidates}[/yellow]")
-    
+
     # Save attraction sources mapping table as Parquet format
     if mappings:
         df_mappings = pd.DataFrame(mappings)
         parquet_path = os.path.join(output_dir, "attraction_sources.parquet")
         df_mappings.to_parquet(parquet_path, index=False, engine="pyarrow")
         console.print(f"[green]Saved source mapping table to {parquet_path}[/green]")
-        
+
         # Save cross_source_matches.csv to reports/
         reports_dir = "reports"
         os.makedirs(reports_dir, exist_ok=True)
@@ -425,7 +508,7 @@ def report():
     Generate automated coverage and data quality report.
     """
     from src.reporting.reporter import generate_reports
-    
+
     console.print("[bold blue]Generating reports...[/bold blue]")
     try:
         generate_reports()
@@ -459,28 +542,28 @@ def run_pipeline(
                 console.print(f" - {path}: [red]MISSING[/red]")
         console.print("[green]Dry run validation complete.[/green]")
         return
-        
+
     console.print("[bold green]=== RUNNING FULL DATA PIPELINE ===[/bold green]")
-    
+
     # 1. Discover
     console.print("\n[bold]Step 1: Discovery[/bold]")
     if include_apify:
         import_apify_all()
-            
+
     discover(source="all", region=region, keyword=keyword, limit=limit, resume=resume)
-    
+
     # 2. Normalize
     console.print("\n[bold]Step 2: Normalization[/bold]")
     normalize()
-    
+
     # 3. Deduplicate
     console.print("\n[bold]Step 3: Deduplication & Enrichment[/bold]")
     deduplicate()
-    
+
     # 4. Report
     console.print("\n[bold]Step 4: Reporting[/bold]")
     report()
-    
+
     console.print("\n[bold green]=== PIPELINE RUN COMPLETE ===[/bold green]")
 
 @app.command(name="create-enrichment-pilot")
@@ -500,9 +583,9 @@ def create_enrichment_pilot(
     from src.enrichment.pilot_selector import select_pilot_places, write_enrichment_schemas, write_reports
     import pandas as pd
     import json
-    
+
     console.print(f"[bold blue]Creating Enrichment Pilot: size={size}, seed={seed}...[/bold blue]")
-    
+
     try:
         # If input path doesn't exist but parquet does, fallback to parquet
         input_path = input
@@ -510,13 +593,13 @@ def create_enrichment_pilot(
             parq_path = input_path.replace(".jsonl", ".parquet")
             if os.path.exists(parq_path):
                 input_path = parq_path
-                
+
         # Also determine parquet/jsonl paths
         # We need sources_path and normalized_path
         sources_path = "data/canonical/attraction_sources.parquet"
         normalized_path = "data/normalized/all_normalized.jsonl"
         possible_dup_path = "reports/possible_duplicate_candidates.csv"
-        
+
         # Load verified to pass to write_reports
         if input_path.endswith(".parquet"):
             df_verified = pd.read_parquet(input_path)
@@ -539,22 +622,22 @@ def create_enrichment_pilot(
             max_region_share=max_region_share,
             include_special=include_special_samples
         )
-        
+
         console.print(f"[green]Successfully selected {len(df_pilot)} pilot attractions![/green]")
-        
+
         if dry_run:
             console.print("[yellow]Dry run mode enabled. No files written.[/yellow]")
             # Print basic statistics
             console.print(df_pilot["region"].value_counts())
             return
-            
+
         # Write outputs
         os.makedirs(output_dir, exist_ok=True)
-        
+
         # Save pilot places in 3 formats
         df_pilot.to_csv(os.path.join(output_dir, "pilot_places.csv"), index=False, encoding="utf-8")
         df_pilot.to_parquet(os.path.join(output_dir, "pilot_places.parquet"), index=False)
-        
+
         # Save as JSONL
         with open(os.path.join(output_dir, "pilot_places.jsonl"), "w", encoding="utf-8") as f:
             for _, r in df_pilot.iterrows():
@@ -563,13 +646,13 @@ def create_enrichment_pilot(
                 if isinstance(r_dict.get("category_tags"), list):
                     pass # json.dumps handles list perfectly
                 f.write(json.dumps(r_dict) + "\n")
-                
+
         # 1. pilot_google_places_input.csv
         gp_rows = []
         for _, row in df_pilot.iterrows():
             g_id = row["google_place_id"]
             eligible = pd.notna(g_id) and g_id != ""
-            
+
             gp_rows.append({
                 "canonical_id": row["canonical_id"],
                 "name": row["name"],
@@ -586,20 +669,20 @@ def create_enrichment_pilot(
             })
         df_gp = pd.DataFrame(gp_rows)
         df_gp.to_csv(os.path.join(output_dir, "pilot_google_places_input.csv"), index=False, encoding="utf-8")
-        
+
         # 2. pilot_price_research_input.csv
         pr_rows = []
         for _, row in df_pilot.iterrows():
             name = row["name"]
             reg = row["region"]
             cat = row["primary_category"]
-            
+
             # Determine research priority
             # High priority if popular or in important category
             is_popular = str(row["review_count_segment"]) in ["popular", "medium"]
             is_important_cat = str(cat) in ["nature", "beach", "waterfall", "waterpark"]
             priority = "high" if (is_popular or is_important_cat) else "medium"
-            
+
             pr_rows.append({
                 "canonical_id": row["canonical_id"],
                 "name": name,
@@ -613,7 +696,7 @@ def create_enrichment_pilot(
             })
         df_pr = pd.DataFrame(pr_rows)
         df_pr.to_csv(os.path.join(output_dir, "pilot_price_research_input.csv"), index=False, encoding="utf-8")
-        
+
         # 3. pilot_selection_manifest.json
         manifest = {
             "batch_id": "enrichment_pilot_300_v1",
@@ -637,15 +720,15 @@ def create_enrichment_pilot(
         }
         with open(os.path.join(output_dir, "pilot_selection_manifest.json"), "w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=2)
-            
+
         # Write schemas
         write_enrichment_schemas()
-        
+
         # Write reports
         write_reports(df_pilot, df_verified)
-        
+
         console.print("[green]Enrichment Pilot outputs successfully generated![/green]")
-        
+
     except Exception as e:
         logger.error(f"Failed to create enrichment pilot: {e}", exc_info=True)
         raise e
@@ -664,8 +747,8 @@ def prepare_review_scraping(
     console.print(f"[bold blue]Building review scraping payloads from {input} with strategy {strategy_version}...[/bold blue]")
     try:
         manifest = build_review_payloads(
-            input_csv_path=input, 
-            output_dir=output_dir, 
+            input_csv_path=input,
+            output_dir=output_dir,
             batch_size=batch_size,
             strategy_version=strategy_version
         )
@@ -695,48 +778,48 @@ def run_review_scraping(
     if not token or str(token).strip() == "":
         console.print("[yellow]APIFY_TOKEN is missing in .env. Skipping execution. (Dry validation mode)[/yellow]")
         return
-        
+
     try:
         from apify_client import ApifyClient
     except ImportError:
         console.print("[red]apify-client library is not installed. Please run 'pip install apify-client' to use this command.[/red]")
         return
-        
+
     manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
     if not os.path.exists(manifest_path):
         console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
         return
-        
+
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest_data = json.load(f)
-        
+
     entry = None
     for b in manifest_data.get("batches", []):
         if b["batch_id"] == batch and b["mode"] == mode:
             entry = b
             break
-            
+
     if not entry:
         console.print(f"[red]Batch {batch} ({mode}) not found in manifest.[/red]")
         return
-        
+
     if entry.get("status") == "completed":
         console.print(f"[yellow]Batch {batch} ({mode}) is already completed. Skipping.[/yellow]")
         return
-        
+
     client = ApifyClient(token)
     payload_path = os.path.join("data/enrichment/apify_review_inputs", entry["payload_path"])
     with open(payload_path, "r", encoding="utf-8") as pf:
         run_input = json.load(pf)
-        
+
     console.print(f"[blue]Starting Apify actor compass/google-maps-reviews-scraper for {batch} ({mode})...[/blue]")
     run = client.actor("compass/google-maps-reviews-scraper").call(run_input=run_input)
-    
+
     run_id = get_run_value(run, "id")
     dataset_id = get_run_value(run, "default_dataset_id", "defaultDatasetId")
-    
+
     console.print(f"[green]Run completed: run_id={run_id}, dataset_id={dataset_id}[/green]")
-    
+
     # Download dataset
     items = client.dataset(dataset_id).list_items().items
     raw_dir = os.path.join("data/enrichment/raw_reviews", mode)
@@ -744,14 +827,14 @@ def run_review_scraping(
     raw_path = os.path.join(raw_dir, f"{batch}.json")
     with open(raw_path, "w", encoding="utf-8") as rf:
         json.dump(items, rf, indent=2)
-        
+
     console.print(f"[green]Saved {len(items)} raw reviews to {raw_path}[/green]")
-    
+
     # Update manifest
     entry["status"] = "completed"
     entry["apify_run_id"] = run_id
     entry["dataset_id"] = dataset_id
-    
+
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest_data, f, indent=2)
 
@@ -766,23 +849,23 @@ def run_review_scraping_all():
     if not token or str(token).strip() == "":
         console.print("[yellow]APIFY_TOKEN is missing in .env. Skipping execution of run-review-scraping-all.[/yellow]")
         return
-        
+
     manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
     if not os.path.exists(manifest_path):
         console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
         return
-        
+
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest_data = json.load(f)
-        
+
     pending_batches = [b for b in manifest_data.get("batches", []) if b.get("status") != "completed"]
-    
+
     if not pending_batches:
         console.print("[green]All batches in manifest are already completed![/green]")
         return
-        
+
     console.print(f"[bold blue]Running {len(pending_batches)} pending review scraping batches...[/bold blue]")
-    
+
     for b in pending_batches:
         try:
             run_review_scraping(mode=b["mode"], batch=b["batch_id"])
@@ -801,12 +884,12 @@ def import_review_results(
     if not os.path.exists(input):
         console.print(f"[red]Input file not found: {input}[/red]")
         return
-        
+
     manifest_path = "data/enrichment/apify_review_inputs/review_batch_manifest.json"
     if not os.path.exists(manifest_path):
         console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
         return
-        
+
     # Read input file (handles JSON array or JSONL)
     reviews = []
     try:
@@ -826,18 +909,18 @@ def import_review_results(
         except Exception as e:
             console.print(f"[red]Failed to parse file as JSON array or JSONL: {e}[/red]")
             return
-            
+
     raw_dir = os.path.join("data/enrichment/raw_reviews", mode)
     os.makedirs(raw_dir, exist_ok=True)
     raw_path = os.path.join(raw_dir, f"{batch}.json")
-    
+
     with open(raw_path, "w", encoding="utf-8") as rf:
         json.dump(reviews, rf, indent=2)
-        
+
     # Update manifest
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest_data = json.load(f)
-        
+
     updated = False
     for b in manifest_data.get("batches", []):
         if b["batch_id"] == batch and b["mode"] == mode:
@@ -846,7 +929,7 @@ def import_review_results(
             b["apify_run_id"] = "imported_offline"
             updated = True
             break
-            
+
     if updated:
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest_data, f, indent=2)
@@ -865,10 +948,10 @@ def import_review_results_all(
     if not os.path.exists(manifest_path):
         console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
         return
-        
+
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest_data = json.load(f)
-        
+
     updated_count = 0
     for b in manifest_data.get("batches", []):
         mode = b["mode"]
@@ -879,7 +962,7 @@ def import_review_results_all(
             b["dataset_id"] = b["dataset_id"] or "imported_offline"
             b["apify_run_id"] = b["apify_run_id"] or "imported_offline"
             updated_count += 1
-              
+
     if updated_count > 0:
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest_data, f, indent=2)
@@ -917,7 +1000,7 @@ def recover_review_run(
     if not token or str(token).strip() == "":
         console.print("[red]APIFY_TOKEN is missing in .env. Cannot perform recovery.[/red]")
         return
-        
+
     try:
         from apify_client import ApifyClient
     except ImportError:
@@ -928,16 +1011,16 @@ def recover_review_run(
     if not os.path.exists(manifest_path):
         console.print("[red]Manifest file not found. Please run prepare-review-scraping first.[/red]")
         return
-        
+
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest_data = json.load(f)
-        
+
     entry = None
     for b in manifest_data.get("batches", []):
         if b["batch_id"] == batch and b["mode"] == mode:
             entry = b
             break
-            
+
     if not entry:
         console.print(f"[red]Batch {batch} ({mode}) not found in manifest.[/red]")
         return
@@ -960,13 +1043,13 @@ def recover_review_run(
 
     console.print(f"[blue]Recovering run {run_id} for {batch} ({mode})...[/blue]")
     client = ApifyClient(token)
-    
+
     try:
         run = client.run(run_id).get()
     except Exception as e:
         console.print(f"[red]Failed to retrieve run details for {run_id}: {e}[/red]")
         raise e
-        
+
     status = get_run_value(run, "status")
     if status != "SUCCEEDED":
         console.print(f"[red]Run {run_id} status is {status}, expected SUCCEEDED. Cannot recover.[/red]")
@@ -974,31 +1057,31 @@ def recover_review_run(
 
     dataset_id = get_run_value(run, "default_dataset_id", "defaultDatasetId")
     console.print(f"[green]Run SUCCEEDED. Dataset ID: {dataset_id}. Downloading items...[/green]")
-    
+
     try:
         items = client.dataset(dataset_id).list_items().items
     except Exception as e:
         console.print(f"[red]Failed to download dataset items: {e}[/red]")
         raise e
-        
+
     raw_review_count = len(items)
     checksum = hashlib.sha256(json.dumps(items, sort_keys=True).encode("utf-8")).hexdigest()
-    
+
     with open(raw_path, "w", encoding="utf-8") as rf:
         json.dump(items, rf, indent=2)
-        
+
     entry["status"] = "completed"
     entry["apify_run_id"] = run_id
     entry["dataset_id"] = dataset_id
     entry["raw_review_count"] = raw_review_count
     entry["result_checksum"] = checksum
-    
+
     from datetime import datetime, timezone
     entry["completed_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    
+
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest_data, f, indent=2)
-        
+
     console.print(f"[green]Successfully recovered {raw_review_count} reviews to {raw_path}. Manifest updated.[/green]")
 
 @app.command(name="recover-review-batch")
@@ -1011,13 +1094,13 @@ def recover_review_batch(
     if batch != "batch_001":
         console.print(f"[red]Only batch_001 is supported for recovery mapping in this command.[/red]")
         return
-        
+
     runs = {
         "positive": "MVrGztxpiTCIXSLsH",
         "negative": "0VCtRHHFadp9JudlV",
         "neutral": "z4UYRSzMdTivVyRD5"
     }
-    
+
     console.print(f"[bold blue]Recovering batch {batch}...[/bold blue]")
     for mode, run_id in runs.items():
         try:
@@ -1152,21 +1235,21 @@ def validate_price_candidates(
         console.print(f" - Excluded (Free): {stats['excluded_free_count']}")
         console.print(f" - Excluded (Non-Attraction): {stats['excluded_non_attraction_count']}")
         console.print(f" - Not Applicable: {stats['not_applicable_count']}")
-        
+
         # Step 13: Reporting
         if not dry_run:
             df_validated = res["validated_df"]
             df_prov = res["provenance_df"]
-            
+
             # Active validation scope dataframe
             df_active = df_validated[df_validated["validation_scope_status"] == "in_scope"]
-            
+
             # 1. Generate reports/price_candidate_validation_summary.md (Task 8 format)
             summary_md_path = os.path.join(reports_dir, "price_candidate_validation_summary.md")
             with open(summary_md_path, "w", encoding="utf-8") as f:
                 f.write(f"# Price Candidate Validation Summary\n\n")
                 f.write(f"Generated at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n")
-                
+
                 f.write(f"## Active Validation Scope\n\n")
                 f.write(f"- **High Count**: {stats['total_high']}\n")
                 f.write(f"- **Medium Count**: {stats['total_medium']}\n")
@@ -1177,7 +1260,7 @@ def validate_price_candidates(
                 f.write(f"- **Excluded Non-Attraction**: {stats['excluded_non_attraction_count']}\n")
                 f.write(f"- **Not Applicable**: {stats['not_applicable_count']}\n")
                 f.write(f"- **Reconciliation Total**: {stats['research_count'] + stats['manual_review_count'] + stats['excluded_free_count'] + stats['excluded_non_attraction_count'] + stats['not_applicable_count']}\n\n")
-                
+
                 f.write(f"## Global Pilot\n\n")
                 f.write(f"- **Total Pilot**: {stats['total_pilot']}\n")
                 f.write(f"- **In Scope**: {stats['total_validated']}\n")
@@ -1190,27 +1273,27 @@ def validate_price_candidates(
                 f.write(f"- **Original Not Applicable**: {orig_not_app}\n")
                 f.write(f"- **Original Manual Review**: {orig_man_rev}\n")
                 f.write(f"- **Global Reconciliation Total**: {stats['total_validated'] + low_not_eval + orig_not_app + orig_man_rev}\n\n")
-                
+
                 f.write(f"## Integrity Check\n\n")
                 f.write(f"Integrity check passed: {res['integrity']['integrity_passed']}\n")
-                
+
             # 2. Generate reports/price_candidate_active_scope_distribution.csv (final decision counts of in_scope)
             df_active["final_decision"].value_counts().to_csv(
                 os.path.join(reports_dir, "price_candidate_active_scope_distribution.csv")
             )
-            
+
             # 3. Generate reports/price_candidate_global_reconciliation.csv (distribution matrix of all 300)
             df_glob_rec = df_validated.copy()
             df_glob_rec["final_decision"] = df_glob_rec["final_decision"].fillna("not_evaluated")
             df_glob_rec.groupby(["original_priority", "validation_scope_status", "validation_status", "final_decision"]).size().reset_index(name="count").to_csv(
                 os.path.join(reports_dir, "price_candidate_global_reconciliation.csv"), index=False
             )
-            
+
             # 4. Generate reports/price_candidate_priority_decision_matrix.csv
             pd.crosstab(df_glob_rec["original_priority"], df_glob_rec["final_decision"]).to_csv(
                 os.path.join(reports_dir, "price_candidate_priority_decision_matrix.csv")
             )
-            
+
             # 5. Generate reports/price_candidate_scope_integrity.csv
             integrity_checks = [
                 {"check_name": "total_pilot_count", "expected": 300, "actual": len(df_validated), "passed": len(df_validated) == 300},
@@ -1225,17 +1308,17 @@ def validate_price_candidates(
             pd.DataFrame(integrity_checks).to_csv(
                 os.path.join(reports_dir, "price_candidate_scope_integrity.csv"), index=False
             )
-            
+
             # Generate reports/price_candidate_manual_review.csv (active scope MR only)
             df_active[df_active["final_decision"] == "manual_review"][
                 ["canonical_id", "name", "region", "decision_rule", "decision_reason"]
             ].to_csv(os.path.join(reports_dir, "price_candidate_manual_review.csv"), index=False)
-            
+
             # Generate reports/price_candidate_exclusions.csv (active scope exclusions only)
             df_active[df_active["final_decision"].isin(["excluded_free", "excluded_non_attraction", "not_applicable"])][
                 ["canonical_id", "name", "region", "final_decision", "decision_rule", "decision_reason"]
             ].to_csv(os.path.join(reports_dir, "price_candidate_exclusions.csv"), index=False)
-            
+
             console.print(f"[green]Reports generated under {reports_dir}/[/green]")
 
     except Exception as e:
@@ -1412,7 +1495,7 @@ def build_consolidated_master_cmd(
     Build a Consolidated Enrichment Master Dataset for the deterministic 300-place pilot or the full 3,130 attractions.
     """
     console.print("[bold blue]Starting Consolidated Enrichment Master Dataset Build...[/bold blue]")
-    
+
     if full:
         if pilot_population == "data/enrichment/consolidated/pilot_population.csv":
             pilot_population = "data/canonical/attractions_master_verified.parquet"
@@ -1424,7 +1507,7 @@ def build_consolidated_master_cmd(
             opening_hours = "data/enrichment/metadata/relations/opening_hours_full.parquet"
         if master_version == "consolidated_enrichment_pilot_v1":
             master_version = "consolidated_enrichment_full_v1"
-            
+
     from src.enrichment.consolidated_master import (
         run_master_consolidation,
         generate_coverage_reports,
@@ -1440,10 +1523,10 @@ def build_consolidated_master_cmd(
                 pilot = pd.read_csv(pilot_population)
         else:
             raise FileNotFoundError(f"Population file not found: {pilot_population}")
-            
+
         # We need external prices to pass to validate_master_dataset
         df_ext_prices = pd.read_csv(external_verified_prices) if os.path.exists(external_verified_prices) else pd.DataFrame()
-        
+
         df_master = run_master_consolidation(
             pilot_population_path=pilot_population,
             canonical_path=canonical,
@@ -1467,16 +1550,16 @@ def build_consolidated_master_cmd(
             console.print("[green]Consolidated Enrichment Master dataset generated successfully![/green]")
             console.print(f" - Rows: {len(df_master)}")
             console.print(f" - Unique canonical IDs: {df_master['canonical_id'].nunique()}")
-            
+
             # TASK 19: Generate summary and distribution reports
             generate_coverage_reports(df_master, reports_dir)
-            
+
             # TASK 13: Write Provenance Manifest
             write_provenance_manifest(df_master, output_dir, reports_dir, master_version)
-            
+
             # TASK 16, 17, 18: Audits
             run_consolidation_audits(df_master, output_dir, reports_dir)
-            
+
     except Exception as e:
         console.print(f"[red]Error building consolidated master: {e}[/red]")
         raise e
