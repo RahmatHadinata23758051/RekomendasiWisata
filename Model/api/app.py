@@ -14,7 +14,8 @@ from Model.sentiment.analyzer import SentimentAnalyzerSuite
 from Model.api.schemas import (
     RecommendationRequest, RecommendationResponse, RecommendedAttractionItem, ScoreBreakdown,
     SentimentRequest, SentimentResponse, HealthCheckResponse, AttractionItem, PaginatedDestinationsResponse,
-    PlannerRequest, PlannerSlotItem, PlannerDayItem, PlannerGenerateResponse, PlannerSwapRequest, PlannerSwapResponse
+    PlannerRequest, PlannerSlotItem, PlannerDayItem, PlannerGenerateResponse, PlannerSwapRequest, PlannerSwapResponse,
+    CatalogSubmission, CatalogSubmissionResponse
 )
 
 app = FastAPI(
@@ -212,6 +213,53 @@ def get_destinations(
         total_items=total_items,
         total_pages=total_pages,
         destinations=destinations_list
+    )
+
+@app.post("/api/v1/catalog/submissions", response_model=CatalogSubmissionResponse, tags=["Catalog Sync"])
+def publish_catalog_submission(item: CatalogSubmission):
+    """Upsert one approved crowdsourced place into the live ML catalog."""
+    global df_features, recommender_engine
+
+    if item.canonical_id in set(df_features["canonical_id"].astype(str)):
+        return CatalogSubmissionResponse(
+            canonical_id=item.canonical_id,
+            total_attractions_loaded=len(df_features),
+        )
+
+    row = {column: np.nan for column in df_features.columns}
+    row.update({
+        "canonical_id": item.canonical_id,
+        "name": item.name,
+        "primary_category": item.primary_category,
+        "city_or_regency": item.city_or_regency,
+        "latitude": item.latitude,
+        "longitude": item.longitude,
+        "operational_status": item.operational_status,
+        "is_eligible_recommend": True,
+        "price_status": item.price_status,
+        "price_min_idr": item.price_min_idr,
+        "price_max_idr": item.price_max_idr,
+        "quality_penalty_score": 0.0,
+        "overall_completeness_score": 100.0,
+        "quality_warning_count": 0,
+        "review_coverage_status": "not_processed",
+        "rating_normalized": np.nan,
+        "sentiment_score_mean": np.nan,
+        "sentiment_confidence": 0.0,
+    })
+
+    for category in CATEGORIES_VOCAB:
+        row[f"feat_cat_{category}"] = 1.0 if category == item.primary_category.lower() else 0.0
+    for region in REGIONS_VOCAB:
+        row[f"feat_reg_{region.lower().replace(' ', '_')}"] = 1.0 if region == item.city_or_regency else 0.0
+    for facility in FACILITIES_VOCAB:
+        row[f"feat_fac_{facility}"] = 1.0 if facility in item.facilities else 0.0
+
+    df_features = pd.concat([df_features, pd.DataFrame([row])], ignore_index=True)
+    recommender_engine = RecommenderAlgorithms(df_features)
+    return CatalogSubmissionResponse(
+        canonical_id=item.canonical_id,
+        total_attractions_loaded=len(df_features),
     )
 
 @app.post("/api/v1/recommendations", response_model=RecommendationResponse, tags=["Recommendation Engine"])

@@ -71,6 +71,33 @@ class PaginatedDestinationsResponse(BaseModel):
     total_pages: int
     destinations: List[AttractionItem]
 
+class CatalogSubmission(BaseModel):
+    canonical_id: str
+    name: str
+    primary_category: str
+    category_tags: List[str] = Field(default_factory=list)
+    city_or_regency: str
+    address: Optional[str] = None
+    district: Optional[str] = None
+    village: Optional[str] = None
+    latitude: float
+    longitude: float
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    facilities: List[str] = Field(default_factory=list)
+    opening_hours: Optional[object] = None
+    price_min_idr: Optional[float] = None
+    price_max_idr: Optional[float] = None
+    price_status: str = "unknown"
+    operational_status: str = "open"
+    review_count: int = 0
+    review_rating_mean: Optional[float] = None
+
+class CatalogSubmissionResponse(BaseModel):
+    status: str = "success"
+    canonical_id: str
+    total_attractions_loaded: int
+
 class SentimentRequest(BaseModel):
     text: str = Field(..., json_schema_extra={"example": "Pantai Sari Ringgung tempatnya sangat bagus, indah, dan bersih!"})
 
