@@ -1,18 +1,21 @@
 canonical_id_1,name_1,place_id_1,canonical_id_2,name_2,place_id_2,distance_meters,fuzzy_score
-can_59a8f91551ac,Pahawang,ChIJKxA7awAlQS4RNqFGu6sNH_Y,can_d5eff4e1d4aa,Pulau Pahawang,ChIJA3CJXGElQS4ROabEI6LQB4M,1.8,100.0
-can_31542a3adb2e,Air terjun ciupang,ChIJIVnmPs7URi4RsN3yHkPlUp4,can_9f9f62569267,Air terjun ciupang,ChIJ5Z7Wx0DVRi4Rmc1RmLbF0Tg,0.0,100.0
-can_236985ac79b1,Pulau Tangkil,ChIJV9J7kovYQC4REcCAPwx6t2A,can_5d307a1b99f0,Pulau Tangkil,ChIJnUTn7YvYQC4RsjyL8o8AP24,54.2,100.0
-can_9e82bc01bd42,Taman Wisata Bukit Singkek,ChIJg865Qe8jRy4ReSwfalfvNpk,can_93ef14c458ec,Bukit Singkek,ChIJjXslS4AjRy4RwberO_wp7d8,6.6,100.0
-can_f5d2a834c853,Pantai Duta Wisata,ChIJsQGr77rZQC4RUqceH_Mvg2c,can_48b4908d30ee,pantai duta wisata,ChIJ-2QO2_7ZQC4RoQKv8IOmh4c,2.0,100.0
-can_720fb2c2e8a5,Pantai Canti Kalianda,ChIJH1-_iL4TQS4RdhiL1cPcaMs,can_57c6de033708,Canti Kalianda Beach,ChIJI9NrVA0TQS4RappCXJQ0FCk,0.0,100.0
-can_68d3dfe705e8,Pantai Ketang,ChIJiU_CA0cQQS4R5bvhYn8l5rA,can_d67003250b89,Ketang Beach,ChIJ2zoACS0RQS4RunUT7DFHHKs,0.0,100.0
-can_20925ee097e7,"Pemandian Air Panas di Laut, Kalianda",ChIJPYrYwYMRQS4RD5aUIZwZn7I,can_3f7d38e8cabe,Air Panas di Pantai Kalianda,ChIJaXqaPwgRQS4RKwhoRkOv2_c,70.9,89.4
-can_1ab913eb55bf,Pantai minangrua,ChIJ64QzYBp1QS4Rrgov0QVeIWs,can_f7ee90698ad2,Pantai Minang Rua,ChIJq6qqqs50QS4RAXjdWfx6uVw,16.5,94.7
-can_cb7c807ea0c9,Pulau Panjurit,ChIJcwlhT36fQS4Ri2aFWzg4dfg,can_bd8c8a1c5d56,Pulau Panjurit,ChIJm4_FqoB1QS4R3AhM4eaqx_M,94.1,100.0
-can_472dcadf2e91,Teluk Nipah Kalianda,ChIJc6E6r18bQS4RdDJEQfA3QQQ,can_a18ea9af3538,Pantai Teluk Nipah Kalianda,ChIJrx43FRwaQS4RWHwrFJ_Sujg,0.0,100.0
-can_847ed2298586,Pantai Melasti,ChIJ9ZNon4S6Ry4R42rBqRNAEoI,can_c24ebd1c0d22,Melasti Beach Lampung,ChIJ7XAMm0O7Ry4RKzX3GNf9e-0,0.0,100.0
-can_ef5885122cd0,Ground Camp Krui - Tent,ChIJPRMfWs3qRy4R2tlWVvAr5Z8,can_9f4b1e0c02e6,Ground Camp Krui - Tent,ChIJa8cYWs3qRy4RzRLV7-FKNvY,0.0,100.0
-can_09b986ad7cef,Curup Kereta,ChIJ_5JhQwWOOC4RvF5RY7p1NbU,can_971ef616f035,Air Terjun KERETA,ChIJDbddQwWOOC4RSAJ9kpCrMzc,0.5,100.0
-can_44c74df9cd0a,PEMANDIAN AIR NANGAN,ChIJ0TtOadeFOC4Rc6_owTDo9Zw,can_d480cc423a8f,Pemandian kali Nangan,ChIJ67zNQ7GFOC4R4lAw_VFL6Dg,17.2,85.7
-can_11181c5bec13,Taman berwarna pingled 21,ChIJ-6Ek6qK9QC4RB0oj8O3UPmU,can_58c807b2db79,Taman berwarna pingled 22,ChIJJdkG9VO9QC4RRovhMWoYnxY,26.4,94.7
-can_f7e32d552b52,bumi arum,ChIJVVVVVSkyRy4RtOEXEAR9D-Q,can_74048e2144c9,Bumi Arum,ChIJramX8iwyRy4RyS_oq2aGGLs,0.0,100.0
+can_dcce9c66a993,Pahawang,ChIJKxA7awAlQS4RNqFGu6sNH_Y,can_cc0e460cd5ce,Pulau Pahawang,ChIJA3CJXGElQS4ROabEI6LQB4M,1.8,100.0
+can_3708d61b05b7,Air terjun ciupang,ChIJIVnmPs7URi4RsN3yHkPlUp4,can_527beb84c6af,Air terjun ciupang,ChIJ5Z7Wx0DVRi4Rmc1RmLbF0Tg,0.0,100.0
+can_1f917d620f76,Pulau Tangkil,ChIJV9J7kovYQC4REcCAPwx6t2A,can_cd537b9e4acf,Pulau Tangkil,ChIJnUTn7YvYQC4RsjyL8o8AP24,54.2,100.0
+can_98240c78161f,Taman Wisata Bukit Singkek,ChIJg865Qe8jRy4ReSwfalfvNpk,can_6df0f0e8f646,Bukit Singkek,ChIJjXslS4AjRy4RwberO_wp7d8,6.6,100.0
+can_370f9d2d60d0,Pantai Duta Wisata,ChIJsQGr77rZQC4RUqceH_Mvg2c,can_bef717594e99,pantai duta wisata,ChIJ-2QO2_7ZQC4RoQKv8IOmh4c,2.0,100.0
+can_91105b903e40,Pulau Pasaran,ChIJq44IE57ZQC4Rt0GPZX3S13g,can_cb90ef78646b,Pulau Pasaran,ChIJL9gdTgDZQC4RYt1haz2wb7A,4.8,100.0
+can_d135e213db21,Pantai Canti Kalianda,ChIJH1-_iL4TQS4RdhiL1cPcaMs,can_1d711a885b3f,Canti Kalianda Beach,ChIJI9NrVA0TQS4RappCXJQ0FCk,0.0,100.0
+can_38982ed26d5a,Pantai Ketang,ChIJiU_CA0cQQS4R5bvhYn8l5rA,can_0ef272ad54b3,Ketang Beach,ChIJ2zoACS0RQS4RunUT7DFHHKs,0.0,100.0
+can_dedf5e411d6c,"Pemandian Air Panas di Laut, Kalianda",ChIJPYrYwYMRQS4RD5aUIZwZn7I,can_60d44b04d213,Air Panas di Pantai Kalianda,ChIJaXqaPwgRQS4RKwhoRkOv2_c,70.9,89.4
+can_c5290650511d,Pantai minangrua,ChIJ64QzYBp1QS4Rrgov0QVeIWs,can_e0f0bf237008,Pantai Minang Rua,ChIJq6qqqs50QS4RAXjdWfx6uVw,16.5,94.7
+can_af21e5d1c2e1,Pulau Panjurit,ChIJcwlhT36fQS4Ri2aFWzg4dfg,can_be47ef0cec44,Pulau Panjurit,ChIJm4_FqoB1QS4R3AhM4eaqx_M,94.1,100.0
+can_bf90375809c5,Teluk Nipah Kalianda,ChIJc6E6r18bQS4RdDJEQfA3QQQ,can_ff2ca83a142f,Pantai Teluk Nipah Kalianda,ChIJrx43FRwaQS4RWHwrFJ_Sujg,0.0,100.0
+can_a2461a64246e,Pantai Melasti,ChIJ9ZNon4S6Ry4R42rBqRNAEoI,can_af8c16e4ac30,Melasti Beach Lampung,ChIJ7XAMm0O7Ry4RKzX3GNf9e-0,0.0,100.0
+can_74865dc50cea,Ground Camp Krui - Tent,ChIJPRMfWs3qRy4R2tlWVvAr5Z8,can_ff7a64cb4c87,Ground Camp Krui - Tent,ChIJa8cYWs3qRy4RzRLV7-FKNvY,0.0,100.0
+can_5004a8445ed0,Objek Wisata Bondan,ChIJfUXgqMxrPy4RCulpOjOaTCw,can_770327487a43,Wisata Bondan,ChIJP0zJLgBrPy4RKnDWzxTTCWM,16.9,100.0
+can_d36277bf7422,Curup Kereta,ChIJ_5JhQwWOOC4RvF5RY7p1NbU,can_702063128268,Air Terjun KERETA,ChIJDbddQwWOOC4RSAJ9kpCrMzc,0.5,100.0
+can_8e035675be84,PEMANDIAN AIR NANGAN,ChIJ0TtOadeFOC4Rc6_owTDo9Zw,can_1125b3690dd7,Pemandian kali Nangan,ChIJ67zNQ7GFOC4R4lAw_VFL6Dg,17.2,85.7
+can_348f5307e286,Taman berwarna pingled 21,ChIJ-6Ek6qK9QC4RB0oj8O3UPmU,can_58786710cb1f,Taman berwarna pingled 22,ChIJJdkG9VO9QC4RRovhMWoYnxY,26.4,94.7
+can_366e1af5fc13,bumi arum,ChIJVVVVVSkyRy4RtOEXEAR9D-Q,can_34f79a735fee,Bumi Arum,ChIJramX8iwyRy4RyS_oq2aGGLs,0.0,100.0
+can_a6eb6d97155c,Perumahan Bukit Bakung Indah,ChIJEwdU5I3ZQC4RrfKdghsJwuE,can_6059873840ca,Perumahan Bukit Bakung Indah,ChIJN1Mi3o3ZQC4RSqOICmp9BQQ,63.6,100.0
