@@ -11,6 +11,10 @@
 # Byte-compiled / cache files
 __pycache__/
 *.py[cod]
+
+# Runtime-approved crowdsourced catalog overlay (generated locally; do not commit data)
+Data/consolidated/approved_catalog_submissions.json
+Data/consolidated/.approved_catalog_submissions.json.tmp-*
 .pytest_cache/
 .mypy_cache/
 .vscode/

@@ -17,6 +17,7 @@ from Model.api.schemas import (
     PlannerRequest, PlannerSlotItem, PlannerDayItem, PlannerGenerateResponse, PlannerSwapRequest, PlannerSwapResponse,
     CatalogSubmission, CatalogSubmissionResponse
 )
+from Model.api.catalog_store import CatalogStore
 
 app = FastAPI(
     title="Recommendation Traveller Lampung - ML Engine API",
@@ -92,6 +93,57 @@ else:
     df_features['description'] = None
     df_features['review_count'] = None
     df_features['review_rating_mean'] = None
+
+# Approved crowdsourced submissions are replayed on every process start. The
+# frozen parquet remains the source of truth for the existing catalog; these
+# rows are an additive overlay and therefore cannot change current behavior.
+catalog_store = CatalogStore()
+
+def _submission_to_feature_row(record):
+    """Map a persisted API contract to the recommender's feature columns."""
+    row = {column: np.nan for column in df_features.columns}
+    row.update({
+        "canonical_id": str(record["canonical_id"]),
+        "name": record["name"],
+        "primary_category": record["primary_category"],
+        "city_or_regency": record["city_or_regency"],
+        "address": record.get("address"),
+        "description": record.get("description"),
+        "latitude": record.get("latitude"),
+        "longitude": record.get("longitude"),
+        "operational_status": record.get("operational_status", "open"),
+        "is_eligible_recommend": True,
+        "price_status": record.get("price_status", "unknown"),
+        "price_min_idr": record.get("price_min_idr"),
+        "price_max_idr": record.get("price_max_idr"),
+        "review_count": record.get("review_count", 0),
+        "review_rating_mean": record.get("review_rating_mean"),
+        "quality_penalty_score": 0.0,
+        "overall_completeness_score": 100.0,
+        "review_coverage_status": "not_processed",
+        "rating_normalized": np.nan,
+        "sentiment_score_mean": np.nan,
+        "sentiment_confidence": 0.0,
+        "image_url": record.get("image_url"),
+    })
+    category = str(record.get("primary_category", "")).lower().strip()
+    region = str(record.get("city_or_regency", "")).strip().lower()
+    facilities = set(record.get("facilities") or [])
+    for value in CATEGORIES_VOCAB:
+        row[f"feat_cat_{value}"] = 1.0 if value == category else 0.0
+    for value in REGIONS_VOCAB:
+        row[f"feat_reg_{value.lower().replace(' ', '_')}"] = 1.0 if value.lower() == region else 0.0
+    for value in FACILITIES_VOCAB:
+        row[f"feat_fac_{value}"] = 1.0 if value in facilities else 0.0
+    return row
+
+# Replay records before image enrichment and model initialization.
+if catalog_store.list_records():
+    existing_ids = set(df_features["canonical_id"].astype(str))
+    for _record in catalog_store.list_records():
+        if str(_record.get("canonical_id", "")) not in existing_ids:
+            df_features.loc[len(df_features)] = _submission_to_feature_row(_record)
+            existing_ids.add(str(_record.get("canonical_id", "")))
 
 # Populate image_url into df_features
 def resolve_image_url(row):
@@ -217,50 +269,42 @@ def get_destinations(
 
 @app.post("/api/v1/catalog/submissions", response_model=CatalogSubmissionResponse, tags=["Catalog Sync"])
 def publish_catalog_submission(item: CatalogSubmission):
-    """Upsert one approved crowdsourced place into the live ML catalog."""
-    global df_features, recommender_engine
+    """Persist and activate one approved crowdsourced destination.
 
-    if item.canonical_id in set(df_features["canonical_id"].astype(str)):
+    The canonical ID is the idempotency key. Persisting before updating the
+    in-memory frame means a process crash after this function returns cannot
+    lose an accepted submission; a restart replays the durable overlay.
+    """
+    global df_features, recommender_engine
+    canonical_id = str(item.canonical_id).strip()
+    existing_ids = set(df_features["canonical_id"].astype(str))
+    if canonical_id in existing_ids:
         return CatalogSubmissionResponse(
-            canonical_id=item.canonical_id,
+            canonical_id=canonical_id,
             total_attractions_loaded=len(df_features),
+            persisted=True,
+            created=False,
         )
 
-    row = {column: np.nan for column in df_features.columns}
-    row.update({
-        "canonical_id": item.canonical_id,
-        "name": item.name,
-        "primary_category": item.primary_category,
-        "city_or_regency": item.city_or_regency,
-        "latitude": item.latitude,
-        "longitude": item.longitude,
-        "operational_status": item.operational_status,
-        "is_eligible_recommend": True,
-        "price_status": item.price_status,
-        "price_min_idr": item.price_min_idr,
-        "price_max_idr": item.price_max_idr,
-        "quality_penalty_score": 0.0,
-        "overall_completeness_score": 100.0,
-        "quality_warning_count": 0,
-        "review_coverage_status": "not_processed",
-        "rating_normalized": np.nan,
-        "sentiment_score_mean": np.nan,
-        "sentiment_confidence": 0.0,
-    })
-
-    for category in CATEGORIES_VOCAB:
-        row[f"feat_cat_{category}"] = 1.0 if category == item.primary_category.lower() else 0.0
-    for region in REGIONS_VOCAB:
-        row[f"feat_reg_{region.lower().replace(' ', '_')}"] = 1.0 if region == item.city_or_regency else 0.0
-    for facility in FACILITIES_VOCAB:
-        row[f"feat_fac_{facility}"] = 1.0 if facility in item.facilities else 0.0
-
-    df_features = pd.concat([df_features, pd.DataFrame([row])], ignore_index=True)
+    record = item.model_dump()
+    record["canonical_id"] = canonical_id
+    created = catalog_store.add_if_absent(record)
+    if not created:
+        # Another worker may have committed between the initial in-memory
+        # check and the store write. Replay the durable record exactly once.
+        persisted = next(r for r in catalog_store.list_records() if str(r.get("canonical_id")) == canonical_id)
+        record = persisted
+    # Assign through ``loc`` rather than concat: this preserves the frozen
+    # frame's dtypes and avoids pandas' all-NA concat coercion behavior.
+    df_features.loc[len(df_features)] = _submission_to_feature_row(record)
     recommender_engine = RecommenderAlgorithms(df_features)
     return CatalogSubmissionResponse(
-        canonical_id=item.canonical_id,
+        canonical_id=canonical_id,
         total_attractions_loaded=len(df_features),
+        persisted=True,
+        created=created,
     )
+
 
 @app.post("/api/v1/recommendations", response_model=RecommendationResponse, tags=["Recommendation Engine"])
 def get_recommendations(req: RecommendationRequest):

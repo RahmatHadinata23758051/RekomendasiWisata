@@ -71,8 +71,10 @@ class PaginatedDestinationsResponse(BaseModel):
     total_pages: int
     destinations: List[AttractionItem]
 
+
 class CatalogSubmission(BaseModel):
-    canonical_id: str
+    """An already-approved destination from the crowdsourcing workflow."""
+    canonical_id: str = Field(..., min_length=1)
     name: str
     primary_category: str
     category_tags: List[str] = Field(default_factory=list)
@@ -93,10 +95,14 @@ class CatalogSubmission(BaseModel):
     review_count: int = 0
     review_rating_mean: Optional[float] = None
 
+
 class CatalogSubmissionResponse(BaseModel):
     status: str = "success"
     canonical_id: str
     total_attractions_loaded: int
+    persisted: bool = True
+    created: bool = False
+
 
 class SentimentRequest(BaseModel):
     text: str = Field(..., json_schema_extra={"example": "Pantai Sari Ringgung tempatnya sangat bagus, indah, dan bersih!"})

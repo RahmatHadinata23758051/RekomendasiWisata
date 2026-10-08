@@ -9,6 +9,7 @@ from Model.sentiment.analyzer import SentimentAnalyzerSuite, preprocess_indonesi
 def resolve_reviews_path():
     candidate_paths = [
         "Data/reviews.parquet",
+        "Data/consolidated/sentiment_processed_reviews.parquet",
         "Scraping/data/enrichment/final/reviews.parquet",
         "Scraping/data/enrichment/processed_reviews/reviews_all.parquet"
     ]
