@@ -140,10 +140,14 @@ def _submission_to_feature_row(record):
 # Replay records before image enrichment and model initialization.
 if catalog_store.list_records():
     existing_ids = set(df_features["canonical_id"].astype(str))
+    new_rows = []
     for _record in catalog_store.list_records():
         if str(_record.get("canonical_id", "")) not in existing_ids:
-            df_features.loc[len(df_features)] = _submission_to_feature_row(_record)
+            new_rows.append(_submission_to_feature_row(_record))
             existing_ids.add(str(_record.get("canonical_id", "")))
+    if new_rows:
+        df_new = pd.DataFrame(new_rows)
+        df_features = pd.concat([df_features, df_new], ignore_index=True)
 
 # Populate image_url into df_features
 def resolve_image_url(row):
