@@ -193,6 +193,7 @@ def generate_reason_codes(row, sim_cat, sim_reg, sim_fac, sim_dist, sentiment_sc
         reasons.append("general_recommendation")
     return reasons
 
+@app.get("/health", response_model=HealthCheckResponse, tags=["Health"], include_in_schema=False)
 @app.get("/api/v1/health", response_model=HealthCheckResponse, tags=["Health"])
 def health_check():
     return HealthCheckResponse(
