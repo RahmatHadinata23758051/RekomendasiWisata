@@ -202,11 +202,30 @@ def health_check():
         service_uptime="operational"
     )
 
+# Category mapping: Indonesian (UI) -> English (data)
+CATEGORY_MAP = {
+    'pantai': 'beach',
+    'alam': 'nature',
+    'budaya': 'culture',
+    'kuliner': 'culinary',
+    'adventure': 'adventure',
+    'beach': 'beach',
+    'nature': 'nature',
+    'culture': 'culture',
+    'culinary': 'culinary',
+}
+
 @app.get("/api/v1/destinations", response_model=PaginatedDestinationsResponse, tags=["Destinations Data"])
 def get_destinations(
-    category: Optional[str] = Query(None, description="Filter by category (Pantai, Alam, Budaya, Kuliner, etc.)"),
+    category: Optional[str] = Query(None, description="Filter by category (Pantai, Alam, Budaya, Kuliner, Adventure, beach, nature, culture, culinary)"),
     city_or_regency: Optional[str] = Query(None, description="Filter by Lampung Regency or City"),
-    search: Optional[str] = Query(None, description="Search keyword in name or address"),
+    search: Optional[str] = Query(None, description="Search keyword in name, address, or description"),
+    price_status: Optional[str] = Query(None, description="Filter by price status: free, paid, all"),
+    min_price: Optional[float] = Query(None, ge=0, description="Minimum price in IDR"),
+    max_price: Optional[float] = Query(None, ge=0, description="Maximum price in IDR"),
+    operational_status: Optional[str] = Query(None, description="Filter by operational status"),
+    sort_by: Optional[str] = Query('popular', description="Sort by: rating, reviews_count, name, price_min_idr, popular"),
+    sort_order: Optional[str] = Query('desc', description="Sort order: asc, desc"),
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page")
 ):
@@ -214,7 +233,8 @@ def get_destinations(
 
     if category and category.lower() != 'semua':
         cat_str = category.lower().strip()
-        filtered = filtered[filtered['primary_category'].str.lower().str.contains(cat_str, na=False)]
+        cat_key = CATEGORY_MAP.get(cat_str, cat_str)
+        filtered = filtered[filtered['primary_category'].str.lower().str.contains(cat_key, na=False)]
 
     if city_or_regency and city_or_regency.lower() != 'semua':
         clean_reg = clean_regency_name(city_or_regency)
@@ -229,8 +249,47 @@ def get_destinations(
         filtered = filtered[
             filtered['name'].str.lower().str.contains(kw, na=False) |
             filtered['city_or_regency'].str.lower().str.contains(kw, na=False) |
-            filtered['address'].astype(str).str.lower().str.contains(kw, na=False)
+            filtered['address'].astype(str).str.lower().str.contains(kw, na=False) |
+            filtered['description'].astype(str).str.lower().str.contains(kw, na=False)
         ]
+
+    if price_status and price_status.lower() != 'all':
+        if price_status.lower() == 'free':
+            filtered = filtered[
+                (filtered['price_status'].str.lower() == 'free') |
+                (filtered['price_min_idr'].isna()) |
+                (filtered['price_min_idr'] == 0)
+            ]
+        elif price_status.lower() == 'paid':
+            filtered = filtered[
+                (filtered['price_status'].str.lower() == 'paid') &
+                (filtered['price_min_idr'].notna()) &
+                (filtered['price_min_idr'] > 0)
+            ]
+
+    if min_price is not None:
+        filtered = filtered[filtered['price_min_idr'].fillna(0) >= min_price]
+
+    if max_price is not None:
+        filtered = filtered[filtered['price_min_idr'].fillna(0) <= max_price]
+
+    if operational_status:
+        filtered = filtered[filtered['operational_status'].str.lower() == operational_status.lower()]
+
+    # Sorting
+    if sort_by == 'rating':
+        filtered = filtered.sort_values('review_rating_mean', ascending=(sort_order == 'asc'), na_position='last')
+    elif sort_by == 'reviews_count':
+        filtered = filtered.sort_values('review_count', ascending=(sort_order == 'asc'), na_position='last')
+    elif sort_by == 'name':
+        filtered = filtered.sort_values('name', ascending=(sort_order == 'asc'), na_position='last')
+    elif sort_by == 'price_min_idr':
+        filtered = filtered.sort_values('price_min_idr', ascending=(sort_order == 'asc'), na_position='last')
+    elif sort_by == 'popular':
+        # Popularity: rating * review_count (higher is more popular)
+        filtered['_popularity'] = filtered['review_rating_mean'].fillna(0) * filtered['review_count'].fillna(0)
+        filtered = filtered.sort_values('_popularity', ascending=(sort_order == 'asc'), na_position='last')
+        filtered = filtered.drop(columns=['_popularity'])
 
     total_items = len(filtered)
     total_pages = max(1, (total_items + limit - 1) // limit)
