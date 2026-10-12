@@ -78,8 +78,13 @@ class RecommenderAlgorithms:
         return top_indices, scores[top_indices]
 
     def candidate4_hybrid_multi_objective(self, query_cat, query_reg, query_fac, user_lat=None, user_lng=None,
-                                          top_k=10, w_cat=0.4, w_reg=0.25, w_fac=0.15, w_dist=0.10, w_qual=0.10):
-        """Candidate 4: Hybrid Multi-Objective Scoring Engine"""
+                                          top_k=10, w_cat=0.4, w_reg=0.25, w_fac=0.15, w_dist=0.10, w_qual=0.10,
+                                          extra_mask=None):
+        """Candidate 4: Hybrid Multi-Objective Scoring Engine
+
+        ``extra_mask`` is an optional boolean array of hard constraints (e.g. budget).
+        It is applied before ranking so top_k is filled from items that satisfy it.
+        """
         sim_cat = cosine_similarity(query_cat.reshape(1, -1), self.cat_matrix)[0]
         sim_reg = np.dot(self.reg_matrix, query_reg)
 
@@ -108,5 +113,9 @@ class RecommenderAlgorithms:
                   w_dist * sim_dist + w_qual * qual_score)
         
         scores[~self.eligible_mask] = -1.0
+        if extra_mask is not None:
+            scores[~extra_mask] = -1.0
         top_indices = np.argsort(scores)[::-1][:top_k]
+        # Drop slots that were filled by ineligible items (fewer matches than top_k)
+        top_indices = top_indices[scores[top_indices] > -1.0]
         return top_indices, scores[top_indices]

@@ -29,7 +29,14 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:4000",
+        "http://127.0.0.1:4000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -218,6 +225,7 @@ CATEGORY_MAP = {
 
 @app.get("/api/v1/destinations", response_model=PaginatedDestinationsResponse, tags=["Destinations Data"])
 def get_destinations(
+    canonical_id: Optional[str] = Query(None, description="Exact canonical ID lookup"),
     category: Optional[str] = Query(None, description="Filter by category (Pantai, Alam, Budaya, Kuliner, Adventure, beach, nature, culture, culinary)"),
     city_or_regency: Optional[str] = Query(None, description="Filter by Lampung Regency or City"),
     search: Optional[str] = Query(None, description="Search keyword in name, address, or description"),
@@ -231,6 +239,9 @@ def get_destinations(
     limit: int = Query(20, ge=1, le=100, description="Items per page")
 ):
     filtered = df_features.copy()
+
+    if canonical_id:
+        filtered = filtered[filtered['canonical_id'].astype(str) == str(canonical_id)]
 
     if category and category.lower() != 'semua':
         cat_str = category.lower().strip()
@@ -387,23 +398,27 @@ def get_recommendations(req: RecommendationRequest):
         if f in FACILITIES_VOCAB:
             fac_vec[FACILITIES_VOCAB.index(f)] = 1.0
 
+    # Budget is a hard constraint applied BEFORE ranking so top_k is filled from
+    # items that satisfy it. Unknown prices (NaN) are kept, matching the catalog's
+    # "price unavailable" semantics rather than being silently excluded.
+    budget_mask = None
+    if req.budget_max_idr is not None:
+        price_series = pd.to_numeric(df_features["price_min_idr"], errors="coerce")
+        budget_mask = (price_series.isna() | (price_series <= req.budget_max_idr)).values
+
     top_indices, scores = recommender_engine.candidate4_hybrid_multi_objective(
         query_cat=cat_vec,
         query_reg=reg_vec,
         query_fac=fac_vec,
         user_lat=req.latitude,
         user_lng=req.longitude,
-        top_k=req.top_k
+        top_k=req.top_k,
+        extra_mask=budget_mask,
     )
 
     recommendations = []
     for rank_idx, (idx, final_score) in enumerate(zip(top_indices, scores), start=1):
         row = df_features.iloc[idx]
-        
-        if req.budget_max_idr is not None:
-            price_min = row.get("price_min_idr")
-            if pd.notna(price_min) and price_min > req.budget_max_idr:
-                continue
 
         s_cat = float(np.dot(cat_vec, recommender_engine.cat_matrix[idx])) if sum(cat_vec) > 0 else 0.0
         s_reg = float(np.dot(reg_vec, recommender_engine.reg_matrix[idx])) if sum(reg_vec) > 0 else 0.0
