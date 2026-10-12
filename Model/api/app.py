@@ -75,21 +75,9 @@ for json_file in glob.glob(JSON_DIR):
     except Exception:
         pass
 
-# Category Fallback Photos
-CATEGORY_FALLBACK_IMAGES = {
-    'beach': '/assets/images/heroes/hero-pahawang-bg.png',
-    'pantai': '/assets/images/heroes/hero-pahawang-bg.png',
-    'nature': 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=800&q=80',
-    'alam': 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=800&q=80',
-    'waterfall': 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=800&q=80',
-    'culture': 'https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=800&q=80',
-    'budaya': 'https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=800&q=80',
-    'museum': 'https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=800&q=80',
-    'culinary': 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-    'kuliner': 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-    'mountain': 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
-    'forest': 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=800&q=80',
-}
+# Branded placeholder used when a destination has no verified photo
+# (never generic external stock photos presented as the destination).
+PLACEHOLDER_IMAGE = '/assets/images/heroes/hero-pahawang-bg.png'
 
 # Merge Master Metadata into df_features
 if not df_master.empty:
@@ -161,8 +149,7 @@ def resolve_image_url(row):
     name_key = str(row['name']).lower().strip()
     if name_key in image_map:
         return image_map[name_key]
-    cat_key = str(row['primary_category']).lower().strip()
-    return CATEGORY_FALLBACK_IMAGES.get(cat_key, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80')
+    return PLACEHOLDER_IMAGE
 
 df_features['image_url'] = df_features.apply(resolve_image_url, axis=1)
 
@@ -312,8 +299,8 @@ def get_destinations(
 
     destinations_list = []
     for _, row in page_df.iterrows():
-        rating_val = float(row['review_rating_mean']) if pd.notna(row['review_rating_mean']) else 4.6
-        reviews_val = int(row['review_count']) if pd.notna(row['review_count']) else 120
+        rating_val = float(row['review_rating_mean']) if pd.notna(row['review_rating_mean']) else None
+        reviews_val = int(row['review_count']) if pd.notna(row['review_count']) else 0
 
         destinations_list.append(AttractionItem(
             canonical_id=str(row['canonical_id']),
@@ -323,7 +310,7 @@ def get_destinations(
             address=str(row['address']) if pd.notna(row['address']) else None,
             description=str(row['description']) if pd.notna(row['description']) else None,
             image_url=str(row['image_url']),
-            rating=round(rating_val, 1),
+            rating=round(rating_val, 1) if rating_val is not None else None,
             reviews_count=reviews_val,
             latitude=float(row['latitude']) if pd.notna(row['latitude']) else None,
             longitude=float(row['longitude']) if pd.notna(row['longitude']) else None,
@@ -440,8 +427,8 @@ def get_recommendations(req: RecommendationRequest):
 
         reasons = generate_reason_codes(row, s_cat, s_reg, s_fac, s_dist, s_sentiment)
 
-        rating_val = float(row['review_rating_mean']) if pd.notna(row['review_rating_mean']) else 4.7
-        reviews_val = int(row['review_count']) if pd.notna(row['review_count']) else 150
+        rating_val = float(row['review_rating_mean']) if pd.notna(row['review_rating_mean']) else None
+        reviews_val = int(row['review_count']) if pd.notna(row['review_count']) else 0
 
         item = RecommendedAttractionItem(
             rank=rank_idx,
@@ -452,7 +439,7 @@ def get_recommendations(req: RecommendationRequest):
             address=str(row["address"]) if pd.notna(row["address"]) else None,
             description=str(row["description"]) if pd.notna(row["description"]) else None,
             image_url=str(row["image_url"]),
-            rating=round(rating_val, 1),
+            rating=round(rating_val, 1) if rating_val is not None else None,
             reviews_count=reviews_val,
             latitude=float(row["latitude"]) if pd.notna(row["latitude"]) else None,
             longitude=float(row["longitude"]) if pd.notna(row["longitude"]) else None,
@@ -541,8 +528,8 @@ def generate_planner_itinerary(req: PlannerRequest):
     # Relevance Score = (CategoryMatch * 0.40) + (BudgetMatch * 0.40) + (Rating/5 * 0.20)
     def calculate_relevance_score(row, is_food_slot):
         cat = str(row.get('primary_category', '')).lower()
-        price = float(row['price_min_idr']) if pd.notna(row.get('price_min_idr')) and float(row.get('price_min_idr', 0)) > 0 else (25000.0 if is_food_slot else 15000.0)
-        rating = float(row['review_rating_mean']) if pd.notna(row.get('review_rating_mean')) else 4.5
+        price = float(row['price_min_idr']) if pd.notna(row.get('price_min_idr')) and float(row.get('price_min_idr', 0)) > 0 else None
+        rating = float(row['review_rating_mean']) if pd.notna(row.get('review_rating_mean')) else None
 
         # 1. Category Score (0.0 to 1.0)
         category_score = 0.5
@@ -553,9 +540,12 @@ def generate_planner_itinerary(req: PlannerRequest):
         else:
             category_score = 0.8
 
-        # 2. Budget Match Score (0.0 to 1.0)
+        # 2. Budget Match Score (0.0 to 1.0). Unknown price => neutral score:
+        # there is no price data, so it is neither cheap nor expensive.
         budget_score = 0.5
-        if budget_tier in ['Ekonomis', 'Backpacker']:
+        if price is None:
+            budget_score = 0.5
+        elif budget_tier in ['Ekonomis', 'Backpacker']:
             if price <= 20000:
                 budget_score = 1.0
             elif price <= 35000:
@@ -579,8 +569,8 @@ def generate_planner_itinerary(req: PlannerRequest):
             else:
                 budget_score = 0.3
 
-        # 3. Rating Score (0.0 to 1.0)
-        rating_score = min(1.0, rating / 5.0)
+        # 3. Rating Score (0.0 to 1.0). Unknown rating => neutral score.
+        rating_score = 0.5 if rating is None else min(1.0, rating / 5.0)
 
         return (category_score * 0.40) + (budget_score * 0.40) + (rating_score * 0.20)
 
@@ -654,21 +644,21 @@ def generate_planner_itinerary(req: PlannerRequest):
                 c_lat = float(chosen_row['latitude']) if pd.notna(chosen_row['latitude']) else -5.4292
                 c_lng = float(chosen_row['longitude']) if pd.notna(chosen_row['longitude']) else 105.2611
                 
-                default_base = 25000.0 if stpl["is_food"] else 15000.0
-                if budget_tier == 'Standar':
-                    default_base = 45000.0 if stpl["is_food"] else 35000.0
-                elif budget_tier == 'Mewah':
-                    default_base = 120000.0 if stpl["is_food"] else 85000.0
-
-                price_val = float(chosen_row['price_min_idr']) if pd.notna(chosen_row['price_min_idr']) and float(chosen_row['price_min_idr']) > 0 else default_base
-                total_cost_accum += price_val
+                # Only use a verified price. No invented per-day cost allowance.
+                price_val = float(chosen_row['price_min_idr']) if pd.notna(chosen_row['price_min_idr']) and float(chosen_row['price_min_idr']) > 0 else None
+                if price_val is not None:
+                    total_cost_accum += price_val
 
                 dist = haversine_km(last_coords[0], last_coords[1], c_lat, c_lng) if last_coords else 0.0
                 travel_txt = f"{round(dist * 3.2, 0):.0f} menit perjalanan" if (last_coords and dist > 0) else "Spot awal rute"
                 last_coords = (c_lat, c_lng)
 
                 tip_prefix = "Tipe Backpacker (Hemat)" if budget_tier in ["Ekonomis", "Backpacker"] else ("Tipe Mewah (Sultan)" if budget_tier == "Mewah" else "Tipe Standar")
-                ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Rating ulasan {chosen_row.get('review_rating_mean', 4.5):.1f}/5.0 dari pengunjung."
+                row_rating = chosen_row.get('review_rating_mean')
+                if pd.notna(row_rating):
+                    ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Rating ulasan {float(row_rating):.1f}/5.0 dari pengunjung."
+                else:
+                    ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Belum ada data rating ulasan."
 
                 day_slots.append(PlannerSlotItem(
                     canonical_id=cid,
@@ -676,8 +666,8 @@ def generate_planner_itinerary(req: PlannerRequest):
                     activityTitle=str(chosen_row["name"]),
                     category=str(chosen_row["primary_category"]).capitalize(),
                     location=str(chosen_row["address"]) if pd.notna(chosen_row["address"]) else f"Kawasan {req.city_or_regency}",
-                    estimatedCost=f"Rp {int(price_val):,} / orang".replace(',', '.'),
-                    numericCost=price_val,
+                    estimatedCost=(f"Rp {int(price_val):,} / orang".replace(',', '.') if price_val is not None else "Harga belum tersedia"),
+                    numericCost=price_val if price_val is not None else 0.0,
                     coords=[c_lat, c_lng],
                     image=str(chosen_row["image_url"]),
                     aiTip=ai_tip,
@@ -730,7 +720,13 @@ def swap_planner_slot(req: PlannerSwapRequest):
     for _, row in top_candidates.iterrows():
         c_lat = float(row['latitude']) if pd.notna(row['latitude']) else -5.4292
         c_lng = float(row['longitude']) if pd.notna(row['longitude']) else 105.2611
-        price_val = float(row['price_min_idr']) if pd.notna(row['price_min_idr']) and row['price_min_idr'] > 0 else 25000.0
+        price_val = float(row['price_min_idr']) if pd.notna(row['price_min_idr']) and row['price_min_idr'] > 0 else None
+
+        row_rating = row.get('review_rating_mean')
+        if pd.notna(row_rating):
+            ai_tip = f"Alternatif terbaik di {req.city_or_regency} dengan ulasan rating {float(row_rating):.1f}/5.0."
+        else:
+            ai_tip = f"Alternatif rekomendasi di {req.city_or_regency} (belum ada data rating ulasan)."
 
         alternatives.append(PlannerSlotItem(
             canonical_id=str(row["canonical_id"]),
@@ -738,11 +734,11 @@ def swap_planner_slot(req: PlannerSwapRequest):
             activityTitle=str(row["name"]),
             category=str(row["primary_category"]).capitalize(),
             location=str(row["address"]) if pd.notna(row["address"]) else f"Kawasan {req.city_or_regency}",
-            estimatedCost=f"Rp {int(price_val):,} / orang".replace(',', '.'),
-            numericCost=price_val,
+            estimatedCost=(f"Rp {int(price_val):,} / orang".replace(',', '.') if price_val is not None else "Harga belum tersedia"),
+            numericCost=price_val if price_val is not None else 0.0,
             coords=[c_lat, c_lng],
             image=str(row["image_url"]),
-            aiTip=f"Alternatif terbaik di {req.city_or_regency} dengan ulasan rating {row.get('review_rating_mean', 4.5):.1f}/5.0."
+            aiTip=ai_tip
         ))
 
     return PlannerSwapResponse(

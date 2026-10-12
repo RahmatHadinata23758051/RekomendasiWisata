@@ -27,8 +27,8 @@ class RecommendedAttractionItem(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
-    rating: Optional[float] = 4.5
-    reviews_count: Optional[int] = 120
+    rating: Optional[float] = None
+    reviews_count: Optional[int] = 0
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     operational_status: str
@@ -53,8 +53,8 @@ class AttractionItem(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
-    rating: Optional[float] = 4.5
-    reviews_count: Optional[int] = 100
+    rating: Optional[float] = None
+    reviews_count: Optional[int] = 0
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     operational_status: str = "open"
