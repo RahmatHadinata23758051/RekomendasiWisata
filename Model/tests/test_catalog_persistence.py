@@ -77,6 +77,7 @@ def test_catalog_store_invalid_format_detection(tmp_path):
 
 
 def test_api_catalog_sync_and_restart_simulation(tmp_path, monkeypatch):
+    monkeypatch.delenv("ML_SYNC_HMAC_SECRET", raising=False)
     store_file = tmp_path / "app_catalog_submissions.json"
     monkeypatch.setenv("CATALOG_SUBMISSIONS_PATH", str(store_file))
 

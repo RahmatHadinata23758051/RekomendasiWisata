@@ -2,10 +2,19 @@ import os
 import glob
 import json
 import time
+import hmac
+import hashlib
+import re
+from datetime import datetime, timezone
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 import pandas as pd
 import numpy as np
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from Model.feature_engineering.builder import CATEGORIES_VOCAB, REGIONS_VOCAB, FACILITIES_VOCAB
@@ -330,7 +339,23 @@ def get_destinations(
     )
 
 @app.post("/api/v1/catalog/submissions", response_model=CatalogSubmissionResponse, tags=["Catalog Sync"])
-def publish_catalog_submission(item: CatalogSubmission):
+async def publish_catalog_submission(item: CatalogSubmission, request: Request):
+    """Verify service HMAC before persisting a catalog submission."""
+    secret = os.getenv("ML_SYNC_HMAC_SECRET", "")
+    if not secret and (os.getenv("NODE_ENV") == "production" or os.getenv("ENVIRONMENT") == "production"):
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Catalog sync authentication is not configured in production")
+    if secret:
+        timestamp = request.headers.get("x-ml-timestamp", "")
+        signature = request.headers.get("x-ml-signature", "")
+        if not re.fullmatch(r"[0-9]{1,12}", timestamp) or not re.fullmatch(r"sha256=[0-9a-f]{64}", signature):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid catalog sync signature")
+        age = abs(datetime.now(timezone.utc).timestamp() - int(timestamp))
+        if age > 300:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expired catalog sync signature")
+        body = await request.body()
+        expected = "sha256=" + hmac.new(secret.encode("utf-8"), timestamp.encode("ascii") + b"." + body, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, signature):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid catalog sync signature")
     """Persist and activate one approved crowdsourced destination.
 
     The canonical ID is the idempotency key. Persisting before updating the
