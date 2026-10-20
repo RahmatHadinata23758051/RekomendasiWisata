@@ -1564,6 +1564,45 @@ def build_consolidated_master_cmd(
         console.print(f"[red]Error building consolidated master: {e}[/red]")
         raise e
 
+@app.command(name="backfill-google-ratings")
+def backfill_google_ratings_cmd(
+    master: str = typer.Option(
+        "data/enrichment/consolidated/attractions_enrichment_master_full.parquet",
+        help="Frozen consolidated master parquet to patch in place",
+    ),
+    data_dir: str = typer.Option("../Data", help="Directory holding the raw Apify JSON exports"),
+    max_distance_m: float = typer.Option(300.0, help="Max name+coordinate match distance in metres"),
+    mirror: str = typer.Option(
+        "",
+        help="Optional extra output directory (comma separated) that receives csv/parquet/jsonl",
+    ),
+):
+    """
+    Backfill Google aggregate ratings (totalScore/reviewsCount) into the frozen
+    consolidated master without rebuilding it or changing canonical IDs.
+    """
+    from src.enrichment.google_rating_backfill import main as run_backfill
+
+    mirrors = [item.strip() for item in mirror.split(",") if item.strip()]
+    try:
+        report = run_backfill(
+            master_path=master,
+            data_dir=data_dir,
+            max_distance_m=max_distance_m,
+            mirror_dirs=mirrors,
+        )
+    except Exception as exc:  # pragma: no cover - CLI surface
+        console.print(f"[red]Google rating backfill failed: {exc}[/red]")
+        raise exc
+
+    console.print("[green]Google rating backfill completed.[/green]")
+    console.print(f" - Rows: {report['total_rows']}")
+    console.print(f" - Matched (<= {report['max_distance_m']}m): {report['matched_within_threshold']}")
+    console.print(f" - Rejected by distance: {report['rejected_distance']}")
+    console.print(f" - No name match: {report['no_name_match']}")
+    console.print(f" - Rating coverage: {report['rating_coverage_before']} -> {report['rating_coverage_after']}")
+
+
 if __name__ == "__main__":
     app()
 
