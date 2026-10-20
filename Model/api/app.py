@@ -90,13 +90,19 @@ PLACEHOLDER_IMAGE = '/assets/images/heroes/hero-pahawang-bg.png'
 
 # Merge Master Metadata into df_features
 if not df_master.empty:
-    master_cols = ['canonical_id', 'address', 'description', 'review_count', 'review_rating_mean']
+    master_cols = ['canonical_id', 'address', 'description', 'review_count', 'review_rating_mean',
+                   'google_rating', 'google_review_count', 'google_rating_weighted']
+    master_cols = [c for c in master_cols if c in df_master.columns]
     df_features = df_features.merge(df_master[master_cols], on='canonical_id', how='left')
 else:
     df_features['address'] = None
     df_features['description'] = None
     df_features['review_count'] = None
     df_features['review_rating_mean'] = None
+
+for _optional_col in ('google_rating', 'google_review_count', 'google_rating_weighted'):
+    if _optional_col not in df_features.columns:
+        df_features[_optional_col] = np.nan
 
 # Approved crowdsourced submissions are replayed on every process start. The
 # frozen parquet remains the source of truth for the existing catalog; these
@@ -122,10 +128,16 @@ def _submission_to_feature_row(record):
         "price_max_idr": record.get("price_max_idr"),
         "review_count": record.get("review_count", 0),
         "review_rating_mean": record.get("review_rating_mean"),
+        "google_rating": np.nan,
+        "google_review_count": np.nan,
+        "google_rating_weighted": np.nan,
         "quality_penalty_score": 0.0,
         "overall_completeness_score": 100.0,
         "review_coverage_status": "not_processed",
-        "rating_normalized": np.nan,
+        "rating_normalized": (
+            min(max(float(record["review_rating_mean"]), 0.0), 5.0) / 5.0
+            if record.get("review_rating_mean") is not None else np.nan
+        ),
         "sentiment_score_mean": np.nan,
         "sentiment_confidence": 0.0,
         "image_url": record.get("image_url"),
@@ -152,6 +164,20 @@ if catalog_store.list_records():
     if new_rows:
         df_new = pd.DataFrame(new_rows)
         df_features = pd.concat([df_features, df_new], ignore_index=True)
+
+# Unified display signals:
+# - rating_display prefers the Google aggregate (large, authoritative sample),
+#   then the review-text mean for places without a Google observation.
+# - review_count_display prefers the Google review count, then the scraped review count.
+df_features['rating_display'] = df_features['google_rating'].where(
+    df_features['google_rating'].notna(), df_features['review_rating_mean'])
+df_features['review_count_display'] = df_features['google_review_count'].where(
+    df_features['google_review_count'].notna(), df_features['review_count'])
+
+# Ranking signal: Bayesian-weighted Google rating first (small-sample safe),
+# then the review-text mean. Sorting and planners use this, never the raw value.
+df_features['rating_rank'] = df_features['google_rating_weighted'].where(
+    df_features['google_rating_weighted'].notna(), df_features['review_rating_mean'])
 
 # Populate image_url into df_features
 def resolve_image_url(row):
@@ -286,16 +312,16 @@ def get_destinations(
 
     # Sorting
     if sort_by == 'rating':
-        filtered = filtered.sort_values('review_rating_mean', ascending=(sort_order == 'asc'), na_position='last')
+        filtered = filtered.sort_values('rating_rank', ascending=(sort_order == 'asc'), na_position='last')
     elif sort_by == 'reviews_count':
-        filtered = filtered.sort_values('review_count', ascending=(sort_order == 'asc'), na_position='last')
+        filtered = filtered.sort_values('review_count_display', ascending=(sort_order == 'asc'), na_position='last')
     elif sort_by == 'name':
         filtered = filtered.sort_values('name', ascending=(sort_order == 'asc'), na_position='last')
     elif sort_by == 'price_min_idr':
         filtered = filtered.sort_values('price_min_idr', ascending=(sort_order == 'asc'), na_position='last')
     elif sort_by == 'popular':
         # Popularity: rating * review_count (higher is more popular)
-        filtered['_popularity'] = filtered['review_rating_mean'].fillna(0) * filtered['review_count'].fillna(0)
+        filtered['_popularity'] = filtered['rating_rank'].fillna(0) * filtered['review_count_display'].fillna(0)
         filtered = filtered.sort_values('_popularity', ascending=(sort_order == 'asc'), na_position='last')
         filtered = filtered.drop(columns=['_popularity'])
 
@@ -308,8 +334,9 @@ def get_destinations(
 
     destinations_list = []
     for _, row in page_df.iterrows():
-        rating_val = float(row['review_rating_mean']) if pd.notna(row['review_rating_mean']) else None
-        reviews_val = int(row['review_count']) if pd.notna(row['review_count']) else 0
+        rating_val = float(row['rating_display']) if pd.notna(row['rating_display']) else None
+        reviews_val = int(row['review_count_display']) if pd.notna(row['review_count_display']) else 0
+        weighted_val = float(row['rating_rank']) if pd.notna(row['rating_rank']) else None
 
         destinations_list.append(AttractionItem(
             canonical_id=str(row['canonical_id']),
@@ -320,6 +347,7 @@ def get_destinations(
             description=str(row['description']) if pd.notna(row['description']) else None,
             image_url=str(row['image_url']),
             rating=round(rating_val, 1) if rating_val is not None else None,
+            rating_weighted=round(weighted_val, 2) if weighted_val is not None else None,
             reviews_count=reviews_val,
             latitude=float(row['latitude']) if pd.notna(row['latitude']) else None,
             longitude=float(row['longitude']) if pd.notna(row['longitude']) else None,
@@ -452,8 +480,9 @@ def get_recommendations(req: RecommendationRequest):
 
         reasons = generate_reason_codes(row, s_cat, s_reg, s_fac, s_dist, s_sentiment)
 
-        rating_val = float(row['review_rating_mean']) if pd.notna(row['review_rating_mean']) else None
-        reviews_val = int(row['review_count']) if pd.notna(row['review_count']) else 0
+        rating_val = float(row['rating_display']) if pd.notna(row['rating_display']) else None
+        reviews_val = int(row['review_count_display']) if pd.notna(row['review_count_display']) else 0
+        weighted_val = float(row['rating_rank']) if pd.notna(row['rating_rank']) else None
 
         item = RecommendedAttractionItem(
             rank=rank_idx,
@@ -465,6 +494,7 @@ def get_recommendations(req: RecommendationRequest):
             description=str(row["description"]) if pd.notna(row["description"]) else None,
             image_url=str(row["image_url"]),
             rating=round(rating_val, 1) if rating_val is not None else None,
+            rating_weighted=round(weighted_val, 2) if weighted_val is not None else None,
             reviews_count=reviews_val,
             latitude=float(row["latitude"]) if pd.notna(row["latitude"]) else None,
             longitude=float(row["longitude"]) if pd.notna(row["longitude"]) else None,
@@ -554,7 +584,7 @@ def generate_planner_itinerary(req: PlannerRequest):
     def calculate_relevance_score(row, is_food_slot):
         cat = str(row.get('primary_category', '')).lower()
         price = float(row['price_min_idr']) if pd.notna(row.get('price_min_idr')) and float(row.get('price_min_idr', 0)) > 0 else None
-        rating = float(row['review_rating_mean']) if pd.notna(row.get('review_rating_mean')) else None
+        rating = float(row['rating_rank']) if pd.notna(row.get('rating_rank')) else None
 
         # 1. Category Score (0.0 to 1.0)
         category_score = 0.5
@@ -679,11 +709,11 @@ def generate_planner_itinerary(req: PlannerRequest):
                 last_coords = (c_lat, c_lng)
 
                 tip_prefix = "Tipe Backpacker (Hemat)" if budget_tier in ["Ekonomis", "Backpacker"] else ("Tipe Mewah (Sultan)" if budget_tier == "Mewah" else "Tipe Standar")
-                row_rating = chosen_row.get('review_rating_mean')
+                row_rating = chosen_row.get('rating_display')
                 if pd.notna(row_rating):
-                    ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Rating ulasan {float(row_rating):.1f}/5.0 dari pengunjung."
+                    ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Rating {float(row_rating):.1f}/5.0 dari pengunjung."
                 else:
-                    ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Belum ada data rating ulasan."
+                    ai_tip = f"[{tip_prefix}] Spot rekomendasi AI Raden Gajah di {req.city_or_regency}. Belum ada data rating."
 
                 day_slots.append(PlannerSlotItem(
                     canonical_id=cid,
@@ -738,7 +768,7 @@ def swap_planner_slot(req: PlannerSwapRequest):
         if not cat_df.empty:
             matched_df = cat_df
 
-    matched_df = matched_df.sort_values(by=['review_rating_mean', 'review_count'], ascending=[False, False])
+    matched_df = matched_df.sort_values(by=['rating_rank', 'review_count_display'], ascending=[False, False])
     top_candidates = matched_df.head(3)
 
     alternatives = []
@@ -747,11 +777,11 @@ def swap_planner_slot(req: PlannerSwapRequest):
         c_lng = float(row['longitude']) if pd.notna(row['longitude']) else 105.2611
         price_val = float(row['price_min_idr']) if pd.notna(row['price_min_idr']) and row['price_min_idr'] > 0 else None
 
-        row_rating = row.get('review_rating_mean')
+        row_rating = row.get('rating_display')
         if pd.notna(row_rating):
-            ai_tip = f"Alternatif terbaik di {req.city_or_regency} dengan ulasan rating {float(row_rating):.1f}/5.0."
+            ai_tip = f"Alternatif terbaik di {req.city_or_regency} dengan rating {float(row_rating):.1f}/5.0."
         else:
-            ai_tip = f"Alternatif rekomendasi di {req.city_or_regency} (belum ada data rating ulasan)."
+            ai_tip = f"Alternatif rekomendasi di {req.city_or_regency} (belum ada data rating)."
 
         alternatives.append(PlannerSlotItem(
             canonical_id=str(row["canonical_id"]),
