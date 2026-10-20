@@ -10,6 +10,33 @@
 - Pricing is effectively unfilled: only **8 places (0.26%)** have local price evidence, all historical-only; **0 verified current external prices** exist. Apify may provide a Google price tier or a displayed price when a place exposes one, but reliable admission/ride/package prices require official operator sources or targeted manual/web research and temporal verification.
 - Category long-tail quality is weak: `other` is **1,012/3,130 (32.33%)**, while culture (4), religious (12), river (14), education (11), and lake (29) are small. Apify's broad keyword search can discover candidates and category signals, but source-specific taxonomy review is required before changing canonical categories.
 
+## 0. Lane A applied — Google rating backfill (2026-10-20)
+
+The gaps above still hold for **review text, opening hours, price, and taxonomy**. The rating/review-count gap has since been partially closed **without spending Apify credits**, because the raw Apify export already contained `totalScore` and `reviewsCount`.
+
+| Metric | Before | After |
+|---|---:|---:|
+| Places with a rating signal (`review_rating_mean` or `google_rating`) | 172 (5.50%) | **2,245 (71.73%)** |
+| `rating_normalized` non-null in recommender features | 172 | **2,245** |
+| `rating_weighted_normalized` non-null (ranking-safe) | 0 | **2,245** |
+| Frontend catalog rows | 2,889 | **3,130** |
+| Catalog rows with `reviews_count > 0` | 161 | **2,245** |
+
+How it was done:
+
+- **No master rebuild.** The canonical snapshot recorded in `consolidated_master_manifest_full.json` (sha256 `d9dd95…`) no longer exists, and the current `attractions_master_verified.parquet` has **zero `canonical_id` overlap** with the frozen master. A rebuild would mint new IDs and break the frontend, ML API, and RAG index.
+- **Additive patch.** `Scraping/src/enrichment/google_rating_backfill.py` adds `google_rating`, `google_review_count`, `google_rating_weighted`, `google_place_id`, `google_rating_observed_at`, `google_rating_match_distance_m`. It never overwrites `review_rating_mean`.
+- **Matching rule.** Exact normalized name + haversine distance ≤ 300 m. Result: 2,245 accepted, **24 rejected by distance**, 861 with no name match, 51 ambiguous names resolved to the nearest candidate. Median accepted distance was 0 m.
+- **Small-sample bias → Bayesian smoothing.** The raw Google rating is kept for display, but ranking uses `google_rating_weighted = (v·R + m·C) / (v + m)` with prior weight `m = 20` and prior mean `C = 4.4924` (the observed mean of the 2,245 matched ratings). With a median of only 8 reviews per place, 703 places had a raw 5.0 and 754 were ≥4.8 with fewer than 10 reviews; unsmoothed, a single 5.0 could outrank a 4.8 with 5,000+ reviews. The weighted value fixes that ordering without erasing the raw value.
+- **Provenance.** The patch is recorded under `enrichment_patches` in the consolidated manifest; `master_version` is now `consolidated_enrichment_full_v1+google_rating_backfill.1`. The report stores `rating_prior_weight` and `rating_prior_mean` so the transform is reproducible.
+- **Feature version.** `recommender_ready_features` is now **v1.3** with `rating_weighted_normalized` plus a `rating_source` column (`scraped_reviews` 172, `google_maps` 2,073, `missing` 885). `rating_normalized` remains the raw signal; ranking consumers should use the weighted column.
+- **Frontend.** `Website/scratch/sync_public_catalog.py` added the 241 missing destinations, replaced the shared `4.6` placeholder rating for 1,785 rows where real Google data exists, and wrote `rating_weighted` for all 3,130 rows. 1,031 rows still have no rating source and keep the placeholder for both fields.
+- **Consumers.** The ML API exposes `rating` (raw display) and `rating_weighted` (ranking); `sort_by=rating`, `popular`, and planner relevance use `rating_weighted`. The Explore page sorts on `ratingWeighted`. The chatbot RAG keeps raw `rating` in its facts but scores with `ratingWeighted`, so the boost now spans roughly 7.1–9.8 instead of a flat 9.2 from the old placeholder.
+- **Unaffected.** The main `/api/v1/recommendations` model never used rating, so its input vectors and top-10 results are byte-for-byte identical before/after.
+
+Residual rating gap: **885 places (28.27%)** still have no rating signal — mostly places with no matching raw Google record. These need a fresh targeted Apify run by place ID or name, not a pipeline change.
+
+
 ## 1. Population and regional coverage
 
 ### Full master distribution
@@ -172,7 +199,7 @@ The final manifest passes the basic invariant (**3,130 rows = 3,130 unique canon
 
 ## Evidence index
 
-- `Data/consolidated/recommender_ready_manifest.json` — v1.1, 3,130 rows, 21 categories, 15 regions, 172 sentiment-integrated places.
+- `Data/consolidated/recommender_ready_manifest.json` — v1.3, 3,130 rows, 21 categories, 15 regions, 172 sentiment-integrated places, 2,245 rating-signal places, 2,245 ranking-safe ratings.
 - `Scraping/reports/consolidated_master_summary.md` — full-master layer coverage, region distribution, warning distribution, price scope.
 - `Scraping/reports/metadata_scaling_manifest_audit.md` and `metadata_scaling_region_coverage.csv` — metadata/opening-hours/facilities relation and regional mapping rates.
 - `Scraping/reports/consolidated_master_source_inventory.md` — source Parquet/CSV row and ID counts.
