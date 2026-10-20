@@ -8,8 +8,11 @@
 | **Eligible Attractions Count** | 3126 |
 | **Ineligible (Permanently Closed/No Coord)** | 4 |
 | **Attractions with NLP Sentiment Scores** | 172 |
+| **Attractions with Rating Signal** | 2245 |
+| **Attractions with Ranking-Safe Rating** | 2245 |
+| **Rating Source Mix** | {'google_maps': 2073, 'missing': 885, 'scraped_reviews': 172} |
 | **Category Vocab Size** | 21 categories |
 | **Region Vocab Size** | 15 regions |
 | **Facility Vocab Size** | 10 facilities |
-| **Total Feature Columns** | 67 columns |
-| **Parquet SHA256** | `d624f32c5ee3a3b3b36358a061bd7fc4e2791a48a10f48996324365078505165` |
+| **Total Feature Columns** | 69 columns |
+| **Parquet SHA256** | `656f6024e7f158480519cb9044333c3b93957b7ca4b43c9e3226538d7da1f4b9` |
