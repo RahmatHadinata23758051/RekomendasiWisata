@@ -111,6 +111,8 @@ def build_recommender_dataset(
 
     eligible_flags = []
     rating_norms = []
+    rating_sources = []
+    rating_weighted_norms = []
     sentiment_means = []
     sentiment_confs = []
     price_statuses = []
@@ -169,12 +171,29 @@ def build_recommender_dataset(
         eligible_flags.append(bool(is_eligible))
 
         # 5. Rating Normalized (0.0 to 1.0)
+        # Prefer the review-derived mean (review-text semantics) and fall back
+        # to the Google aggregate rating backfilled from the raw Apify export.
         rev_status = str(row.get("review_coverage_status", "not_processed"))
         mean_rating = row.get("review_rating_mean")
+        google_rating = row.get("google_rating")
         if rev_status == "scraped" and pd.notna(mean_rating):
-            rating_norms.append(float(mean_rating) / 5.0)
+            rating_norms.append(min(max(float(mean_rating), 0.0), 5.0) / 5.0)
+            rating_sources.append("scraped_reviews")
+        elif pd.notna(google_rating):
+            rating_norms.append(min(max(float(google_rating), 0.0), 5.0) / 5.0)
+            rating_sources.append("google_maps")
         else:
             rating_norms.append(np.nan)
+            rating_sources.append("missing")
+
+        # 5b. Ranking-safe rating (Bayesian weighted) for sorts and planners.
+        # Display still uses the raw rating above; this column is what should
+        # drive ranking so small-sample 5.0s do not outrank well-reviewed 4.8s.
+        weighted_rating = row.get("google_rating_weighted")
+        if pd.notna(weighted_rating):
+            rating_weighted_norms.append(min(max(float(weighted_rating), 0.0), 5.0) / 5.0)
+        else:
+            rating_weighted_norms.append(np.nan)
 
         # 6. Sentiment Values (Integrated from Empirical NLP Pipeline)
         if cid in sentiment_dict:
@@ -218,6 +237,8 @@ def build_recommender_dataset(
         "facility_vector": fac_vectors,
         "review_coverage_status": df_master["review_coverage_status"],
         "rating_normalized": rating_norms,
+        "rating_weighted_normalized": rating_weighted_norms,
+        "rating_source": rating_sources,
         "sentiment_score_mean": sentiment_means,
         "sentiment_confidence": sentiment_confs,
         "price_status": price_statuses,
@@ -266,13 +287,19 @@ def build_recommender_dataset(
 
     manifest = {
         "dataset_name": "recommender_ready_features",
-        "dataset_version": "v1.1",
+        "dataset_version": "v1.3",
         "source_master_version": "consolidated-enrichment-master-full-v1",
         "total_rows": n_rows,
         "unique_canonical_ids": int(df_features["canonical_id"].nunique()),
         "eligible_recommend_count": int(df_features["is_eligible_recommend"].sum()),
         "ineligible_recommend_count": int((~df_features["is_eligible_recommend"]).sum()),
         "sentiment_integrated_attractions_count": int(df_features["sentiment_score_mean"].notna().sum()),
+        "rating_coverage_count": int(df_features["rating_normalized"].notna().sum()),
+        "rating_weighted_coverage_count": int(df_features["rating_weighted_normalized"].notna().sum()),
+        "rating_source_distribution": {
+            str(k): int(v)
+            for k, v in df_features["rating_source"].value_counts().items()
+        },
         "category_vocab_size": len(CATEGORIES_VOCAB),
         "region_vocab_size": len(REGIONS_VOCAB),
         "facility_vocab_size": len(FACILITIES_VOCAB),
@@ -297,6 +324,9 @@ def build_recommender_dataset(
 | **Eligible Attractions Count** | {manifest['eligible_recommend_count']} |
 | **Ineligible (Permanently Closed/No Coord)** | {manifest['ineligible_recommend_count']} |
 | **Attractions with NLP Sentiment Scores** | {manifest['sentiment_integrated_attractions_count']} |
+| **Attractions with Rating Signal** | {manifest['rating_coverage_count']} |
+| **Attractions with Ranking-Safe Rating** | {manifest['rating_weighted_coverage_count']} |
+| **Rating Source Mix** | {manifest['rating_source_distribution']} |
 | **Category Vocab Size** | {manifest['category_vocab_size']} categories |
 | **Region Vocab Size** | {manifest['region_vocab_size']} regions |
 | **Facility Vocab Size** | {manifest['facility_vocab_size']} facilities |
