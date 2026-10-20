@@ -28,6 +28,7 @@ class RecommendedAttractionItem(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     rating: Optional[float] = None
+    rating_weighted: Optional[float] = None
     reviews_count: Optional[int] = 0
     latitude: Optional[float] = None
     longitude: Optional[float] = None
@@ -54,6 +55,7 @@ class AttractionItem(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     rating: Optional[float] = None
+    rating_weighted: Optional[float] = None
     reviews_count: Optional[int] = 0
     latitude: Optional[float] = None
     longitude: Optional[float] = None
